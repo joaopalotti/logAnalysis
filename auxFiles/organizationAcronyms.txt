@@ -1,0 +1,193 @@
+AA, Alcoholics Anonymous
+AABB,   AABB, formerly known as the American Association of Blood Banks
+AACCN,  American Academy of Critical Care Nurses
+AAD,American Association of Dermatology
+AADGP,  American Academy of Dental Group Practice
+AAFP,   American Academy of Family Physicians
+AAIN,   American Academy of Industrial Nurses
+AAN,American Academy of Nursing
+AAO,American Academy of Ophthalmology
+AAO,American Academy of Optometry
+AAOS,   American Academy of Orthopaedic Surgeons
+AAP,American Academy of Pediatrics
+ABEM,   American Boarded in Emergency Medicine
+ABMS,   American Boarded in Medical Specialties
+ACCP,   American College of Chest Physicians
+ACEP,   American College of Emergency Physicians
+ACGME,  Accreditation Council for Graduate Medical Education
+ACOG,   American College of Obstetics and Gynecology
+ACP,Advanced Care Paramedic (Canada)
+ACR,American College of Radiologists
+ACR,American College of Rheumatology
+ACS,American Cancer Society
+ACP,American College of Physicians
+ACS,American College of Surgeons
+ADA,American Dental Association
+ADA,American Diabetes Association
+AGD,Academy of General Dentistry
+AHA,American Heart Association
+AMA,American Medical Association
+AMA,Australian Medical Association
+AMSA,   American Medical Student Association
+ANNA,   American Nephrology Nurses' Association
+AND,Academy of Nutrition and Dietetics (formerly American Dietetic Association)
+ANF,Australian Nursing Federation
+AOA,American Optometric Association
+AOA,Australian Orthopaedic Association
+APGAR,  American Pediatric Gross Assessment Record (a backronym)
+APA,American Psychiatric Association
+APN,Advanced practice nurse
+ARA,American Rheumatological Association
+ARRT,   American Registry of Radiologic Technologists
+ASCEPT, Australasian Society of Clinical & Experimental Pharmacologists and Toxicologists
+ASCP,   American Society for Clinical Pathology
+ASCP,   American Society of Consultant Pharmacists
+ASHA,   American Speech-Language-Hearing Association
+ASL,American sign language
+ASMI,   Australian Self-Medication Industry
+ASMSO,  American Society of Medication Safety Officers
+ASPS,   American Society of Plastic Surgeons
+ASRT,   American Society of Radiologic Technologists
+ASSH,   American Society for Surgery of the Hand
+BMA,British Medical Association
+BAAPS,  British Association of Aesthetic Plastic Surgeons
+BNF,British National Formulary
+CAD,Canadian Association of the Deaf
+CAEP,   Canadian Association of Emergency Physicians
+CAG,Canadian Association of Gerontology
+CAMT,   Canadian Association of Music Therapy
+CAMTS,  Commission on Accreditation of Medical Transport Systems
+CAO,Chronic airway obstruction
+CAO,Canadian Association of Optometrists
+CAOT,   Canadian Association of Occupational Therapists
+CAP,Canadian Association of Physicists
+CAP,College of American Pathologists
+CAR,Canadian Association of Radiologists
+CASLPA, Canadian Association of Speech-Language Pathologists and Audiologists
+CASLPO, College of Audiologists and Speech-Language Pathologists of Ontario
+CCOHS,  Canadian Centre for Occupational Health and Safety
+CCS,Canadian Cardiovascular Society
+CDAAC,  Communicative Disorders Assistant Association of Canada
+CDC,Centers for Disease Control and Prevention
+CfWI,   Centre for Workforce Intelligence
+CESMA,  Council for European Specialist Medical Assessments
+CKD,Chronic Kidney Disease
+CMA,Canadian Medical Association
+CMS,Centers for Medicare and Medicaid Services
+COTA(A),Council on the Ageing (Australia)
+CPhT,   Certified Pharmacy Technician
+CPM,Certified Professional Midwife
+CPME,   Standing Committee of European Doctors
+CRD,Centre for Reviews and Dissemination
+CRN,Certified Radiology Nurse
+CRNA,   Certified Registered Nurse Anesthetist
+CRT,Certified Respiratory Therapists - Respiratory therapy
+CRTT,   Certified Respiratory Therapy Technicians - Respiratory therapy
+CTRS,   Certified Therapeutic Recreation Specialist - Recreation Therapy or Therapeutic Recreation
+CSA,Certified Surgical Assistant
+DDS,Doctor of Dental Surgery
+DI, Digital Imaging Technologist
+DMD,Doctor of Dental Medicine
+DO, Doctor of Osteopathic Medicine
+DoH,Department of Health (various countries)
+EMS,Emergency medical services
+EMT,Emergency Medical Technician
+EN, Enrolled Nurse (AU) - See Licensed Practical Nurse
+ESRD,   End Stage Renal Disease (US Federal Program)
+FDA,Food and Drug Administration
+FHO,Foundation House Officer
+FIGO,   International Federation of Gynecology and Obstetrics
+FRCP,   Fellow of the Royal College of Physicians (UK)
+GDC,General Dental Council (UK)
+GMC,General Medical Council (UK)
+GMS,General medical services medical services provided by GPs (UK)
+GP, General practitioner
+GPhC,   General Pharmaceutical Council (UK)
+HC, Health Canada
+HEMS,   Helicopter Emergency Medical Service
+HSE,Health Service Executive
+IASP,   International Association for the Study of Pain
+IAMMS,  Ibn Sina Academy of Medieval Medicine and Sciences
+IFMSA,  International Federation of Medical Students' Associations
+IMD,Institution for Mental Disease
+IMF,Irish Medicines Formulary
+IMO,Irish Medical Organisation
+INHS,   Inland Northwest Health Services
+JAMA,   Journal of the American Medical Association
+JC, Joint Commission, previously JCAHO
+LA, Laboratory Aide or Assistant
+LMSSA,  Licentiate in Medicine and Surgery of the Society of Apothecaries
+LMT,Licensed Massage Therapist
+LPN,Licensed Practical Nurse
+LSA,Licensed Surgical Assistant
+LVN,Licensed Vocational Nurse — See Licensed Practical Nurse
+MASH,   Mobile Army Surgical Hospital
+MedPAC, Medicare Payment Advisory Commission
+MD, Medical doctor
+MLA,Medical laboratory assistant
+MT, Medical technologist
+MLT,Medical laboratory technician
+MRCP,   Membership of the Royal College of Physicians
+MRT,Medical Radiation Technologist
+MP, Medical psychologist
+NA, Narcotics Anonymous
+NAACLS, National Accrediting Agency for Clinical Laboratory Science
+NCA,National Credentialing Agency for Laboratory Personnel
+NCTMB,  Nationally Certified in Therapeutic Massage and Bodywork
+NEJM,   New England Journal of Medicine
+NHC,Nephrology Hypertension Clinic, P.C
+NHS,National Health Service
+NICE,   National Institute for Health and Clinical Excellence
+NKC,Northwest Kidney Centers
+NKF,National Kidney Foundation
+NYHA,   New York Heart Association
+NPS,National Prescribing Service (Australia)
+NPSA,   National Pharmaceutical Services Association
+OD, Doctor of Optometry
+ONG,Orthodontic National Group
+OTA,Orthodontic Technicians Association
+PA, Physician Assistant or Pathologist Assistant
+CPT,Phlebotomist
+PCT,Primary Care Trust (UK)
+PGNZ,   Pharmaceutical Guild Of New Zealand
+PHARM,  Pharmaceutical Health and Rational Use of Medicines (Australia)
+Pharm.D,Doctor of Pharmacy
+PMS,Personal Medical Services alternative contract for UK GPs
+PRHO,   Pre-registration house officer (UK)
+PSNZ,   Pharmaceutical Society Of New Zealand
+RA, Radiologist's Assistant
+RACP,   Royal Australasian College of Physicians
+RACS,   Royal Australasian College of Surgeons
+RCGP,   Royal College of General Practitioners
+RCM,Royal College of Midwives
+RCN,Royal College of Nursing
+RCOG,   Royal College of Obstetricians and Gynaecologists
+RCP,Royal College of Pathologists
+RCP,Royal College of Physicians
+RCPA,   Royal College of Pathologists of Australasia
+RCS,Royal College of Surgeons (England)
+RCSI,   Royal College of Surgeons in Ireland
+RN, Registered Nurse
+R.Ph,   Registered Pharmacist
+RPN,Registered Practical Nurse — See Licensed Practical Nurse
+RPN,Registered Psychiatric Nurse
+RPS,Royal Pharmaceutical Society
+RRT,Registered Respiratory Therapist - Respiratory therapy
+RSN,Renal Support Network
+RT, Radiologic Technologist
+RT, Respiratory Therapist - Respiratory therapy
+SEN,State Enrolled Nurse (UK) - See Licensed Practical Nurse
+SHO,Senior house officer (UK)
+SIGN,   Scottish Intercollegiate Guidelines Network (similar to the English NICE)
+SN, student nurse
+STFM,   Society of Teachers of Family Medicine
+SpR,Specialist registrar (UK)
+SLP,Speech-Language Pathologist
+UDC,University Disability Consortium
+UEMS,   Union Européenne des Médecins Spécialistes
+UNOS,   United Network for Organ Sharing
+UKPDS,  United Kingdom Prospective Diabetes Study
+USMLE,  United States Medical Licensing Examination
+VA, Veterans Administration - United States Department of Veterans Affairs
+WHO,World Health Organization
+WMA,World Medical Association

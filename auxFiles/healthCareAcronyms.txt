@@ -1,0 +1,492 @@
+A&E, Accident and Emergency Department
+AAAHC, Accreditation Association for Ambulatory Health Care
+AAHSA,American Association of Homes and Services for the Aging
+AAMA,American Association of Medical Assistants
+AAMC, American Association of Medical Colleges
+AAO-HNS, American Academy of Otolaryngology - Head and Neck Surgery
+AAPC,American Academy of Professional Coders
+AAPCC,Adjusted Average per Capita Cost
+AAPS, American Association of Physicians and Surgeons
+AAPI, American Association of Physicians of Indian Origin
+AARC, American Association of Respiratory Care
+ABMT, Autologous Bone Marrow Transplant
+ACA, Affordable Care Act of 2010
+ACF, Administration for Children and Families
+ACHE, American College of Healthcare Executives
+ACIIP, Association of Clinical IVR and IWR Professionals
+ACO, Accountable care organization
+ACOG, American Congress of Obstetricians and Gynecologists
+ACS, American Cancer Society
+ACS, American College of Surgeons
+ADA, American Dietetic Association
+ADA, American Dental Association
+ADA, American Diabetes Association
+ADA, Americans with Disabilities Act
+ADHD, Attention-Deficit Hyperactivity Disorder
+ADL, Activities of Daily Living
+ADR, Adverse Drug Reaction
+ADSA, American Dental Society of Anesthesiology
+ADT, Admission, Discharge, Transfer
+AEP, Accredited Exercise Physiologist
+AFDC, Aid to Families with Dependent Children
+AF, Atrial Fibrillation
+AFMA, African Medical Association
+AHA, American Hospital Association
+AHA, American Heart Association
+AHCA, American Health Care Association
+AHDI,Association for Healthcare Documentation Integrity
+AHEC, Area Health Education Center
+AHIMA, American Health Information Management Association
+AHIP, America's Health Insurance Plans
+AHRQ, Agency for Healthcare Research and Quality
+AIDS, acquired immunodeficiency syndrome
+AIN, Assistant In Nursing
+AMA, American Medical Association
+AMANET, African Malaria Network Trust
+AMGA, American Medical Group Association
+AMIA, American Medical Informatics Association
+ANA, American Nurses Association
+AOA, American Optometric Association
+AOA, American Osteopathic Association
+AOTA, American Occupational Therapy Association
+APA, Administrative Procedures Act
+APA, American Psychiatric Association
+APA, American Pharmaceutical Association
+APA, American Psychological Association
+APC, Ambulatory Payment Classification
+APDRG, All Patient Diagnosis Related Groups
+APHA, American Public Health Association
+APHA, American Protestant Hospital Association
+APTA, American Physical Therapy Association
+ASA, `American Society of Anesthesiology
+ASC, Ambulatory Surgery Center
+ASCP, American Society for Clinical Pathology
+ASHICE,Reporting patient's condition    Age Sex History Injury/Illness Consciousness ETA
+ASHRM,American Society for Healthcare Risk Management
+ASO, Administrative Service Organization
+AST, Aspartate Aminotransferase
+ASTHO, Association of State and Territorial Health Officials
+AWP,Average Wholesale Price
+AYUSH, Department of Ayurveda, Yoga and Naturopathy, Unani, Siddha and Homoeopathy
+BBA, Balanced Budget Act of 1997
+BBRA, Balanced Budget Refinement Act of 1999
+BCA,Blue Cross Association
+BCBSA, Blue Cross Blue Shield Association
+BCMA,   Bar Code Medication Administration
+BFHI, Baby Friendly Hospital Initiative
+BHCS,   Baylor Health Care System, Dallas, TX
+BI-RADS, Breast Imaging-Reporting and Data System Atlas
+BP, Blood Pressure
+BPM,Beats Per Minute
+BPHC, Bureau of Primary Health Care
+BPOC, Bar Code Enabled Point of Care
+BRFSS, Behavioral Risk Factor Surveillance System
+BSN, Bachelor of Science in Nursing
+CABG, Coronary artery bypass grafting
+CAD, Coronary Artery Disease
+CAH,Critical Access Hospital
+CAHPS,  Consumer Assessment of Healthcare Providers and Systems
+CAM, Complementary and Alternative Medicine
+CAP, College of American Pathologists, Community Action Program, or Community Access Program
+CARF, Commission on Accreditation of Rehabilitation Facilities
+CAT, Computerized Axial Tomography
+CBG, Capillary Blood Glucose
+CBO, Congressional Budget Office
+CCA,Cost Consequence Analysis
+CCBTI,  Certified Cognitive Behavioral Training Instructor
+CCHIT, Certification Commission for Healthcare Information Technology
+CCHP,   Consumer Choice Health Plan
+CCM,Certified Case Manager
+CCRN,   Critical Care Registered Nurse
+CCU, Coronary Care Unit
+CCU, Critical Care Unit
+CDA, Clinical Document Architecture
+CDif, Clostridium Difficule
+CDC, Centers for Disease Control and Prevention
+CDM, Charge Description Master
+CDR, Clinical Data Repository
+CDR, Chronic Disease Register
+CDU, Clinical Decisions Unit
+CERTs,Centers for Education and Research on Therapeutics
+CEO,Campaign to End Obesity
+CHAMPUS, Civilian Health and Medical Program of the Uniformed Services
+CHAMPVA, Civilian Health and Medical Program - Veterans Administration
+CHC, Community Health Center
+CHER, Community Health Education & Resources
+CHHA,Certified Home Health Agency
+CHIME, College of Health Information Management Executives
+CHF, Congestive Heart Failure
+CHI,Consolidated Health Informatics
+CHMIS,Community Health Management Information System
+CHS,Certified in Healthcare Security
+CHW, Community health worker
+CICU,Cardiac Intensive Care Unit
+CIS, Clinical information system
+CLIA, Clinical Laboratory Improvement Amendments Act
+CMA, Cost Minimization Analysis
+CME, Continuing Medical Education
+CMHC, Community Mental Health Center
+CMO,Career Medical Officer
+CMO, Chief Medical Officer
+CMP,Competitive Medical Plan
+CMS, Centers for Medicare and Medicaid Services
+CMT,Certified Medical Transcriptionist
+CN, Clinical Nurse
+CNA, Certified Nursing Assistant
+CNC, Clinical Nurse Consultant
+CNS, Central Nervous System
+COB,Coordination of Benefits
+COBRA, Consolidated Omnibus Budget Reconciliation Act
+COG, Council of Governments
+COI,Cost of Illness Analysis
+COLA, Cost of Living Allowance
+COMPASS,Community Participation for Action in the Social Sector (Nigeria)
+CON, Certificate of Need
+CONQUEST,Computerized Needs-Oriented Quality Measurement Evaluation System
+COPC,Community Oriented Primary Care
+COPD, Chronic Obstructive Pulmonary Disease
+COTH,Council of Teaching Hospitals
+CPA, Certified Public Accountant
+CPHA,Commission on Professional and Hospital Activities
+CPI, Consumer Price Index
+CPOE, Computerized Physician Order Entry
+CPOE,Computerized Prescription Order Entry
+CPR, Customary, Prevailing, and Reasonable
+CPR, Cardiopulmonary Resuscitation
+CPT-4, Current Procedural Terminology, Forth Edition
+CQuIPS,Center for Quality Improvement and Patient Safety
+CRNA, Certified Registered Nurse Anesthetist
+CRVS,California Relative Value Studies
+CT, Computerized Tomographic (scanners)
+CCRAS, Central Council for Research in Ayurveda and Siddha
+CWSN, children with special needs
+DD, Developmental Disability
+DDS, Doctor of Dental Surgery
+DEA, Drug Enforcement Administration
+DEA, Drug Enforcement Agency
+DDM, Doctor of Dental Medicine
+DHHS, Department of Health and Human Services
+DME, Durable Medical Equipment
+DMO,Disease Management Organization
+DNR, Do Not Resuscitate
+DO, Doctor of Osteopathic Medicine
+DOA,Dead On Arrival
+DON, Director Of Nursing
+DOS, Date Of Service
+DOU, Direct Observation Unit
+DR,ABC Primary Survey – Danger Response Airway Breathing Circulation
+DRG, Diagnosis Related Group
+DSH, Disproportionate Share Hospital
+DSM-IV, Diagnostic and Statistical Manual of Mental Disorders, Fourth Edition
+DTC, Direct to Consumer
+DUR,Drug Utilization Review
+DVM, Doctor of Veterinary Medicine
+EBM, Evidence-Based Medicine
+ECF,Extended Care Facility
+ECG, Electrocardiogram
+ED, Emergency Department
+EDI, Electronic Data Interchange
+EDON, Executive Director Of Nursing
+EEG, Electroencephalogram
+EEN, Endorsed Enrolled Nurse
+EHR, Electronic health record
+EKG, Electrocardiogram
+ELS,Emergency Life Support
+EMG, Electromyogram
+EMR, Electronic medical record
+EMS, Emergency Medical Services
+EMT, Emergency Medical Technician
+EMTALA, Emergency Medical Treatment and Active Labor Act
+ENT, Ear, Nose and Throat
+EOB, explanation of benefits (insurance)
+EPA,Exclusive Provider Arrangement
+EPA, Environmental Protection Agency
+EPC,Evidence-Based Practice Center
+EPO, Exclusive provider organization
+EPSDT,Early and Periodic Screening, Diagnosis, and Treatment Program
+ER, Emergency Room
+ERCP, Endoscopic Retrograde Cholangiopancreatography
+ERISA, Employee Retirement Income Security Act
+ESI,Employer-sponsored Insurance
+ESRD, End Stage Renal Disease
+ET,Expenditure Target
+ETA,Estimated Time of Arrival
+FACCT,The Foundation for Accountability
+FACS, Fellow, American College of Surgeons
+FAH, Federation of American Hospitals
+FAHIMA, Fellow of the American Health Information Management Association
+FDA, Food and Drug Administration
+FEHBP, Federal Employees Health Benefits Program
+FFDCA, Federal Food, Drug, and Cosmetic Act
+FIC, Family of International Classifications, World Health Organization
+FICA, Federal Insurance Contributions Act
+FIPH,Fellow International Public Health, honoris
+FMAP, Federal Medical Assistance Percentages
+FMCFoundation,for Medical Care
+FMG, Foreign Medical Graduate
+FMLA, Family and Medical Leave Act of 1993
+FNP, Family Nurse Practitioner
+FPL, Federal poverty level
+FTC, Federal Trade Commission
+FQHC, Federally Qualified Health Center
+FY, Fiscal Year
+FSA, Flexible spending account
+FHTFetal,Heart Tones
+GAO, Government Accountability Office
+GDP, Gross Domestic Product
+GHAA, Group Health Association of America
+GI, Gastro-intestinal
+GME, Graduate Medical Education
+GOS, General Ophthalmic Services
+GP, General Practitioner
+GPAM, General Pediatrics and Adolescent Medicine
+HAART, Highly active antiretroviral therapy
+HCBS, Home and Community Based Services
+HCFAP, Healthcare Facilities Accreditation Program
+HCPCS, Healthcare Common Procedure Coding System
+HCUP, Healthcare Cost and Utilization Project
+HCQ, Healthcare Quality
+HDHP, High-deductible Health Plan
+HEDIS, Healthcare Effectiveness Data and Information Set
+HH, Home Health
+HIE, Health Information Exchange
+HIFA, Health Insurance Flexibility and Accountability
+HIM, Health information management
+HIMSS, Healthcare Information and Management Systems Society
+HIPAA, Health Insurance Portability and Accountability Act
+HIPC, Health Insurance Purchasing Cooperative
+HIPDB, Healthcare Integrity and Protection Data Bank
+HIPPS, Health information prospective payment system
+HISP, Health Information Service Provider [2]
+HISPC, Health Information Security and Privacy Collaboration
+HIS, Health Information System
+HIT, Health Information Technology
+HITECH, Health Information Technology for Economic and Clinical Health Act
+HITSP, Healthcare Information Technology Standards Panel
+HAV, Hepatitis A
+HBV, Hepatitis B
+HCV, Hepatitis C
+HIV, Human immunodeficiency virus
+HL7, Health Level 7
+HME, Home Medical Equipment
+HMO, Health Maintenance Organization
+HMSA, Health Manpower Shortage Area
+HOPPS, Hospital Outpatient Prospective Payment System
+HPI, History of Present Illness
+HPSAs, Health Professional Shortage Areas
+HRQL, Health Related Quality of Life
+HRA, Health Risk Assessment
+HRA, Health Reimbursement Account
+HRH, Human resources for health
+HRHIS, Human resources for health information system
+HRSA, Health Resources and Services Administration
+HSA, Health Savings Account
+HSA, Health Service Area
+HSA, Health Systems Agency
+HSE, Health Service Executive
+HTA, Health Technology Assessment
+ADL, Instrumental Activities of Daily Living
+IBNR, Incurred But Not Reported
+ICD, International Statistical Classification of Diseases and Related Health Problems
+ICD-9-CM, International Classification of Diseases, Ninth Revision, Clinical Modifications
+ICD-10-CM, International Classification of Diseases, Tenth Revision, Clinical Modifications
+ICD-10-PCS, International Classification of Diseases, Ninth Revision, Procedure Coding System
+ICDA, International Classification of Diseases, Adopted
+ICF, International Classification of Functioning, Disability and Health
+ICF, Intermediate Care Facility
+ICN, International Council of Nurses
+ICNP, International Classification for Nursing Practice
+ICU, Intensive Care Unit
+ICF/MR, Intermediate Care Facility for the Mentally Retarded
+ICPC, International Classification of Primary Care
+IDA, Indian Dental Association
+IDN, Integrated Delivery Network
+IDS, Integrated Delivery System
+IHI, Institute for Healthcare Improvement
+IMG, International Medical Graduate
+IMO, Irish Medical Organisation
+INHS, Inland Northwest Health Services
+IOM, Institute of Medicine of the National Academy of the Sciences
+IPA, Independent Practice Association
+IPE, Interprofessional Education
+IPHF, International Public Health Forum
+IRM, Information Resource Management
+ISN, Integrated Services Network
+ITU, Intensive Treatment Unit
+JAMA, Journal of the American Medical Association
+JCAHO, Joint Commission on the Accreditation of Healthcare Organizations
+JIPHF, Journal of International Public Health Forum
+KPM, Key Performance Measures
+LDH, Lactic dehydrogenase
+LIS, Low Income Subsidy or Laboratory Information System
+LMT, Licensed Massage Therapist
+LOS, Length of Stay
+LPN, Licensed Practical Nurse
+LSC, Life Safety Code
+LSIT, Life Sciences Information Technology
+LTAC, Long-Term Acute Care facility
+LTC, Long Term Care
+LUPA, Low Utilization Payment Adjustment
+LVN, Licensed Vocational Nurse
+LVRS, Lung volume reduction surgery
+LWBS, Left without being seen
+MA, Medical Assistant; Medicare Advantage
+MAAC, Maximum Allowable Actual Charge
+MAF, Medical Assistance Facility
+MAP, Medical Audit Program
+MAPD, Medicare Advantage Prescription Drug Plan
+MAR, Medication Administration Record
+MCAT, Medical College Admission Test
+MCH, Maternal and Child Health Program
+MCI, Medical Council of India
+MCO, Managed Care Organization
+MD, Doctor of Medicine
+MEDLARS, Medical Literature and Analysis Retrieval System
+MedPAC, Medicare Payment Advisory Commission
+MEPS, Medical Expenditure Panel Survey
+MET,Multiple Employer Trust
+MEWA, Multiple Employer Welfare Arrangement
+MDH, Medicare-dependent Hospital
+MHC, Managed Health Care
+MHA, Master's in Health Care Administration
+MI, Myocardial Infarction
+MLR, Medical Loss Ratio
+MLT, Medical Laboratory Technician
+MMIS, Medicaid Management Information System
+MMRA, Metropolitan Medical Response System
+MRHFP, Medicare Rural Hospital Flexibility Program
+MRI, Magnetic Resonance Imaging
+MRSA, Methicillin-resistant Staphylococcus aureus infections
+MSA, Medical Savings Account or Metropolitan Statistical Area
+MSN, Master of Science in Nursing
+MSW, Master of Social Work or Medical social worker
+MT, Medical Technologist
+MU, Meaningful Use measurement/objective of HITECH Act
+MUA/MUPs, Medically Underserved Areas/Populations
+NACo, National Association of Counties
+NACCHO, National Association of County and City Health Officials
+NASHP, National Academy for State Health Policy
+NASMD, National Association of State Medicaid Directors
+NBRC, National Board for Respiratory Care
+NCD, Non-communicable disease
+NCHS, National Center for Health Statistics
+NCQA, National Committee for Quality Assurance
+NDC, National Drug Code
+NEJM, New England Journal of Medicine (standard PubMed abbreviation is N EnglJ Med)
+NGA, National Governors Association
+NGC, National Guidelines Clearinghouse
+NwHIN, Nationwide Health Information Network[3]
+NHS, National Health Service
+NHSC, National Health Savings Corps
+NICU, Neonatal Intensive Care Unit
+NIH, National Institutes of Health
+NIMH, National Institute of Mental Health
+NIOSH, National Institute of Occupational Safety and Health
+NKDA, No Known Drug Allergies
+NLM, National Library of Medicine
+NMA, Nigerian Medical Association
+NMF, Nigerian Medical Forum
+NP, Nurse Practitioner
+NPRM, Notice of Proposed Rulemaking
+NPS, National Pharmaceutical Stockpile
+NRHA, National Rural Health Association
+NUM, Nurse Unit Manager
+OAA, Old Age Assistance
+OASDHI, Old Age Survivors, Disability, and Health Insurance Program
+OB/GYN, Obstetrician/Gynecologist
+OBRA, Omnibus Budget Reconciliation Act
+OD, Overdose or the right eye (from the Latin oculus dexter)
+ODS, Organized Delivery System
+OMB, Office of Management and Budget
+OPD, Outpatient Department
+OPHP, Office of Public Health Preparedness
+OS, the left eye (from the Latin oculus sinister)
+OSHA, Occupational Health and Safety Administration
+PA, Physician Assistant
+PACU, Post Anesthesia Care Unit
+PAHO, Pan American Health Organization
+PBM, Pharmacy Benefits Manager
+PCA, Personal Care Assistant
+PCCM, Primary Care Case Management
+PCMH,- Patient-Centered Medical Home
+PCP, Primary Care Physician
+PCT, NHS Primary Care Trust
+PDI, Professional Development Institute
+PDP, Prescription Drug Plan
+PDQS, Partnership Defined Quality of Service
+PFP, Patient Flow Platform
+PHC, Primary health care
+PHI, Protected Health Information
+PHO, Physician-Hospital Organization
+PHS, Public Health Service
+PIAPHP, Partners in Information Access for Public Health Professionals
+PICC, Peripherally Inserted Central Catheter
+PICU, Pediatric Intensive Care Unit
+POC, Point of Care
+POS, Place of Service
+PMPM, Per Member Per Month
+PMP, Per Million Population
+PPA, Preferred Provider Arrangement
+PPO, Preferred Provider Organization
+PPG,- Physician Provider Group
+PPS, Prospective Payment System
+PSN, Provider Sponsored Network
+PSO, Provider Sponsored Organization
+QALY, Quality-Adjusted Life Year
+QAPI, Quality Assessment and Performance Improvement Program
+QARI, Quality Assurance Reform Initiative
+QD, Each day, usually in prescriptions.
+QIO, Quality Improvement Organization
+QISMC, Quality Improvement System for Managed Care
+QuIC, Quality Interagency Coordination Task Force
+RAN, Rural Area Computer Network
+RAP, Request for Anticipated Payment
+RBRVS, Resource-Based Relative Value Scale
+RCT, Randomized Clinical Trial or Randomized Controlled Trial
+RD, Registered Dietician
+RFE, Reason For Encounter
+RHC, Rural Health Clinic
+RICE, Rest, Ice, Compression, Elevation (Alternatively) Rest, Immobilize, Cool, Elevate
+RIS, Radiology Information System
+RRC, Rural Referral Centers
+RUG, Resource Utilization Groups
+RWJF, Robert Wood Johnson Foundation
+RN, Registered Nurse
+RMO, Resident Medical Officer
+RHIT, Registered Health Information Technician
+RHIA, Registered Health Information Administrator
+RHIO, Regional Health Information Organization
+SAMPLE, Signs/Symptoms, Allergies, Medications, Past history, Last meal, Events leading up to (First aid secondary survey questions)
+SAMSHA, Substance Abuse and Mental Health Services Administration
+SBA, Skilled Birth Attendant
+SCH, Sole Community Hospitals
+SCHIP, State Children's Health Insurance Program
+SEP, Special Enrollment Period
+SDMC, Statistical and Data Management Center
+SFDA, State Food and Drug Administration
+SGR, Sustainable Growth Rate
+SHEA, State Health Expenditure Account
+SJA, St John Ambulance
+SOB, Shortness of Breath
+SNF, Skilled Nursing Facility
+SNIP, Strategic National Implementation Process
+SNP, Special Needs Plan
+SSF,Sjögren's Syndrome Foundation
+SSI, Supplemental Security Income
+SSRI, Selective Serotonin Reuptake Inhibitor
+TANF, Temporary Assistance for Needy Families
+TCD, Transcranial Doppler
+TPA, Third Party Administrator or tissue plasminogen activator
+TTHs, tension type headaches
+Tx, Treatment
+UAP, Unlicensed assistive personnel
+UCH, UnitingCare Health
+UNICEF, United Nations Children's Fund
+USAID, United States Agency for International Development
+USP, U.S. Pharmacopeia
+URAC, Utilization Review Accreditation Commission
+VIRHN,Vertically Integrated Rural Health Network
+WHO, World Health Organization
+WHRN, Whole Health Resource Network
+WISN, Workload Indicators of Staffing Needs
+WRAIR, Walter Reed Army Institute of Research

@@ -1,0 +1,325 @@
+AAA, Abdominal aortic aneurysm
+AAS, Aarskog-Scott syndrome
+ABCD,   albinism, black lock, cell migration disorder
+ACC, Agenesis of the corpus callosum
+ACS, Acute coronary syndrome
+ACTH, deficiency Adrenocorticotropic hormone deficiency
+AD, Alzheimer's Disease
+AD, Attachment disorder
+ADD, Attention Deficit Disorder
+ADD-RT, Attention Deficit Disorder-Residual Type
+ADEM, Acute disseminated encephalomyelitis
+ADHD, Attention Deficit Hyperactivity Disorder
+AF, Atrial fibrillation
+AGS, Aicardi-Goutieres syndrome
+AHC, Alternating hemiplegia of childhood
+AIDS, Acquired Immune Deficiency Syndrome
+AIP, Acute intermittent porphyria
+ALADD, Doss porphyria/ALA dehydratase deficiency/Plumboporphyria
+ALA, Doss porphyria/ALA dehydratase deficiency/Plumboporphyria
+ALI, Acute lung injury
+ALS, Amyotrophic Lateral Sclerosis
+AMD, Age-related Macular Degeneration
+AOS, Apraxia of speech
+APA, Aldosterone-Producing Adenoma
+APS, Antiphospholipid syndrome
+ARBD, Alcohol-Related Birth Defects
+ARD, Adult Refsum disease
+ARDS, Acute Respiratory Distress Syndrome
+ARND, Alcohol-Related Neurodevelopmental Disorder
+AS, Ankylosing Spondylitis
+AS, Asperger syndrome
+ASDs, Autism spectrum disorders
+A-T, Ataxia-telangiectasia
+AVMs, Arteriovenous malformations
+BBS, Bashful Bladder Syndrome (see Paruresis)
+BEB, Benign essential blepharospasm
+BD, Binswanger's disease
+BEH, Behaviorally/Emotionally Handicapped
+BH, Behaviorally Handicapped
+BMD, Becker's muscular dystrophy
+BPH, Benign prostatic hyperplasia
+BS, Bloom's syndrome
+BSE, Bovine spongiform encephalopathy
+BSS, Brown-Sequard syndrome
+BV, Bacterial Vaginosis
+CACH, Central Nervous System Hypomyelination
+CAD, Coronary artery disease
+CADASIL, Cerebral Autosomal Dominant Arteriopathy with Sub-cortical Infarcts and Leukoencephalopathy
+CAPD, Central Auditory Processing Disorder
+CCD, Considerable Conduct Disorder
+CCHF, Crimean-Congo haemorrhagic fever
+CCHS, Congenital Central Hypoventilation Syndrome
+CCM, Cerebral cavernous malformation
+CDG, Congenital disorder of glycosylation
+CDGS, Carbohydrate deficient glycoprotein syndrome
+CEP, Congenital erythropoietic porphyria
+CESD, Cholesteryl ester storage disease
+CF, Cystic Fibrosis
+CFIDS, Chronic Fatigue Immune Dysfunction Syndrome
+CFS, Chronic fatigue syndrome
+CGBD, Corticobasal ganglionic degeneration
+CH, Cluster headache
+CHARGE, Coloboma of the eye, Heart defects, Atresia of the nasal choanae, Retarded growth & or development, Genital abnormalities, Ear abnormalities
+CHD, Congenital Heart Disease
+CHD, Congenital hip dysplasia
+CHD, Coronary heart disease
+CHF, Congestive heart failure
+CIDP, Chronic inflammatory demyelinating polyneuropathy
+CIPA, Congenital insensitivity to pain with anhidrosis
+CJD, Creutzfeldt-Jakob disease
+CMs, Chiari malformations
+CMT, disease Charcot-Marie-Tooth disease
+COFS, Cerebro-oculo-facio-skeletal syndrome
+COPD, Chronic Obstructive Pulmonary Disease
+CP, Cerebral Palsy
+CP/CPPS, Chronic prostatitis/chronic pelvic pain syndrome
+CPDD, Calcium pyrophosphate deposition disease
+CPM, Central pontine myelinolysis
+CPPS, Chronic Pelvic Pain Syndrome (see UCPPS)
+CRF, Chronic Renal Failure
+CRKP, Carbapenem resistant Klebsiella pneumonia
+CRPS, Complex regional pain syndrome
+CSA, Central sleep apnea
+CSD, Cat scratch disease
+CVD, Cardiovascular disease
+DAS, Developmental apraxia of speech
+DBA, Diamond Blackfan anemia
+DBMD, Duchenne/Becker Muscular Dystrophy
+DD, Developmental disability
+DEF, Deaf
+DF, Dengue Fever
+DH, Developmentally handicapped
+DHF, Dengue hemorrhagic fever
+DiG, DiGeorge syndrome
+DLB, Dementia with Lewy bodies
+DM, Diabetes mellitus
+DMD, Duchenne muscular dystrophy
+DP, Doss porphyria/ALA dehydratase deficiency/Plumboporphyria (the disease is known by multiple names)
+DRSP, disease    Drug-resistant Streptococcus pneumoniae disease
+DS, Down syndrome
+DSPS, Delayed sleep phase syndrome
+DTs, Delirium tremens
+DVD, Developmental verbal dyspraxia
+DVT, Deep vein thrombosis
+ED, Emotionally disturbed
+EDS, Ehlers-Danlos syndrome
+EDS, Excessive daytime sleepiness
+EEE, Eastern equine encephalitis
+EHK, Epidermolytic hyperkeratosis
+EMH, Educable mentally handicapped
+EMR, Educable mentally retarded
+ENS, Epidermal nevus syndrome
+EPM, Extrapontine myelinolysis
+EPP, Erythropoietic protoporphyria
+ESRD, End Stage Renal Disease
+ESS, Empty Sella Syndrome
+FAE, Fetal Alcohol Effects
+FAS, Fetal Alcohol Syndrome
+FASDs, Fetal Alcohol Spectrum Disorders
+FFI, Fatal familial insomnia
+FMA, Focal Muscular Atrophies
+FMD, Fibromuscular dysplasia
+FMS, Fibromyalgia Syndrome
+FSP, Familial spastic paraparesis
+FTD, Frontotemporal dementia
+FVS, Fetal valproate syndrome
+FXS, Fragile X syndrome
+GAD, Generalized anxiety disorder
+GAN, Giant axonal neuropathy
+GAS, disease Group A Streptococcal disease
+GBS, Guillain-Barré Syndrome
+GBS, disease Group B Streptococcal disease
+GCE, Glycine encephalopathy
+GD, Gestational diabetes
+GERD, Gastroesophageal reflux disease
+GI, Gastrointestinal
+GIB, Gastrointestinal bleeding
+GN, Glossopharyngeal neuralgia
+GSS, disease Gerstmann-Straussler-Scheinker disease
+GT/LD, Gifted and learning disabled
+GVHD, Graft-versus-host disease
+GWD, Guinea worm disease
+HAS, Holmes-Adie syndrome
+HCP, Hereditary coproporphyria
+HD,  Huntington's Disease
+HDL2, Huntington's disease–like 2
+HELLP, syndrome  Hemolytic anemia, Elevated Liver enzymes and Low Platelet count syndrome
+HFA, High Functioning Autism
+HFMD, Hand, foot, and mouth disease
+HFRS, Hemorrhagic fever with renal syndrome
+HI, Hearing impaired
+HiB, disease Haemophilus influenzae type B disease
+HMSN, Type III   Hereditary Motor and Sensory Polyneuropathy Type III 
+HOH, Hard of hearing
+HPN, Hypertension
+HPRT, deficiency hypoxanthine-guanine phosphoribosyl transferase deficiency
+HPS, Hantavirus pulmonary syndrome
+HPV, Infection   Human Papillomavirus Infection
+HSP, Hereditary spastic paraplegia
+IBD, Inflammatory bowel disease
+IBIDS, syndrome  ichthyosis, brittle hair, intellectual impairment, decreased fertility, and short stature syndrome
+IBM, Inclusion body myositis
+IBS, Ichthyosis bullosa of Siemens
+IBS, Irritable bowel syndrome
+IC/PBS,  Interstitial cystitis/painful bladder syndrome
+ICF, syndrome    Immunodeficiency, Centromere instability and Facial anomalies syndrome
+IHA, Idiopathic Hyperaldosteronism
+IED, Intermittent Explosive Disorder
+IFAP, syndrome   Ichthyosis follicularis, alopecia, and photophobia syndrome
+INAD, Infantile neuroaxonal dystrophy
+IP, Incontinentia pigmenti
+IRD, Infantile Refsum disease
+IS, Infantile spasm
+ITP, Idiopathic thrombocytopenic purpura
+JAS, Juvenile Anklosing Spondylitis
+JE, Japanese encephalitis
+JHD, Juvenile Huntington's disease
+JRA, Juvenile Rheumatoid Arthritis
+KS, Kawasaki syndrome
+KSS, Kearns-Sayre syndrome
+KTS, Klippel-Trenaunay syndrome
+KTW, Klippel-Trenaunay-Weber Syndrome
+LCM, Lymphocytic choriomeningitis
+LD, Learning Disabilities/Differences
+LD, Legionnaires' Disease
+LEMS, Lambert-Eaton myasthenic syndrome
+LFA, Low Functioning Autism
+LGV, Lymphogranuloma venereum
+LKS, Landau-Kleffner syndrome
+LNS, Lesch-Nyhan syndrome
+LP, Lipoid proteinosis
+LP, Little person/people (see Dwarfism)
+MAC, Mycobacterium avium complex
+MBD, Minimal brain dysfunction
+MCS, Multiple Chemical Sensitivities
+MD, Muscular dystrophy
+MDR, TB  Multi-drug-resistant tuberculosis
+MID, Multi-infarct dementia
+MJD, Machado-Joseph disease
+ML, mucolipidoses
+MLD, Metachromatic leukodystrophy
+MMA, Monomelic amyotrophy
+MMR, measles, mumps, rubella
+MMRV, measles, mumps, rubella, varicella
+MND, motor neuron disease
+MOH, Medication overuse headaches
+MPD, Myeloproliferative disorders
+MPS, Mucopolysaccharoidosis Type I-VII
+MR/DD, Mentally retarded/Developmentally disabled
+MS, Multiple Sclerosis      MSA Multiple system atrophy
+MSDD, Multi-Sensory Developmental Delays
+NAS, Neonatal Abstinence Syndrome
+NBIA, Neurodegeneration with brain iron accumulation
+NCL, Neuronal Ceroid Lipofuscinosis
+NF1, Neurofibromatosis type 1
+NF2, Neurofibromatosis type 2
+NKH, Nonketotic hyperglycinemia
+NLD, Nonverbal learning disability
+NMDs, Neuronal migration disorders
+NMO, Neuromyelitis optica
+NMS, Neuroleptic malignant syndrome
+NP, Niemann-Pick disease
+NPC1, Niemann-Pick disease, type C1
+NPH, Normal pressure hydrocephalus
+NTD, Neural Tube Defect
+NTDs, Neural tube defects
+OA, Osteoarthritis
+OCD, Obsessive-Compulsive Disorder
+ODD, Oppositional Defiant Disorder
+OMA, Ocular Motor Apraxia
+ON, Osteonecrosis
+OPC, Oropharyngeal Candidiasis
+OPCA, Olivopontocerebellar atrophy
+OSA, Obstructive sleep apnea
+PBC, Primary biliary cirrhosis
+PBD, Peroxisome biogenesis disorders
+PCOS, Polycystic ovarian syndrome
+PCT, Porphyria cutanea tarda
+PD, Parkinson's disease
+PDD, Pervasive Developmental Disorder
+PDD-NOS, Pervasive developmental disorder not otherwise specified
+PDD/NOS, Pervasive developmental disorder not otherwise specified
+PKAN, Panthothenate kinase-associated neurodegeneration
+PLMD, Periodic limb movement disorder
+PLS, Primary lateral sclerosis
+PMD, Pelizaeus-Merzbacher disease
+PML, Progressive multifocal leukoencephalopathy
+PMS, Premenstrual Syndrome
+POTS, Postural orthostatic tachycardia syndrome
+PPMA, Postpolio Progressive Muscular Atrophy
+PPS, Post-polio syndrome
+PSC, Primary sclerosing cholangitis
+PSP, Progressive supranuclear palsy
+PVL, Periventricular leukomalacia
+PW, Port-wine stain
+Q, fever Query fever
+RA,  Rheumatoid Arthritis
+RAD, Reactive Airway Disease
+RIND, Reversible ischemic neurologic deficit
+RLF, Retrolental fibroplasia
+RLS, Restless legs syndrome
+RMDs, Repetitive motion disorders
+ROP, Retinopathy of prematurity
+RS,  Reye's syndrome
+RSD, Reflex Sympathetic Dystrophy
+RTI, Respiratory Tract Infection
+SARS, Severe Acute Respiratory Syndrome
+SB, Spina bifida
+SBS, Shaken Baby Syndrome
+SC, Sydenham chorea
+SD, Saint Vitus's dance (see Sydenham chorea)
+SIDS, Sudden Infant Death Syndrome
+SIS, Shaken infant syndrome
+SLE, Systemic lupus erythematosus
+SMA, Spinal Muscular Atrophy
+SMEI, Severe myoclonic epilepsy of infancy
+SMS, Smith-Magenis Syndrome
+SOD, Septo-optic dysplasia
+SPS, Stiff person syndrome
+SSPE, Subacute sclerosing panencephalitis
+STEMI, ST-elevation myocardial infarction
+STD, Sexually Transmitted Disease
+SUNCT, Headache  Short-lasting, Unilateral, Neuralgiform headache
+SWS, Sturge-Weber syndrome
+TAC, Trigeminal autonomic cephalgia
+TB, Tuberculosis
+TBI, Traumatic brain injury
+TCS, Tethered cord syndrome
+TEF, Tracheoesophageal fistula
+TIA, Transient ischemic attack
+TMH, Trainable mentally handicapped
+TMJ/TMD, Temporomandibular joint disorder
+TMR, Trainable mentally retarded
+TN, Trigeminal neuralgia
+TOS, Thoracic Outlet Syndrome
+TS, Tourette syndrome
+TS, Tuberous sclerosis
+TSC, Tuberous sclerosis
+TSEs, Transmissible spongiform encephalopathies
+TSP, Tropical spastic paraparesis
+TTH, Tension type headache
+TTP, Thrombotic thrombocytopenic purpura
+UCPPS, Urologic chronic pelvic pain syndrome (IC/PBS + CP/CPPS)
+UDA, Urticaria-deafness-amyloidosis
+UTIs, Urinary Tract Infections
+UC, Ulcerative Colitis
+VCFS, Velo cardio facial syndrome
+vCJD, variant Creutzfeldt-Jakob disease
+VD, Venereal disease
+VHF, Viral Hemorrhagic Fever
+VHL, Von Hippel-Lindau Disease
+VP, Variegate porphyria
+VSD, Ventricular septal defect
+VVC, Vulvovaginal candidiasis
+VWM, disease Vanishing White Matter disease
+WAGR, Wilms tumor, Aniridia, Genitourinary anomalies, and mental Retardation syndrome
+WD, Wilson's disease
+WEE, Western equine encephalitis
+WS, Williams Syndrome
+XDRTB, Extensively drug-resistant tuberculosis
+XLSA, X-linked sideroblastic anemia
+XP, Xeroderma pigmentosa
+YSS, Young Simpson syndrome
+YVS, Yunis-Varon syndrome
+ZBLS, Zadik Barak Levin syndrome
