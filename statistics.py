@@ -5,16 +5,26 @@ import operator
 from myPlot import plotFrequency, plotXY, plotCounter, plotFrequency
 import statsmodels.distributions as sm
 import numpy as np
+from datetime import datetime
 from nltk.tokenize.punkt import PunktWordTokenizer
+from metrics import generateStatsVector
+from latexTools import latexPrinter
 #from nltk import word_tokenize, wordpunct_tokenize
 
-####TODO: think about percentages instead of numbers. It means X / total of queries are of size Y....change it along the code!
+####TODO: Add relative metrics like (X / total of queries are of size Y). Change it along the code!
 
 PATH_TO_AUX_FILES = "auxFiles/"
 
+def preProcessData(data, removeStopWords):
+    data = tokenizeAllData(data)
+    
+    if removeStopWords:
+        data = filterStopWords(data)
+    return data
+
 def calculateMetrics(dataList, removeStopWords=True, printPlotSizeOfWords=True, printPlotSizeOfQueries=True,\
                      printPlotFrequencyOfQueries=True, printPlotFrequencyOfTerms=True, printPlotAcronymFrequency=True,\
-                     printQueriesPerSession=True, printTimePerSession=True):
+                     printQueriesPerSession=True, printTimePerSession=True, printValuesToFile=False):
     """
         Expected a list of list of DataSet (TripData or AolData) objects
     """
@@ -24,52 +34,87 @@ def calculateMetrics(dataList, removeStopWords=True, printPlotSizeOfWords=True, 
     countingTokensList = []
     countingQueriesList = []
     countingQueriesPerSessionList = []
+    
+    tableHeader = [ ["Dtst", "\#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion"] ]
+    generalTableRow = []
 
     for dataPair in dataList:
-        
         data, dataName = dataPair[0], dataPair[1]
 
-        data = tokenizeAllData(data)
-    
-        if removeStopWords:
-            data = filterStopWords(data)
+        data = preProcessData(data, removeStopWords)
 
         percentageAcronym, countingAcronyms = calculateAcronyms(data)
-        maxValue, minValue, meanValue, medianValue, countingTokens, coOccurrenceList, greatestQuery, countingQueries= calculateTerms(data)
-        #numExpasions, numExtractions, numReformulations = calculateExpansionShrinkageReformulations(data)
-        numSessions, countingQueriesPerSession, maxNumQueries, minNumQueries, meanNumQueries, medianNumQueries,\
-                countingTimePerSession, maxTime, minTime, meanTime, medianTime,\
+        npTerms, countingTokens, coOccurrenceList, greatestQuery, countingQueries = calculateTerms(data)
+        numSessions, countingQueriesPerSession, npNumQueries,\
+                countingTimePerSession, npTime,\
                 numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions = calculateQueriesPerSession(data)
+        firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
 
         # Print statistics
         with open(dataName + ".result", "w") as f:
             f.write("Metrics calculated:\n")
-            printMetricsForTerms(f, maxValue, minValue, meanValue, medianValue, countingTokens, coOccurrenceList,\
-                                 percentageAcronym, countingAcronyms, countingQueries, greatestQuery)
-            printMetricsForSessions(f, numSessions, maxNumQueries, minNumQueries, meanNumQueries, medianNumQueries,\
-                                    maxTime, minTime, meanTime, medianTime, numberOfExpansions, numberOfShrinkage,\
-                                    numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions)
+            printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList,\
+                                 percentageAcronym, countingAcronyms, countingQueries, greatestQuery,\
+                                firstDay, lastDay, countingQueriesPerDay, meanQueriesPerDay)
+            printMetricsForSessions(f, numSessions, npNumQueries, npTime,\
+                                    numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
+                                   countingSessionsPerDay, meanSessionsPerDay)
 
-        countingAcronymsList.append(countingAcronyms)
-        countingTimePerSessionList.append(countingTimePerSession)
-        countingTokensList.append(countingTokens)
-        countingQueriesList.append(countingQueries)
-        countingQueriesPerSessionList.append(countingQueriesPerSession)
+        countingAcronymsList.append([dataName, countingAcronyms])
+        countingTimePerSessionList.append( [ dataName , countingTimePerSession ])
+        countingTokensList.append( [dataName, countingTokens] )
+        countingQueriesList.append([dataName, countingQueries] )
+        countingQueriesPerSessionList.append([dataName, countingQueriesPerSession])
+
+        #Data for tables
+        generalTableRow.append( [ dataName, sum(countingQueries.values()), npTerms.mean, meanQueriesPerDay, numSessions, npNumQueries.mean ] )
 
     if printQueriesPerSession:
-        plotQueriesPerSession(countingQueriesPerSessionList)
+        plotQueriesPerSession(countingQueriesPerSessionList, printValuesToFile)
     if printPlotFrequencyOfTerms:
-        plotFrequencyOfTerms(countingTokensList)
+        plotFrequencyOfTerms(countingTokensList, printValuesToFile)
     if printPlotFrequencyOfQueries:
-        plotFrequencyOfQueries(countingQueriesList)
+        plotFrequencyOfQueries(countingQueriesList, printValuesToFile)
     if printTimePerSession:
-        plotTimePerSession(countingTimePerSessionList)
+        plotTimePerSession(countingTimePerSessionList, printValuesToFile=True)
     if printPlotAcronymFrequency:
-        plotAcronymFrequency(countingAcronymsList)
+        plotAcronymFrequency(countingAcronymsList, printValuesToFile)
     if printPlotSizeOfWords:
-           plotSizeOfWords(dataList)
+           plotSizeOfWords(dataList, printValuesToFile)
     if printPlotSizeOfQueries:
-        plotSizeOfQueries(dataList)
+        plotSizeOfQueries(dataList, printValuesToFile)
+
+    #Print latex tables:
+        latexWriter = latexPrinter() 
+        for l in generalTableRow: 
+            tableHeader.append( l )
+        latexWriter.addTable(tableHeader, caption="General Numbers")
+
+def calculateDates(data):
+
+    firstDay = datetime.now() 
+    lastDay =  datetime.strptime("14/01/1987 12:10", "%d/%m/%Y %H:%M")
+    countingSessionsPerDay = defaultdict(dict)
+    countingQueriesPerDay = defaultdict(int)
+
+    for member in data:
+        firstDay = member.datetime if member.datetime < firstDay else firstDay
+        lastDay = member.datetime if member.datetime > lastDay else lastDay
+        
+        dayMonthYear = member.datetime.strftime("%d-%m-%Y")
+        countingQueriesPerDay[dayMonthYear] += 1
+        if member.sessionid not in countingSessionsPerDay[dayMonthYear]:
+            countingSessionsPerDay[dayMonthYear][member.sessionid] = 0
+        
+        countingSessionsPerDay[dayMonthYear][member.sessionid] += 1
+ 
+    sessionsPerDay = [ len(countingSessionsPerDay[day]) for day in countingSessionsPerDay.keys() ]
+
+    meanQueriesPerDay = 0 if len(countingQueriesPerDay) == 0 else sum(countingQueriesPerDay.values()) / len(countingQueriesPerDay)
+    meanSessionsPerDay = 0 if len(sessionsPerDay) == 0 else sum(sessionsPerDay) / len(sessionsPerDay)
+
+    #print firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay,  meanQueriesPerDay
+    return firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay 
 
 def calculateAcronyms(data):
 
@@ -94,100 +139,101 @@ def calculateAcronyms(data):
     #print hasAcronym
     return percentageAcronym, countingAcronyms
 
-def plotCoutingTimePerSessionListAcc(countingTimePerSessionList):
+def plotCountingTimePerSessionListAcc(countingTimePerSessionList, printValuesToFile):
     
-    for countingTimePerSession in countingTimePerSessionList[:-1]:
+    for countingTimePerSessionPair in countingTimePerSessionList[:-1]:
+        dataName = countingTimePerSessionPair[0]
+        countingTimePerSession = countingTimePerSessionPair[1]
 
         ecdf = sm.ECDF( list(countingTimePerSession.elements()) )
         x = np.linspace(min(countingTimePerSession.keys()), max(countingTimePerSession.keys()))
         y = ecdf(x)
-        plotXY(x, y, ylabelName="Frequency", xlabelName="Acc Time Per Session", showIt=False, lastOne=False)
+        plotXY(x, y, label=dataName, ylabelName="Frequency", xlabelName="Acc Time Per Session", showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="accTimePerSession")
     
-    countingTimePerSession = countingTimePerSessionList[-1]
+    dataName, countingTimePerSession = countingTimePerSessionList[-1][0], countingTimePerSessionList[-1][1]
     ecdf = sm.ECDF( list(countingTimePerSession.elements()) )
     x = np.linspace(min(countingTimePerSession.keys()), max(countingTimePerSession.keys()))
     y = ecdf(x)
-    plotXY(x, y, ylabelName="Frequency", xlabelName="Acc Time Per Session", saveName = "accTimePerSession.png", showIt=False, lastOne=True)
+    plotXY(x, y, label=dataName, ylabelName="Frequency", xlabelName="Acc Time Per Session", saveName="accTimePerSession", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
 
-def plotTimePerSession(countingTimePerSessionList):
+def plotTimePerSession(countingTimePerSessionList, printValuesToFile):
     
-    plotCoutingTimePerSessionListAcc(countingTimePerSessionList)
+    plotCountingTimePerSessionListAcc(countingTimePerSessionList, printValuesToFile)
     
-    for countingTimePerSession in countingTimePerSessionList[:-1]:
-        plotCounter(countingTimePerSession, ylabelName="Frequency", xlabelName="Time Per Session (Seconds)", showIt=False, lastOne=False)
+    for countingTimePerSessionPair in countingTimePerSessionList[:-1]:
+        dataName, countingTimePerSession = countingTimePerSessionPair[0], countingTimePerSessionPair[1]
+        plotCounter(countingTimePerSession, label=dataName, ylabelName="Frequency", xlabelName="Time Per Session (Seconds)", showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="timePerSession")
 
-    countingTimePerSession = countingTimePerSessionList[-1]
-    plotCounter(countingTimePerSession, ylabelName="Frequency", xlabelName="Time Per Session (Seconds)", \
-                saveName = "timePerSession.png", showIt=False, lastOne=True)
+    countingTimePerSessionPair = countingTimePerSessionList[-1]
+    dataName, countingTimePerSession = countingTimePerSessionPair[0], countingTimePerSessionPair[1]
+    plotCounter(countingTimePerSession, label=dataName, ylabelName="Frequency", xlabelName="Time Per Session (Seconds)", \
+                saveName="timePerSession", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
 
 
-def plotQueriesPerSession(countingQueriesPerSessionList):
+def plotQueriesPerSession(countingQueriesPerSessionList, printValuesToFile):
 
-    for countingQueriesPerSession in countingQueriesPerSessionList[:-1]:
-        plotCounter(countingQueriesPerSession, xlabelName="Queries Per Session", ylabelName="Frequency", showIt=False, lastOne=False)
+    for countingQueriesPerSessionPair in countingQueriesPerSessionList[:-1]:
+        dataName, countingQueriesPerSession = countingQueriesPerSessionPair[0], countingQueriesPerSessionPair[1]
+        plotCounter(countingQueriesPerSession, label=dataName, xlabelName="Queries Per Session", ylabelName="Frequency", showIt=False, lastOne=False, printValuesToFile=printValuesToFile,saveName="queriesPerSession")
     
-    countingQueriesPerSession = countingQueriesPerSessionList[-1]
-    plotCounter(countingQueriesPerSession, xlabelName="Queries Per Session", ylabelName="Frequency", saveName="queriesPerSession.png", showIt=False, lastOne=True)
+    countingQueriesPerSessionPair = countingQueriesPerSessionList[-1]
+    dataName, countingQueriesPerSession = countingQueriesPerSessionPair[0], countingQueriesPerSessionPair[1]
+    plotCounter(countingQueriesPerSession, label=dataName, xlabelName="Queries Per Session", ylabelName="Frequency", saveName="queriesPerSession", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
 
-def plotAcronymFrequency(countingAcronymsList):
+def plotAcronymFrequency(countingAcronymsList, printValuesToFile):
     
-    for countingAcronyms in countingAcronymsList[:-1]:
-        plotFrequency(countingAcronyms.values(), "Acronyms Repetition", showIt=False, lastOne=False)
+    for countingAcronymsPair in countingAcronymsList[:-1]:
+        dataName, countingAcronyms = countingAcronymsPair[0], countingAcronymsPair[1]
+        plotFrequency(countingAcronyms.values(), "Acronyms Repetition", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="acronymFreq")
     
-    countingAcronyms = countingAcronymsList[-1]
-    plotFrequency(countingAcronyms.values(), "Acronyms Repetition", saveName = "acronymFreq.png", showIt=False, lastOne=True)
+    countingAcronymsPair = countingAcronymsList[-1]
+    dataName, countingAcronyms = countingAcronymsPair[0], countingAcronymsPair[1]
+    plotFrequency(countingAcronyms.values(), "Acronyms Repetition", label=dataName, saveName="acronymFreq", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
 
-def plotFrequencyOfQueries(countingQueriesList):
+def plotFrequencyOfQueries(countingQueriesList, printValuesToFile):
     
-    for countingQueries in countingQueriesList[:-1]:
-        plotFrequency(countingQueries.values(), "Query Repetition", showIt=False, lastOne=False)
+    for countingQueriesPair in countingQueriesList[:-1]:
+        dataName, countingQueries = countingQueriesPair[0], countingQueriesPair[1]
+        plotFrequency(countingQueries.values(), "Query Repetition", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="queriesFre")
 
-    countingQueries = countingQueriesList[-1]
-    plotFrequency(countingQueries.values(), "Query Repetition", saveName = "queriesFreq.png", showIt=False, lastOne=True)
+    countingQueriesPair = countingQueriesList[-1]
+    dataName, countingQueries = countingQueriesPair[0], countingQueriesPair[1]
+    plotFrequency(countingQueries.values(), "Query Repetition", label=dataName, saveName="queriesFreq", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
 
-def plotFrequencyOfTerms(countingTokensList):
+def plotFrequencyOfTerms(countingTokensList, printValuesToFile):
 
-    for countingTokens in countingTokensList[:-1]:
-        plotFrequency(countingTokens.values(), "Term Repetition", showIt=False, lastOne=False)
+    for countingTokensPair in countingTokensList[:-1]:
+        dataName, countingTokens = countingTokensPair[0], countingTokensPair[1]
+        plotFrequency(countingTokens.values(), "Term Repetition", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="termFreq")
     
-    countingTokens = countingTokensList[-1]
-    plotFrequency(countingTokens.values(), "Term Repetition", saveName = "termFreq.png", showIt=False, lastOne=True)
+    countingTokensPair = countingTokensList[-1]
+    dataName, countingTokens = countingTokensPair[0], countingTokensPair[1]
+    plotFrequency(countingTokens.values(), "Term Repetition", label=dataName, saveName="termFreq", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
 
-def plotSizeOfQueries(dataList):
+def plotSizeOfQueries(dataList, printValuesToFile):
     
     queriesSize = []
     for dataItem in dataList[:-1]:
-        data = dataItem[0]
+        data, dataName = dataItem[0], dataItem[1]
         queriesSize = [ len(member.keywords) for member in data ] 
-        plotFrequency(queriesSize, "Query Size", showIt=False, lastOne=False)
+        plotFrequency(queriesSize, "Query Size", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="queriesSize")
 
-    data = dataList[-1][0]
+    data, dataName = dataList[-1][0], dataList[-1][1]
     queriesSize = [ len(member.keywords) for member in data ] 
-    plotFrequency(queriesSize, "Query Size", saveName = "queriesSize.png", showIt=False, lastOne=True)
+    plotFrequency(queriesSize, "Query Size", label=dataName, saveName="queriesSize", showIt=False, lastOne=True, relative=True, printValuesToFile=printValuesToFile)
 
-## TODO: remove later
-#def plotSizeOfQueries(data):
-#    queriesSize = []
-#    queriesSize = [ len(member.keywords) for member in data ]
-#    plotFrequency(queriesSize, "Query Size", saveName = "queriesSize.png", showIt=False)
-
-def plotSizeOfWords(dataList):
+def plotSizeOfWords(dataList, printValuesToFile):
     
     wordsSize = []
     for dataItem in dataList[:-1]:
-        data = dataItem[0]
+        data, dataName = dataItem[0], dataItem[1]
+        queriesSize = [ len(member.keywords) for member in data ] 
         wordsSize = [ len(word) for member in data for word in member.keywords]
-        plotFrequency(wordsSize, "Word Size", showIt=False, lastOne=False)
+        plotFrequency(wordsSize, "Word Size", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="wordSize")
 
     wordsSize = [ len(word) for member in dataList[-1][0] for word in member.keywords]
-    plotFrequency(wordsSize, "Word Size", saveName = "wordSize.png", showIt=False, lastOne=True)
-
-#TODO: remove later
-#def plotSizeOfWords(data):
-#    wordsSize = []
-#    for member in data:
-#        wordsSize += [ len(word) for word in member.keywords ]
-#    plotFrequency(wordsSize, "Word Size", saveName = "wordSize.png", showIt=False)
+    dataName = dataList[-1][1]
+    plotFrequency(wordsSize, "Word Size", label=dataName, saveName="wordSize", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
 
 def tokenizeAllData(data):
     
@@ -214,48 +260,58 @@ def filterStopWords(data):
 
     return data
 
-
 def compareSets(set1, set2):
     #print "Comparing ", set1, " and ", set2
     #numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions
     if set1 == set2:
         return 0,0,0,1
-    if set1 > set2:
+    elif set1 > set2:
         return 0,1,0,0
-    if set1 < set2:
+    elif set1 < set2:
         return 1,0,0,0
     else: 
         return 0,0,1,0
     
 
-def calculateExpansionShrinkageReformulations(sessions):
+def calculateExpansionShrinkageReformulations(sessions, ignoreRepetition=True):
     
     numberOfExpansions = 0
     numberOfShrinkage = 0
     numberOfReformulations = 0
     numberOfRepetitions = 0
+    
     # TODO: if I remove the ''keep dimmension'', the number of dimmensions would be only 3 -> 2**3 -> 8
-    vectorOfModifiedSessions = [0]*16
+    vectorOfModifiedSessions = [0]*8 if ignoreRepetition else [0]*16
 
     for session in sessions.values():
         for subSession in session.values():
             
             modifiedSubSession = False
             previousQuery = subSession[0]
+            subQueryE, subQueryS, subQueryRef, subQueryRep = 0,0,0,0
             for query in subSession[1:]:
                 e, s, ref, rep = compareSets( set(previousQuery[1]), set(query[1]))
                 numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions =\
                         e + numberOfExpansions, s + numberOfShrinkage, ref + numberOfReformulations, rep + numberOfRepetitions
+                subQueryE, subQueryS, subQueryRef, subQueryRep = subQueryE + e, subQueryS + s, subQueryRef + ref, subQueryRep + rep
+                
+                #print "Session === ", subSession
+                #print "Q1  = ", set(previousQuery[1]), " Q2 = ", set(query[1])
+                #print " numberOfExpansions = ", numberOfExpansions, " numberOfShrinkage = ", numberOfShrinkage, " numberOfReformulations = ", numberOfReformulations, " numberOfRepetitions = ", numberOfRepetitions
+
+                # If a repetition occurs, we do not consider it as a modified session
+                if e > 0 or s > 0 or ref > 0:
+                    modifiedSubSession = True 
                 previousQuery = query
                 
-                #TODO: modified should be only when they are actually modified...
-                modifiedSubSession = True
-        
             if modifiedSubSession:
-                indexVal = int( str(e) + str(s) + str(ref) + str(rep), 2)
+                be, bs, bref, brep = 0 if subQueryE == 0 else 1, 0 if subQueryS == 0 else 1, 0 if subQueryRef == 0 else 1, 0 if subQueryRep == 0 else 1
+                indexVal =  int( str(be) + str(bs) + str(bref), 2) if ignoreRepetition else int( str(be) + str(bs) + str(bref) + str(brep), 2)
+                #print "INDEX = ", indexVal
                 vectorOfModifiedSessions[indexVal] += 1
-
-
+                
+                
+    
     return numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions
 
 def calculateQueriesPerSession(data):
@@ -268,21 +324,21 @@ def calculateQueriesPerSession(data):
 
         # There are no previous keywords and no sessions of this id -> create the first one sessions[id][1] = list
         if member.previouskeywords is None and not sessions[member.sessionid]:
-            sessions[member.sessionid][1] = [[member.datatime, member.keywords]]
+            sessions[member.sessionid][1] = [[member.datetime, member.keywords]]
 
         # There are no previous keywords and there is at least one sessions of this id 
         elif member.previouskeywords is None and sessions[member.sessionid]:
-            sessions[member.sessionid][ len(sessions[member.sessionid]) + 1 ] = [[member.datatime, member.keywords]]
+            sessions[member.sessionid][ len(sessions[member.sessionid]) + 1 ] = [[member.datetime, member.keywords]]
         
         elif member.previouskeywords is not None and not sessions[member.sessionid]:
             # This situation should not happen, but it does. It means that a session was not created but there were previous keywords.
             #print "ERROR!"
-            #print member.sessionid, member.datatime, member.keywords, "previous ---> ", member.previouskeywords
-            sessions[member.sessionid][1] = [[member.datatime, member.keywords]]
+            #print member.sessionid, member.datetime, member.keywords, "previous ---> ", member.previouskeywords
+            sessions[member.sessionid][1] = [[member.datetime, member.keywords]]
 
         # There are previous keywords!
         else:
-            sessions[member.sessionid][ len(sessions[member.sessionid]) ] += [[member.datatime,member.keywords]]
+            sessions[member.sessionid][ len(sessions[member.sessionid]) ] += [[member.datetime,member.keywords]]
 
     #for session, date in sessions.iteritems():
     #    print session, date
@@ -297,29 +353,26 @@ def calculateQueriesPerSession(data):
     countingTimePerSession = Counter(timeSpansInSeconds)
 
     # Basic statistics for queries inside sessions
-    maxNumQueries = max(queriesPerSession)
-    minNumQueries = min(queriesPerSession)
-    meanNumQueries = sum(queriesPerSession) / len(queriesPerSession)
-    medianNumQueries = sorted(queriesPerSession)[len(queriesPerSession)//2]
+    npNumQueries = generateStatsVector(queriesPerSession)
     
     # Basic statistics for the time spend in each session (metric used is seconds) 
-    maxTime = max(timeSpansInSeconds)
-    minTime = min(timeSpansInSeconds) 
-    meanTime = sum(timeSpansInSeconds) / len(timeSpansInSeconds)
-    medianTime = sorted(timeSpansInSeconds)[len(timeSpansInSeconds)//2]
+    npTime = generateStatsVector(timeSpansInSeconds)
    
     #calculate extra metrics for sessions
     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions,\
             vectorOfModifiedSessions = calculateExpansionShrinkageReformulations(sessions)
     modifiedQueries = numberOfExpansions + numberOfShrinkage + numberOfReformulations + numberOfRepetitions 
+    
     # The number of sessions with more that 2 queries HAVE to be the same that the number of modified session
-    print sum(vectorOfModifiedSessions),sessionsWithMoreThanOneQuery
-    assert sum(vectorOfModifiedSessions) == sessionsWithMoreThanOneQuery
+    #print "SUM = ", sum(vectorOfModifiedSessions), " More than one = ", sessionsWithMoreThanOneQuery, " rep =", numberOfRepetitions
+    #print vectorOfModifiedSessions
+    ###TODO CHECK code :
+    #assert sum(vectorOfModifiedSessions) == sessionsWithMoreThanOneQuery
     
 
-    #print numSessions, maxNumQueries, minNumQueries, meanNumQueries, medianNumQueries, maxTime, minTime, meanTime, medianTime
-    return numSessions, countingQueriesPerSession, maxNumQueries, minNumQueries, meanNumQueries, medianNumQueries,\
-            countingTimePerSession, maxTime, minTime, meanTime, medianTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions,\
+    #print numSessions, npNumQueries, npTime
+    return numSessions, countingQueriesPerSession, npNumQueries,\
+            countingTimePerSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions,\
             vectorOfModifiedSessions
 
 def tokenize(keywordList):
@@ -337,14 +390,14 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
         The coOccurrenceThreshold is a parameter that indicates the minimal number of times that 
         term X has to appears together with term Y among all the apparences of term X or Y.
     """
-
-    
-    allQueries = [ ' '.join(member.keywords) for member in data ]
+   
+    # I had to transforme the list into a tuple to use the counter
+    allQueries = [ tuple(sorted(member.keywords)) for member in data ] 
     countingQueries = Counter(allQueries)
-    
+
     # separate the information about the queries from the rest of the data
     listOfQueries = [ member.keywords for member in data ]
-    #print "list = ", listOfQueries 
+    
     # Count the number of keywords used in each single query
     queryInNumbers = [ len( query ) for query in listOfQueries]
 
@@ -385,34 +438,41 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
                 coOccurrenceList.append( [d1, d2, matrix[d1][d2], matrix[d1][d2]/numberOfQueries, matrix[d1][d2]/countingTokens[d1], matrix[d1][d2]/countingTokens[d2]] )
 
     # Calculate basic metrics
-    avg = sum(queryInNumbers) / len(queryInNumbers)
-    median = sorted(queryInNumbers)[len(queryInNumbers)//2]
-    max_ = max(queryInNumbers)
-    min_ = min(queryInNumbers)
+    npTerms = generateStatsVector(queryInNumbers)
     
-    return max_, min_, avg, median, countingTokens, coOccurrenceList, greatestQuery, countingQueries
+    return npTerms, countingTokens, coOccurrenceList, greatestQuery, countingQueries
 
 
-def printMetricsForTerms(writer, maxValue, minValue, meanValue, medianValue, countingTokens, coOccurrenceList, percentageAcronym, countingAcronyms, countingQueries, greatestQuery):
+def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, percentageAcronym, countingAcronyms, countingQueries, greatestQuery,\
+                         firstDay, lastDay, countingQueriesPerDay, meanQueriesPerDay):
     
     writer.write("-" * 80 + "\n")
     writer.write("-" * 45 + "\n")
-    writer.write("For TERMS:\n")
+    writer.write("General Information:\n")
+    writer.write('{0:45} ==> {1:30}\n'.format("First date in logs", str(firstDay)))
+    writer.write('{0:45} ==> {1:30}\n'.format("Last date in logs", str(lastDay)))
+    writer.write('{0:45} ==> {1:30}\n'.format("How may days? ", str((lastDay - firstDay).days)))
+    writer.write('{0:45} ==> {1:30}\n'.format("Mean number of Queries per day", str(meanQueriesPerDay)))
+    
     writer.write("-" * 45 + "\n")
     
-    table = {'Number Of Types': len(countingTokens), 'Number Of Terms': sum(countingTokens.values()),\
-             'Relation Type/Terms': sum(countingTokens.values()) / len(countingTokens),\
-             'Greatest Query': ' '.join(greatestQuery),\
-             'Max. number of Terms in a query': maxValue,\
-             'Min. number of Terms in a query': minValue,\
-             'Mean number of Terms in a query': meanValue,\
-             'Median number of Terms in a query': medianValue,\
-             'Percentage of Acronyms used': percentageAcronym
-            }
+    writer.write("For TERMS:\n")
+    writer.write("-" * 45 + "\n")
+   
+    writer.write('{0:45} ==> {1:30}\n'.format("Number Of Types ", str(len(countingTokens))))
+    writer.write('{0:45} ==> {1:30}\n'.format("Number Of Terms", str( sum(countingTokens.values()))))
+    
+    writer.write('{0:45} ==> {1:30}\n'.format('Relation Type/Terms', str( sum(countingTokens.values()) / len(countingTokens))))
+    writer.write('{0:45} ==> {1:30}\n'.format('Greatest Query', ' '.join(greatestQuery)))
 
-    for name, value in table.items():
-        writer.write('{0:45} ==> {1:30}\n'.format(name, value))
-
+    writer.write('{0:45} ==> {1:30}\n'.format('Max. number of Terms in a query', str(npTerms.max)))
+    writer.write('{0:45} ==> {1:30}\n'.format('Min. number of Terms in a query', str(npTerms.min)))
+    writer.write('{0:45} ==> {1:30}\n'.format('Mean number of Terms in a query', str(npTerms.mean)))
+    writer.write('{0:45} ==> {1:30}\n'.format('Median number of Terms in a query', str(npTerms.median)))
+    writer.write('{0:45} ==> {1:30}\n'.format('Std Deviation of Terms in a query', str(npTerms.std)))
+    
+    writer.write('{0:45} ==> {1:30}\n'.format('Percentage of Acronyms used', str(percentageAcronym)))
+    
     writer.write("-" * 45 + "\n")
     writer.write("10 Most Common Terms:\n")
     
@@ -443,7 +503,7 @@ def printMetricsForTerms(writer, maxValue, minValue, meanValue, medianValue, cou
     writer.write("-" * 80 + "\n")
 
 
-def printMetricsForSessions(writer,numSessions, maxNumQueries, minNumQueries, meanNumQueries, medianNumQueries, maxTime, minTime, meanTime, medianTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions):
+def printMetricsForSessions(writer,numSessions, npNumQueries, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions, countingSessionsPerDay, meanSessionsPerDay):
 
     writer.write("-" * 80 + "\n")
     writer.write("-" * 40 + "\n")
@@ -453,17 +513,19 @@ def printMetricsForSessions(writer,numSessions, maxNumQueries, minNumQueries, me
     writer.write("-" * 40 + "\n")
     writer.write("Session Length in Queries\n")
     writer.write("-" * 40 + "\n")
-    writer.write('{0:45} ==> {1:30}\n'.format("Maximum number of Queries in a session", str(maxNumQueries)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Minimum number of Queries in a session", str(minNumQueries)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Mean number of Queries in a session", str(meanNumQueries)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Median number of Queries in a session", str(medianNumQueries)))
+    writer.write('{0:45} ==> {1:30}\n'.format("Maximum number of Queries in a session", str(npNumQueries.max)))
+    writer.write('{0:45} ==> {1:30}\n'.format("Minimum number of Queries in a session", str(npNumQueries.min)))
+    writer.write('{0:45} ==> {1:30}\n'.format("Mean number of Queries in a session", str(npNumQueries.mean)))
+    writer.write('{0:45} ==> {1:30}\n'.format("Median number of Queries in a session", str(npNumQueries.median)))
+    writer.write('{0:45} ==> {1:30}\n'.format("Std dev of the number of Queries in a session", str(npNumQueries.std)))
     writer.write("-" * 40 + "\n")
     writer.write("Session Length in Time\n")
     writer.write("-" * 40 + "\n")
-    writer.write('{0:45} ==> {1:30}\n'.format("Maximum duration of a session", str(maxTime)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Minimum duration of a session", str(minTime)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Mean duration of a session", str(meanTime)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Median duration of a session", str(medianTime)))
+    writer.write('{0:45} ==> {1:30}\n'.format("Maximum duration of a session", str(npTime.max)))
+    writer.write('{0:45} ==> {1:30}\n'.format("Minimum duration of a session", str(npTime.min)))
+    writer.write('{0:45} ==> {1:30}\n'.format("Mean duration of a session", str(npTime.mean)))
+    writer.write('{0:45} ==> {1:30}\n'.format("Median duration of a session", str(npTime.median)))
+    writer.write('{0:45} ==> {1:30}\n'.format("Std dev. of duration of a session", str(npTime.std)))
     writer.write("-" * 40 + "\n")
     writer.write('{0:45} ==> {1:30}\n'.format("Vector Of Modified Session ", str(vectorOfModifiedSessions)))
     writer.write('{0:45} ==> {1:30}\n'.format("Number of Modified Session ", str(sum(vectorOfModifiedSessions))))
@@ -474,5 +536,6 @@ def printMetricsForSessions(writer,numSessions, maxNumQueries, minNumQueries, me
     writer.write('{0:45} ==> {1:30}\n'.format("Number of Reformulations", str(numberOfReformulations)))    
     writer.write('{0:45} ==> {1:30}\n'.format("Number of Repetitions", str(numberOfRepetitions)))    
     writer.write("-" * 40 + "\n")
+    writer.write('{0:45} ==> {1:30}\n'.format("Mean Number of Sessions Per Day", str(meanSessionsPerDay)))    
     writer.write("\n")
 

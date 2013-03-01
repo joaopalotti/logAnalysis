@@ -1,3 +1,4 @@
+from __future__ import division
 from pylab import *
 from collections import Counter
 import math, sys
@@ -8,34 +9,38 @@ def finalPlot(x, y, label_, format_="o", saveName=None, showIt=True, closeIt=Tru
     plot( x, y, format_, label=label_)
     legend()
 
-    if saveName:
-        savefig(PATH_TO_SAVE + saveName)
+    if saveName and closeIt:
+        savefig(PATH_TO_SAVE + saveName + ".png")
+        close()
     
     if showIt:
         show()
     
-    if closeIt:
-        close()
-
-
-def plotXY(dataX, dataY, xlabelName, ylabelName, label1=None, saveName=None, data2=None, label2=None, xStartRange=None, xEndRange=None, yStartRange=None, yEndRange=None, showIt=True, lastOne=True):
+def plotXY(dataX, dataY, xlabelName, ylabelName, label=None, saveName=None, data2=None, label2=None, xStartRange=None, xEndRange=None, yStartRange=None, yEndRange=None, showIt=True, lastOne=True, printValuesToFile=False):
     
     ylabel(ylabelName)
     xlabel(xlabelName)
     
     configureLimits(xStartRange, xEndRange, yStartRange, yEndRange)
-    finalPlot(dataX, dataY, label1, "o", saveName, showIt, closeIt=lastOne)
+    if printValuesToFile and label and saveName:
+        with open(PATH_TO_SAVE + saveName + label + ".data", "w") as f:
+            for x, y in zip(dataX, dataY):
+                f.write(str(x) + "," + str(y) + "\n")
 
+    finalPlot(dataX, dataY, label, "o", saveName, showIt, closeIt=lastOne)
 
-def plotCounter(counter, xlabelName, ylabelName, label1=None, saveName=None, data2=None, label2=None, xStartRange=None, xEndRange=None, yStartRange=None, yEndRange=None, showIt=True, lastOne=True):
+def plotCounter(counter, xlabelName, ylabelName, label=None, saveName=None, data2=None, label2=None, xStartRange=None, xEndRange=None, yStartRange=None, yEndRange=None, showIt=True, lastOne=True, printValuesToFile=False):
 
     ylabel(ylabelName)
     xlabel(xlabelName)
     
     configureLimits(xStartRange, xEndRange, yStartRange, yEndRange)
+    if printValuesToFile and label and saveName:
+        with open(PATH_TO_SAVE + saveName + label + ".data", "w") as f:
+            for x, y in counter.iteritems():
+                f.write(str(x) + "," + str(y) + "\n")
 
-    finalPlot(counter.keys(), counter.values(), label1, "o", saveName, showIt, closeIt=lastOne)
-
+    finalPlot(counter.keys(), counter.values(), label, "o", saveName, showIt, closeIt=lastOne)
 
 def configureLimits(xStartRange, xEndRange, yStartRange, yEndRange):
 
@@ -53,14 +58,28 @@ def configureLimits(xStartRange, xEndRange, yStartRange, yEndRange):
     elif yStartRange is None and yEndRange is not None:
         ylim(ymax=yEndRange)
  
-def plotFrequency(data1, xlabelName, label1=None, saveName=None, data2=None, label2=None, xStartRange=None, xEndRange=None, yStartRange=None, yEndRange=None, showIt=True, lastOne=True):
+def plotFrequency(data1, xlabelName, label=None, saveName=None, data2=None, label2=None, xStartRange=None, xEndRange=None, yStartRange=None, yEndRange=None, showIt=True, lastOne=True, relative=False, printValuesToFile=False):
 
-    dataInt = [ floor(v) for v in data1] 
-    c1 =  Counter(dataInt)  
-    
     ylabel("Frequency")
     xlabel(xlabelName)
     
+    dataInt = [ floor(v) for v in data1] 
+    c1 =  Counter(dataInt)  
+    
+    if relative:
+        total = sum(c1.values())
+        newC1 = dict()
+        for k,v in dict(c1).iteritems():
+            newC1[k] = (100 * v)/total
+        c1 = newC1 
+        ylabel("Frequency (%)")
+        configureLimits(xStartRange, xEndRange, 0, 100)
+    
     configureLimits(xStartRange, xEndRange, yStartRange, yEndRange)
-   
-    finalPlot(c1.keys(), c1.values(), label1, "o", saveName, showIt, closeIt=lastOne)
+
+    if printValuesToFile and label and saveName:
+        with open(PATH_TO_SAVE + saveName + label + ".data", "w") as f:
+            for x, y in c1.iteritems():
+                f.write(str(x) + "," + str(y) + "\n")
+    
+    finalPlot(c1.keys(), c1.values(), label, "o", saveName, showIt, closeIt=lastOne)
