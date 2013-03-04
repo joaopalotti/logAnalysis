@@ -5,6 +5,9 @@ from datetime import datetime
 
 
 def readGoldMiner(filename):
+    
+    print "Reading information for GoldMiner data"
+    
     data = []
     if filename.endswith(".gz"):
         csvfile = gzip.open(filename, 'rb')
@@ -41,6 +44,8 @@ Read and process data from Health On the Net (HON) - basically:
 id,date,engine,language,nb_terms,orig_query,query_id,session_id,source,user_id,loaded_file_id,ip_address_id,refere
 '''
 def readHONDataSet(filename):
+    
+    print "Reading information for HON data"
     data = []
     if filename.endswith(".gz"):
         csvfile = gzip.open(filename, 'rb')
@@ -92,6 +97,8 @@ Read and process data like this:
 IMPORTANT: all the data have to be sorted by usedid -> required to create the sessions in a easy way.
 '''
 def readAolDataSet(filename):
+    
+    print "Reading information for AOL data"
     data = []
     if filename.endswith(".gz"):
         csvfile = gzip.open(filename, 'rb')
@@ -122,6 +129,8 @@ def readAolDataSet(filename):
 
 #if file in DOS format, it is necessary to run dos2unix command before running this script
 def readTripDataSet(filename):
+    
+    print "Reading information for TRIP data"
 
     data = []
     
