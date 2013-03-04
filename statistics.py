@@ -35,7 +35,7 @@ def calculateMetrics(dataList, removeStopWords=True, printPlotSizeOfWords=True, 
     countingQueriesList = []
     countingQueriesPerSessionList = []
     
-    tableHeader = [ ["Dtst", "\#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion"] ]
+    tableHeader = [ ["Dtst", "#Days", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Exp", "Exp(%)", "Shr", "Shr(%)", "Ref", "Ref(%)", "Rep", "Rep(%)"] ]
     generalTableRow = []
 
     for dataPair in dataList:
@@ -50,13 +50,15 @@ def calculateMetrics(dataList, removeStopWords=True, printPlotSizeOfWords=True, 
                 numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions = calculateQueriesPerSession(data)
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
 
+        numberOfQueries = sum(countingQueries.values())
+        
         # Print statistics
         with open(dataName + ".result", "w") as f:
             f.write("Metrics calculated:\n")
             printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList,\
                                  percentageAcronym, countingAcronyms, countingQueries, greatestQuery,\
                                 firstDay, lastDay, countingQueriesPerDay, meanQueriesPerDay)
-            printMetricsForSessions(f, numSessions, npNumQueries, npTime,\
+            printMetricsForSessions(f, numSessions, numberOfQueries, npNumQueries, npTime,\
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
                                    countingSessionsPerDay, meanSessionsPerDay)
 
@@ -67,7 +69,7 @@ def calculateMetrics(dataList, removeStopWords=True, printPlotSizeOfWords=True, 
         countingQueriesPerSessionList.append([dataName, countingQueriesPerSession])
 
         #Data for tables
-        generalTableRow.append( [ dataName, sum(countingQueries.values()), npTerms.mean, meanQueriesPerDay, numSessions, npNumQueries.mean ] )
+        generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfQueries, npTerms.mean, meanQueriesPerDay, numSessions, npNumQueries.mean, npTime.mean, numberOfExpansions, 100.0 * numberOfExpansions/ numberOfQueries , numberOfShrinkage, 100 * numberOfShrinkage/ numberOfQueries, numberOfReformulations, 100 * numberOfReformulations/numberOfQueries, numberOfRepetitions, 100 * numberOfRepetitions/numberOfQueries])
 
     
     myPlotter = plotter()
@@ -88,10 +90,10 @@ def calculateMetrics(dataList, removeStopWords=True, printPlotSizeOfWords=True, 
         plotSizeOfQueries(myPlotter, dataList, printValuesToFile)
 
     #Print latex tables:
-        latexWriter = latexPrinter() 
-        for l in generalTableRow: 
-            tableHeader.append( l )
-        latexWriter.addTable(tableHeader, caption="General Numbers")
+    latexWriter = latexPrinter() 
+    for l in generalTableRow: 
+        tableHeader.append( l )
+    latexWriter.addTable(tableHeader, caption="General Numbers", transpose=True)
 
 def calculateDates(data):
 
@@ -466,16 +468,16 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, perc
     writer.write('{0:45} ==> {1:30}\n'.format("Number Of Types ", str(len(countingTokens))))
     writer.write('{0:45} ==> {1:30}\n'.format("Number Of Terms", str( sum(countingTokens.values()))))
     
-    writer.write('{0:45} ==> {1:30}\n'.format('Relation Type/Terms', str( sum(countingTokens.values()) / len(countingTokens))))
+    writer.write('{0:45} ==> {1:.3f}\n'.format('Relation Type/Terms', ( sum(countingTokens.values()) / len(countingTokens))))
     writer.write('{0:45} ==> {1:30}\n'.format('Greatest Query', ' '.join(greatestQuery)))
 
-    writer.write('{0:45} ==> {1:30}\n'.format('Max. number of Terms in a query', str(npTerms.max)))
-    writer.write('{0:45} ==> {1:30}\n'.format('Min. number of Terms in a query', str(npTerms.min)))
-    writer.write('{0:45} ==> {1:30}\n'.format('Mean number of Terms in a query', str(npTerms.mean)))
-    writer.write('{0:45} ==> {1:30}\n'.format('Median number of Terms in a query', str(npTerms.median)))
-    writer.write('{0:45} ==> {1:30}\n'.format('Std Deviation of Terms in a query', str(npTerms.std)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format('Max. number of Terms in a query', (npTerms.max)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format('Min. number of Terms in a query', (npTerms.min)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format('Mean number of Terms in a query', (npTerms.mean)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format('Median number of Terms in a query', (npTerms.median)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format('Std Deviation of Terms in a query', (npTerms.std)))
     
-    writer.write('{0:45} ==> {1:30}\n'.format('Percentage of Acronyms used', str(percentageAcronym)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format('Percentage of Acronyms used', (percentageAcronym)))
     
     writer.write("-" * 45 + "\n")
     writer.write("10 Most Common Terms:\n")
@@ -507,7 +509,7 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, perc
     writer.write("-" * 80 + "\n")
 
 
-def printMetricsForSessions(writer,numSessions, npNumQueries, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions, countingSessionsPerDay, meanSessionsPerDay):
+def printMetricsForSessions(writer, numSessions, numberOfQueries, npNumQueries, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions, countingSessionsPerDay, meanSessionsPerDay):
 
     writer.write("-" * 80 + "\n")
     writer.write("-" * 40 + "\n")
@@ -517,28 +519,28 @@ def printMetricsForSessions(writer,numSessions, npNumQueries, npTime, numberOfEx
     writer.write("-" * 40 + "\n")
     writer.write("Session Length in Queries\n")
     writer.write("-" * 40 + "\n")
-    writer.write('{0:45} ==> {1:30}\n'.format("Maximum number of Queries in a session", str(npNumQueries.max)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Minimum number of Queries in a session", str(npNumQueries.min)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Mean number of Queries in a session", str(npNumQueries.mean)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Median number of Queries in a session", str(npNumQueries.median)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Std dev of the number of Queries in a session", str(npNumQueries.std)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Maximum number of Queries in a session", (npNumQueries.max)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Minimum number of Queries in a session", (npNumQueries.min)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Mean number of Queries in a session", (npNumQueries.mean)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Median number of Queries in a session", (npNumQueries.median)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Std dev of the number of Queries in a session", (npNumQueries.std)))
     writer.write("-" * 40 + "\n")
     writer.write("Session Length in Time\n")
     writer.write("-" * 40 + "\n")
-    writer.write('{0:45} ==> {1:30}\n'.format("Maximum duration of a session", str(npTime.max)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Minimum duration of a session", str(npTime.min)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Mean duration of a session", str(npTime.mean)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Median duration of a session", str(npTime.median)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Std dev. of duration of a session", str(npTime.std)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Maximum duration of a session", npTime.max))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Minimum duration of a session", npTime.min))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Mean duration of a session", npTime.mean))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Median duration of a session", npTime.median))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Std dev. of duration of a session", npTime.std))
     writer.write("-" * 40 + "\n")
     writer.write('{0:45} ==> {1:30}\n'.format("Vector Of Modified Session ", str(vectorOfModifiedSessions)))
     writer.write('{0:45} ==> {1:30}\n'.format("Number of Modified Session ", str(sum(vectorOfModifiedSessions))))
-    writer.write('{0:45} ==> {1:30}\n'.format("Percentage of Modified Session ", str(sum(vectorOfModifiedSessions)/numSessions)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Percentage of Modified Session ", sum(vectorOfModifiedSessions)/numSessions))
     writer.write('{0:45} ==> {1:30}\n'.format("Number of Modified Queries", str(numberOfExpansions + numberOfShrinkage + numberOfReformulations + numberOfRepetitions)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Number of Expansions", str(numberOfExpansions)))    
-    writer.write('{0:45} ==> {1:30}\n'.format("Number of Shrinkages", str(numberOfShrinkage)))    
-    writer.write('{0:45} ==> {1:30}\n'.format("Number of Reformulations", str(numberOfReformulations)))    
-    writer.write('{0:45} ==> {1:30}\n'.format("Number of Repetitions", str(numberOfRepetitions)))    
+    writer.write('{0:45} ==> {1:15}{2:.3f}(%)\n'.format("Number of Expansions", str(numberOfExpansions),numberOfExpansions/numberOfQueries))    
+    writer.write('{0:45} ==> {1:15}{2:.3f}(%)\n'.format("Number of Shrinkages", str(numberOfShrinkage), numberOfShrinkage/numberOfQueries))    
+    writer.write('{0:45} ==> {1:15}{2:.3f}(%)\n'.format("Number of Reformulations", str(numberOfReformulations), numberOfReformulations/numberOfQueries))    
+    writer.write('{0:45} ==> {1:15}{2:.3f}(%)\n'.format("Number of Repetitions", str(numberOfRepetitions), numberOfRepetitions/numberOfQueries))    
     writer.write("-" * 40 + "\n")
     writer.write('{0:45} ==> {1:30}\n'.format("Mean Number of Sessions Per Day", str(meanSessionsPerDay)))    
     writer.write("\n")

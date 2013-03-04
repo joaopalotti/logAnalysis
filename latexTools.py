@@ -1,4 +1,4 @@
-import numpy
+import numpy, re
 
 class latexPrinter:
     
@@ -44,12 +44,12 @@ class latexPrinter:
 
         header = True
         for row in rows:
-            self.document.write( str(row[0]) )
+            self.document.write( self.__escapeChars(str(row[0])) )
             for element in row[1:]:
                 if type(element) in [float, int, numpy.float64]:
                     self.document.write(" & %.2f" % element)
                 else:
-                    self.document.write(" & " +element)
+                    self.document.write(" & " + self.__escapeChars(element))
             self.document.write(" \\\\ \n")
 
             if header:
@@ -67,3 +67,5 @@ class latexPrinter:
         self.document.write("\\end{center}\n")
         self.document.write("\\end{table}\n")
 
+    def __escapeChars(self, s):
+        return re.sub("#","\#", re.sub("%", "\%", s))
