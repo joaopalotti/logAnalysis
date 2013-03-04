@@ -40,10 +40,12 @@ def calculateMetrics(dataList, removeStopWords=True, printPlotSizeOfWords=True, 
 
     for dataPair in dataList:
         data, dataName = dataPair[0], dataPair[1]
+        print "Processing information for data: ", dataName
 
         data = preProcessData(data, removeStopWords)
 
         percentageAcronym, countingAcronyms = calculateAcronyms(data)
+        numberOfUsers = calculateUsers(data)
         npTerms, countingTokens, coOccurrenceList, greatestQuery, countingQueries = calculateTerms(data)
         numberOfSessions, countingQueriesPerSession, npNumQueriesInSession,\
                 countingTimePerSession, npTime,\
@@ -55,7 +57,7 @@ def calculateMetrics(dataList, removeStopWords=True, printPlotSizeOfWords=True, 
         # Print statistics
         with open(dataName + ".result", "w") as f:
             f.write("Metrics calculated:\n")
-            printGeneralMetrics(f, numberOfQueries, numberOfSessions, firstDay, lastDay)
+            printGeneralMetrics(f, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay)
             printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList, percentageAcronym, countingAcronyms)
             printMetricsForQueries(f, greatestQuery, countingQueries, countingQueriesPerDay, meanQueriesPerDay)
             printMetricsForSessions(f, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime,\
@@ -95,6 +97,10 @@ def calculateMetrics(dataList, removeStopWords=True, printPlotSizeOfWords=True, 
         tableHeader.append( l )
     latexWriter.addTable(tableHeader, caption="General Numbers", transpose=True)
 
+
+def calculateUsers(data):
+    return   len(set( [ member.userId for member in data] ))
+
 def calculateDates(data):
 
     firstDay = datetime.now() 
@@ -108,10 +114,10 @@ def calculateDates(data):
         
         dayMonthYear = member.datetime.strftime("%d-%m-%Y")
         countingQueriesPerDay[dayMonthYear] += 1
-        if member.sessionid not in countingSessionsPerDay[dayMonthYear]:
-            countingSessionsPerDay[dayMonthYear][member.sessionid] = 0
+        if member.userId not in countingSessionsPerDay[dayMonthYear]:
+            countingSessionsPerDay[dayMonthYear][member.userId] = 0
         
-        countingSessionsPerDay[dayMonthYear][member.sessionid] += 1
+        countingSessionsPerDay[dayMonthYear][member.userId] += 1
  
     sessionsPerDay = [ len(countingSessionsPerDay[day]) for day in countingSessionsPerDay.keys() ]
 
@@ -329,22 +335,22 @@ def calculateQueriesPerSession(data):
     for member in data:
 
         # There are no previous keywords and no sessions of this id -> create the first one sessions[id][1] = list
-        if member.previouskeywords is None and not sessions[member.sessionid]:
-            sessions[member.sessionid][1] = [[member.datetime, member.keywords]]
+        if member.previouskeywords is None and not sessions[member.userId]:
+            sessions[member.userId][1] = [[member.datetime, member.keywords]]
 
         # There are no previous keywords and there is at least one sessions of this id 
-        elif member.previouskeywords is None and sessions[member.sessionid]:
-            sessions[member.sessionid][ len(sessions[member.sessionid]) + 1 ] = [[member.datetime, member.keywords]]
+        elif member.previouskeywords is None and sessions[member.userId]:
+            sessions[member.userId][ len(sessions[member.userId]) + 1 ] = [[member.datetime, member.keywords]]
         
-        elif member.previouskeywords is not None and not sessions[member.sessionid]:
+        elif member.previouskeywords is not None and not sessions[member.userId]:
             # This situation should not happen, but it does. It means that a session was not created but there were previous keywords.
             #print "ERROR!"
-            #print member.sessionid, member.datetime, member.keywords, "previous ---> ", member.previouskeywords
-            sessions[member.sessionid][1] = [[member.datetime, member.keywords]]
+            #print member.userId, member.datetime, member.keywords, "previous ---> ", member.previouskeywords
+            sessions[member.userId][1] = [[member.datetime, member.keywords]]
 
         # There are previous keywords!
         else:
-            sessions[member.sessionid][ len(sessions[member.sessionid]) ] += [[member.datetime,member.keywords]]
+            sessions[member.userId][ len(sessions[member.userId]) ] += [[member.datetime,member.keywords]]
 
     #for session, date in sessions.iteritems():
     #    print session, date
@@ -449,10 +455,11 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
     return npTerms, countingTokens, coOccurrenceList, greatestQuery, countingQueries
 
 
-def printGeneralMetrics(writer, numberOfQueries, numberOfSessions, firstDay, lastDay):
+def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay):
     writer.write("-" * 80 + "\n")
     writer.write("-" * 45 + "\n")
     writer.write("General Information:\n")
+    writer.write('{0:45} ==> {1:30}\n'.format("Number of Unique Users", str(numberOfUsers)))
     writer.write('{0:45} ==> {1:30}\n'.format("Number of Queries", str(numberOfQueries)))
     writer.write('{0:45} ==> {1:30}\n'.format("Number of Sessions", str(numberOfSessions)))
     writer.write('{0:45} ==> {1:30}\n'.format("First date in logs", str(firstDay)))

@@ -20,6 +20,7 @@ if __name__ == "__main__":
     
     calculateMetrics([ [aol, "Aol"], [ trip, "Trip"], [hon, "HoN" ] ]) 
     #calculateMetrics([ [hon, "honTest"] ] ) 
+    #calculateMetrics([ [aol, "Aol"] ] ) 
     #calculateMetrics([ [aolNotHealth, "~aol"] ] ) 
     #calculateMetrics([ [goldminer, "goldMinerTest"] ] ) 
 

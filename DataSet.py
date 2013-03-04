@@ -3,7 +3,7 @@ import re
 
 class DataSet(object):
     
-    def __init__(self, dttime, sessionid, category, publication, keywords, previouskeywords, rank, clickurl, usingTimestamp=False):
+    def __init__(self, dttime, userId, category, publication, keywords, previouskeywords, rank, clickurl, usingTimestamp=False):
        
         trip = re.compile("(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).(\d{3})")
         aol = re.compile("(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})")
@@ -22,8 +22,8 @@ class DataSet(object):
             self.datetime = None
             assert False
 
-        #Sessionid in the tripdatabase and annonid in AOL
-        self.sessionid = sessionid
+        #userId in the tripdatabase and annonid in AOL
+        self.userId = userId
         
         self.keywords = keywords
         

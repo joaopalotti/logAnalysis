@@ -23,15 +23,15 @@ def readGoldMiner(filename):
     # (0) timestamp (1) client (2) keywords
     # (3) images matched by concept search (using ontologies) (4) images matched by keyword (string) search
     # (5) total number of images returned (may be less than c + x;  it's the union of the two search result sets)
-    temp = DataSet(dttime=previousRow[0], sessionid=previousRow[1], category=None, publication=None, keywords=previousRow[2], rank=None, clickurl=None, previouskeywords=None, usingTimestamp=True)
+    temp = DataSet(dttime=previousRow[0], userId=previousRow[1], category=None, publication=None, keywords=previousRow[2], rank=None, clickurl=None, previouskeywords=None, usingTimestamp=True)
     data.append(temp)             
     
     for row in reader:
         if row:
             if checkSession(previousRow, row, idIndex=1, dateIndex=0, usingTimestamp=True):
-                temp = DataSet(dttime=row[0], sessionid=row[1], category=None, publication=None, keywords=row[2], rank=None, clickurl=None, previouskeywords=previousRow[2], usingTimestamp=True)
+                temp = DataSet(dttime=row[0], userId=row[1], category=None, publication=None, keywords=row[2], rank=None, clickurl=None, previouskeywords=previousRow[2], usingTimestamp=True)
             else:
-                temp = DataSet(dttime=row[0], sessionid=row[1], category=None, publication=None, keywords=row[2], rank=None, clickurl=None, previouskeywords=None, usingTimestamp=True)
+                temp = DataSet(dttime=row[0], userId=row[1], category=None, publication=None, keywords=row[2], rank=None, clickurl=None, previouskeywords=None, usingTimestamp=True)
             data.append(temp)
             previousRow = row
     return data
@@ -50,21 +50,18 @@ def readHONDataSet(filename):
     
     reader = csv.reader(csvfile, delimiter=',', quotechar='|')
     
-    #Data in the header - skip it
-    reader.next()
-    
     #Data in the first line
     previousRow = reader.next()
     # (0) msql-id, (1) date, (2) engine, (3) language, (4) nb_terms, (5) orig_query, (6) query_id, (7) session_id, (8) source, (9) user_id, (10) loaded_file_id, (11) ip_address_id, (12) refere
-    temp = DataSet(dttime=previousRow[1], sessionid=previousRow[11], category=None, publication=None, keywords=previousRow[5].strip("\""), rank=None, clickurl=None, previouskeywords=None)
+    temp = DataSet(dttime=previousRow[1], userId=previousRow[11], category=None, publication=None, keywords=previousRow[5].strip("\""), rank=None, clickurl=None, previouskeywords=None)
     data.append(temp)             
 
     for row in reader:
         if row:
             if checkSession(previousRow, row, idIndex=11, dateIndex=1, dateFormat='"%Y-%m-%d %H:%M:%S"'):
-                temp = DataSet(dttime=row[1], sessionid=row[11], category=None, publication=None, keywords=row[5].strip("\""), rank=None, clickurl=None, previouskeywords=previousRow[5].strip("\""))
+                temp = DataSet(dttime=row[1], userId=row[11], category=None, publication=None, keywords=row[5].strip("\""), rank=None, clickurl=None, previouskeywords=previousRow[5].strip("\""))
             else:
-                temp = DataSet(dttime=row[1], sessionid=row[11], category=None, publication=None, keywords=row[5].strip("\""), rank=None, clickurl=None, previouskeywords=None)
+                temp = DataSet(dttime=row[1], userId=row[11], category=None, publication=None, keywords=row[5].strip("\""), rank=None, clickurl=None, previouskeywords=None)
             data.append(temp)
             previousRow = row
     return data
@@ -108,7 +105,7 @@ def readAolDataSet(filename):
     
     #Data in the first line
     previousRow = reader.next()
-    temp = DataSet(dttime=previousRow[2], sessionid=previousRow[0], category=None, publication=None, keywords=previousRow[1], rank=previousRow[3], clickurl=previousRow[4], previouskeywords=None)
+    temp = DataSet(dttime=previousRow[2], userId=previousRow[0], category=None, publication=None, keywords=previousRow[1], rank=previousRow[3], clickurl=previousRow[4], previouskeywords=None)
     data.append(temp)             
 
     # The rest of the data
@@ -116,9 +113,9 @@ def readAolDataSet(filename):
         if row:
             #print row
             if checkSession(previousRow, row):
-                temp = DataSet(dttime=row[2], sessionid=row[0], category=None, publication=None, keywords=row[1], rank=row[3], clickurl=row[4], previouskeywords=previousRow[1])
+                temp = DataSet(dttime=row[2], userId=row[0], category=None, publication=None, keywords=row[1], rank=row[3], clickurl=row[4], previouskeywords=previousRow[1])
             else:
-                temp = DataSet(dttime=row[2], sessionid=row[0], category=None, publication=None, keywords=row[1], rank=row[3], clickurl=row[4], previouskeywords=None)
+                temp = DataSet(dttime=row[2], userId=row[0], category=None, publication=None, keywords=row[1], rank=row[3], clickurl=row[4], previouskeywords=None)
             data.append(temp)
             previousRow = row
     return data
@@ -139,9 +136,9 @@ def readTripDataSet(filename):
         if row:
             #print ', '.join(row)
             if len(row) == 6:
-               temp = DataSet(dttime=row[0], sessionid=row[1], category=row[2], publication=row[3], keywords=row[4], previouskeywords=row[5], rank=None, clickurl=None)
+               temp = DataSet(dttime=row[0], userId=row[1], category=row[2], publication=row[3], keywords=row[4], previouskeywords=row[5], rank=None, clickurl=None)
             else:
-               temp = DataSet(dttime=row[0], sessionid=row[1], category=row[2], publication=row[3], keywords=row[4], previouskeywords=None, rank=None, clickurl=None)
+               temp = DataSet(dttime=row[0], userId=row[1], category=row[2], publication=row[3], keywords=row[4], previouskeywords=None, rank=None, clickurl=None)
             data.append(temp)             
 
     csvfile.close()
