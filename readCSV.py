@@ -2,12 +2,13 @@ import csv
 from DataSet import DataSet
 import gzip
 from datetime import datetime
-
+from time import time
 
 def readGoldMiner(filename):
     
     print "Reading information for GoldMiner data"
-    
+    start = time()
+
     data = []
     if filename.endswith(".gz"):
         csvfile = gzip.open(filename, 'rb')
@@ -37,6 +38,9 @@ def readGoldMiner(filename):
                 temp = DataSet(dttime=row[0], userId=row[1], category=None, publication=None, keywords=row[2], rank=None, clickurl=None, previouskeywords=None, usingTimestamp=True)
             data.append(temp)
             previousRow = row
+
+    csvfile.close()
+    print "GoldMiner data read in %.2f seconds" % float(time() - start)
     return data
 
 '''
@@ -46,6 +50,8 @@ id,date,engine,language,nb_terms,orig_query,query_id,session_id,source,user_id,l
 def readHONDataSet(filename):
     
     print "Reading information for HON data"
+    start = time()
+    
     data = []
     if filename.endswith(".gz"):
         csvfile = gzip.open(filename, 'rb')
@@ -69,6 +75,9 @@ def readHONDataSet(filename):
                 temp = DataSet(dttime=row[1], userId=row[11], category=None, publication=None, keywords=row[5].strip("\""), rank=None, clickurl=None, previouskeywords=None)
             data.append(temp)
             previousRow = row
+    
+    csvfile.close()
+    print "HON data read in %.2f seconds" % float(time() - start)
     return data
 
 '''check if two rows belong to the same user and during the same session (defined by default as a 30 min time'''
@@ -99,6 +108,8 @@ IMPORTANT: all the data have to be sorted by usedid -> required to create the se
 def readAolDataSet(filename):
     
     print "Reading information for AOL data"
+    start = time()
+
     data = []
     if filename.endswith(".gz"):
         csvfile = gzip.open(filename, 'rb')
@@ -125,12 +136,16 @@ def readAolDataSet(filename):
                 temp = DataSet(dttime=row[2], userId=row[0], category=None, publication=None, keywords=row[1], rank=row[3], clickurl=row[4], previouskeywords=None)
             data.append(temp)
             previousRow = row
+    
+    csvfile.close()
+    print "AOL data read in %.2f seconds" % float(time() - start)
     return data
 
 #if file in DOS format, it is necessary to run dos2unix command before running this script
 def readTripDataSet(filename):
     
     print "Reading information for TRIP data"
+    start = time()
 
     data = []
     
@@ -151,4 +166,6 @@ def readTripDataSet(filename):
             data.append(temp)             
 
     csvfile.close()
+    
+    print "TRIP data read in %.2f seconds" % float(time() - start)
     return data
