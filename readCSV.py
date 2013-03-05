@@ -1,18 +1,36 @@
 import csv
 from DataSet import DataSet
-import gzip
 from datetime import datetime
 from time import time
+import gzip
+
+def readMyFormat(filename):
+    print "Reading file: ", filename
+    start = time()
+     
+    data = []
+    if filename.endswith(".gz"):
+        csvfile = gzip.open(filename, 'rb')
+    else:
+        csvfile = open(filename, 'rb')
+
+    reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+
+    ## The concept of session should already be defined when this file was created. 
+    for row in reader:
+        temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4])
+        data.append(temp)
+    return data
+
 
 def readGoldMiner(filename):
     
-    print "Reading information for GoldMiner data"
+    print "Reading information for GoldMiner data. Filename: ", filename
     start = time()
 
     data = []
     if filename.endswith(".gz"):
         csvfile = gzip.open(filename, 'rb')
-    
     else:
         csvfile = open(filename, 'rb')
     
@@ -49,7 +67,7 @@ id,date,engine,language,nb_terms,orig_query,query_id,session_id,source,user_id,l
 '''
 def readHONDataSet(filename):
     
-    print "Reading information for HON data"
+    print "Reading information for HON data. Filename: ", filename
     start = time()
     
     data = []
@@ -85,7 +103,6 @@ def checkSession(previousRow, currentRow, timeBetweenInSeconds=60*30, dateFormat
     # Check if both queries belong to the same user 
     if previousRow[idIndex] == currentRow[idIndex]:
         if not usingTimestamp: 
-        
             dtPrevious = datetime.strptime(previousRow[dateIndex], dateFormat)
             dtCurrent = datetime.strptime(currentRow[dateIndex], dateFormat)
             timeSpansInSeconds = (max(dtPrevious, dtCurrent) - min(dtPrevious, dtCurrent)).total_seconds()
@@ -107,7 +124,7 @@ IMPORTANT: all the data have to be sorted by usedid -> required to create the se
 '''
 def readAolDataSet(filename):
     
-    print "Reading information for AOL data"
+    print "Reading information for AOL data. Filename: ", filename
     start = time()
 
     data = []
@@ -144,7 +161,7 @@ def readAolDataSet(filename):
 #if file in DOS format, it is necessary to run dos2unix command before running this script
 def readTripDataSet(filename):
     
-    print "Reading information for TRIP data"
+    print "Reading information for TRIP data. Filename: ", filename
     start = time()
 
     data = []

@@ -1,5 +1,4 @@
 from __future__ import division
-from tripData import TripData
 from collections import defaultdict, Counter
 import operator
 from myPlot import plotter
