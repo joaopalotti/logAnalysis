@@ -19,9 +19,26 @@ def preProcessData(data, removeStopWords):
     
     if removeStopWords:
         data = filterStopWords(data)
+    
+    #Sort Data by id/datetime, just to be sure
+    data = sorted(data, key= lambda member: (member.userId, member.datetime))
+
     return data
 
-def calculateMetrics(dataList, removeStopWords=True, printPlotSizeOfWords=True, printPlotSizeOfQueries=True,\
+def multikeysort(items, columns):
+#http://wiki.python.org/moin/SortingListsOfDictionaries
+    from operator import itemgetter
+    comparers = [ ((itemgetter(col[1:].strip()), -1) if col.startswith('-') else (itemgetter(col.strip()), 1)) for col in columns]  
+    def comparer(left, right):
+        for fn, mult in comparers:
+            result = cmp(fn(left), fn(right))
+            if result:
+                return mult * result
+        else:
+            return 0
+    return sorted(items, cmp=comparer)
+
+def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSizeOfWords=True, printPlotSizeOfQueries=True,\
                      printPlotFrequencyOfQueries=True, printPlotFrequencyOfTerms=True, printPlotAcronymFrequency=True,\
                      printQueriesPerSession=True, printTimePerSession=True, printValuesToFile=True):
     """
@@ -33,6 +50,7 @@ def calculateMetrics(dataList, removeStopWords=True, printPlotSizeOfWords=True, 
     countingTokensList = []
     countingQueriesList = []
     countingQueriesPerSessionList = []
+    countingMesh = []
     
     tableHeader = [ ["Dtst", "#Days", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Exp", "Exp(%)", "Shr", "Shr(%)", "Ref", "Ref(%)", "Rep", "Rep(%)"] ]
     generalTableRow = []
@@ -52,7 +70,11 @@ def calculateMetrics(dataList, removeStopWords=True, printPlotSizeOfWords=True, 
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
 
         numberOfQueries = sum(countingQueries.values())
-        
+
+        #if usingMesh:
+        #    coutingMesh = calculateMesh(data)
+
+
         # Print statistics
         with open(dataName + ".result", "w") as f:
             f.write("Metrics calculated:\n")
@@ -72,7 +94,6 @@ def calculateMetrics(dataList, removeStopWords=True, printPlotSizeOfWords=True, 
         #Data for tables
         generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfQueries, npTerms.mean, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession.mean, npTime.mean, numberOfExpansions, 100.0 * numberOfExpansions/ numberOfQueries , numberOfShrinkage, 100 * numberOfShrinkage/ numberOfQueries, numberOfReformulations, 100 * numberOfReformulations/numberOfQueries, numberOfRepetitions, 100 * numberOfRepetitions/numberOfQueries])
 
-    
     myPlotter = plotter()
     
     if printQueriesPerSession:

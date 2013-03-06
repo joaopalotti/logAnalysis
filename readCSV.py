@@ -4,6 +4,24 @@ from datetime import datetime
 from time import time
 import gzip
 
+'''check if two rows belong to the same user and during the same session (defined by default as a 30 min time'''
+def checkSession(previousRow, currentRow, timeBetweenInSeconds=60*30, dateFormat='%Y-%m-%d %H:%M:%S', idIndex=0, dateIndex=2, usingTimestamp=False):
+    
+    # Check if both queries belong to the same user 
+    if previousRow[idIndex] == currentRow[idIndex]:
+        if not usingTimestamp: 
+            dtPrevious = datetime.strptime(previousRow[dateIndex], dateFormat)
+            dtCurrent = datetime.strptime(currentRow[dateIndex], dateFormat)
+            timeSpansInSeconds = (max(dtPrevious, dtCurrent) - min(dtPrevious, dtCurrent)).total_seconds()
+            if timeSpansInSeconds <= timeBetweenInSeconds:
+                return True
+        else:
+            dtPrevious, dtCurrent = float(previousRow[dateIndex]), float(currentRow[dateIndex])
+            #Assuming the timestamps are in seconds:
+            if ( abs(dtPrevious - dtCurrent ) ) <= timeBetweenInSeconds:
+                return True
+    return False
+
 def readMyFormat(filename):
     print "Reading file: ", filename
     start = time()
@@ -15,9 +33,15 @@ def readMyFormat(filename):
         csvfile = open(filename, 'rb')
 
     reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+    
+    #Sort the data by user and datetime to construct sessions
+    reader = sorted(reader, key= lambda k: (k[1], k[0]))  
 
     ## The concept of session should already be defined when this file was created. 
     for row in reader:
+        if len(row[2]) == 0 or row[2] == None:
+            continue
+
         temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4])
         data.append(temp)
     return data
@@ -39,8 +63,11 @@ def readGoldMiner(filename):
     #Header - skip it
     #In the version 4 we dont need to skip the header -> reader.next()
     
+    #Sort the data by user and datetime to construct sessions
+    reader = sorted(reader, key= lambda k: (k[1], k[0]))  
+    
     #Data in the first line
-    previousRow = reader.next()
+    previousRow = reader[0]
     
     # (0) timestamp (1) client (2) keywords
     # (3) images matched by concept search (using ontologies) (4) images matched by keyword (string) search
@@ -48,7 +75,7 @@ def readGoldMiner(filename):
     temp = DataSet(dttime=previousRow[0], userId=previousRow[1], category=None, publication=None, keywords=previousRow[2], rank=None, clickurl=None, previouskeywords=None, usingTimestamp=True)
     data.append(temp)             
     
-    for row in reader:
+    for row in reader[1:]:
         if row:
             if checkSession(previousRow, row, idIndex=1, dateIndex=0, usingTimestamp=True):
                 temp = DataSet(dttime=row[0], userId=row[1], category=None, publication=None, keywords=row[2], rank=None, clickurl=None, previouskeywords=previousRow[2], usingTimestamp=True)
@@ -79,13 +106,16 @@ def readHONDataSet(filename):
     
     reader = csv.reader(csvfile, delimiter=',', quotechar='|')
     
+    #Sort the data by user and datetime to construct sessions
+    reader = sorted(reader, key= lambda k: (k[11], k[1]))  
+    
     #Data in the first line
-    previousRow = reader.next()
+    previousRow = reader[0]
     # (0) msql-id, (1) date, (2) engine, (3) language, (4) nb_terms, (5) orig_query, (6) query_id, (7) session_id, (8) source, (9) user_id, (10) loaded_file_id, (11) ip_address_id, (12) refere
     temp = DataSet(dttime=previousRow[1], userId=previousRow[11], category=None, publication=None, keywords=previousRow[5].strip("\""), rank=None, clickurl=None, previouskeywords=None)
     data.append(temp)             
 
-    for row in reader:
+    for row in reader[1:]:
         if row:
             if checkSession(previousRow, row, idIndex=11, dateIndex=1, dateFormat='"%Y-%m-%d %H:%M:%S"'):
                 temp = DataSet(dttime=row[1], userId=row[11], category=None, publication=None, keywords=row[5].strip("\""), rank=None, clickurl=None, previouskeywords=previousRow[5].strip("\""))
@@ -98,29 +128,10 @@ def readHONDataSet(filename):
     print "HON data read in %.2f seconds" % float(time() - start)
     return data
 
-'''check if two rows belong to the same user and during the same session (defined by default as a 30 min time'''
-def checkSession(previousRow, currentRow, timeBetweenInSeconds=60*30, dateFormat='%Y-%m-%d %H:%M:%S', idIndex=0, dateIndex=2, usingTimestamp=False):
-    # Check if both queries belong to the same user 
-    if previousRow[idIndex] == currentRow[idIndex]:
-        if not usingTimestamp: 
-            dtPrevious = datetime.strptime(previousRow[dateIndex], dateFormat)
-            dtCurrent = datetime.strptime(currentRow[dateIndex], dateFormat)
-            timeSpansInSeconds = (max(dtPrevious, dtCurrent) - min(dtPrevious, dtCurrent)).total_seconds()
-            if timeSpansInSeconds <= timeBetweenInSeconds:
-                return True
-        else:
-            dtPrevious, dtCurrent = float(previousRow[dateIndex]), float(currentRow[dateIndex])
-            #Assuming the timestamps are in seconds:
-            if ( abs(dtPrevious - dtCurrent ) ) <= timeBetweenInSeconds:
-                return True
-    return False
-
 '''
 Read and process data like this:
 
 1268    gallstones  2006-05-11 02:13:02 1   http://www.niddk.nih.gov
-
-IMPORTANT: all the data have to be sorted by usedid -> required to create the sessions in a easy way.
 '''
 def readAolDataSet(filename):
     
@@ -138,15 +149,17 @@ def readAolDataSet(filename):
     if not reader:
         return
     
+    #Sort the data by user and datetime to construct sessions
+    reader = sorted(reader, key= lambda k: (k[0], k[2]))  
+
     #Data in the first line
-    previousRow = reader.next()
+    previousRow = reader[0]
     temp = DataSet(dttime=previousRow[2], userId=previousRow[0], category=None, publication=None, keywords=previousRow[1], rank=previousRow[3], clickurl=previousRow[4], previouskeywords=None)
     data.append(temp)             
 
     # The rest of the data
-    for row in reader:
+    for row in reader[1:]:
         if row:
-            #print row
             if checkSession(previousRow, row):
                 temp = DataSet(dttime=row[2], userId=row[0], category=None, publication=None, keywords=row[1], rank=row[3], clickurl=row[4], previouskeywords=previousRow[1])
             else:
@@ -173,6 +186,8 @@ def readTripDataSet(filename):
         csvfile = open(filename, 'rb')
 
     reader = csv.reader(csvfile, delimiter='\t', quotechar='|')
+
+    #It is not necessary to sort the reader because we are trusting the information of previouskeywords.
     for row in reader:
         if row:
             #print ', '.join(row)

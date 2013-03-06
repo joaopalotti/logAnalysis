@@ -28,18 +28,20 @@ def convertFile(filename, filetype, outputname=None):
 if __name__ == "__main__":
 
     #convertFile(PATH_TO_DATASETS + "tripTest2.csv", "trip", "tripSmall.dataset")
-    convertFile(PATH_TO_DATASETS + "aolHealthSites.csv", "aol", "aolHealthSites.dataset")
+    #convertFile(PATH_TO_DATASETS + "aolHealthSites.csv", "aol", "aolHealthSites.dataset")
 
     #trip = readMyFormat(PATH_TO_DATASETS + "tripSmall.dataset.gz")
-    #trip = readTripDataSet(PATH_TO_DATASETS + "tripTest2.csv")
+    
+    #trip = readTripDataSet(PATH_TO_DATASETS + "tripTest3.csv")
     #aol = readAolDataSet(PATH_TO_DATASETS + "aolSmall.csv")
-    #hon = readHONDataSet(PATH_TO_DATASETS + "honSmall.csv")
+    hon = readHONDataSet(PATH_TO_DATASETS + "honSmall.csv")
     #aolNotHealth = readAolDataSet(PATH_TO_DATASETS + "aolNotHealthsitesSmall.csv")
     #goldminer = readGoldMiner(PATH_TO_DATASETS + "goldminer-v4.txt")
     
     #calculateMetrics([ [aol, "Aol"], [ trip, "Trip"], [hon, "HoN" ] ]) 
     #calculateMetrics([ [trip, "Trip"] ] ) 
     #calculateMetrics([ [aol, "Aol"] ] ) 
+    calculateMetrics([ [hon, "Hon"] ] ) 
     #calculateMetrics([ [aolNotHealth, "~aol"] ] ) 
     #calculateMetrics([ [goldminer, "goldMinerTest"] ] ) 
 
