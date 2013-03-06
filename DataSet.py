@@ -28,7 +28,8 @@ class DataSet(object):
         #userId in the tripdatabase and annonid in AOL
         self.userId = userId
         
-        self.keywords = keywords
+        # remove final char that screws the CSV reader
+        self.keywords = keywords.rstrip("\\")
         
         self.category = category if category else None
         self.publication = publication if publication else None
@@ -36,11 +37,9 @@ class DataSet(object):
         self.rank = rank if rank else None
         self.clickurl = clickurl if clickurl else None
         self.mesh = mesh if mesh else None
-    
-        print self.keywords
-
+        
     def printMe(self, out=sys.stdout):
-        writer = csv.writer(out, delimiter=',', quoting=csv.QUOTE_MINIMAL, quotechar ='"', escapechar='\\', doublequote=False)
+        writer = csv.writer(out, delimiter=',', quoting=csv.QUOTE_ALL, quotechar ='"', escapechar='\\', doublequote=False)
         # Should add here any important information and modify the corresponding readCSV
         writer.writerow( [ str(self.datetime) ,  self.userId, self.keywords, self.previouskeywords, self.mesh ])
         

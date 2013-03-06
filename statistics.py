@@ -53,8 +53,13 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
     countingMeshList = []
     countingDiseaseList = []
     
-    tableHeader = [ ["Dtst", "#Days", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Exp", "Exp(%)", "Shr", "Shr(%)", "Ref", "Ref(%)", "Rep", "Rep(%)"] ]
+    tableGeneralHeader = [ ["Dtst", "#Days", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Exp", "Exp(%)", "Shr", "Shr(%)", "Ref", "Ref(%)", "Rep", "Rep(%)"] ]
+    tableMeshHeader = [ ["Dtst","A","B","C","D","E","F","G","H","I","J","K","L","M","N","V","Z"] ]
+    tableDiseasesHeader = [ ["Dtst","C01","C02","C03","C04","C05","C06","C07","C08","C09","C10","C11","C12","C13","C14","C15","C16","C17","C18","C19","C20","C21","C22","C23","C24","C25","C26"] ]
+
     generalTableRow = []
+    meshTableRow = []
+    diseaseTableRow = []
 
     for dataPair in dataList:
         data, dataName = dataPair[0], dataPair[1]
@@ -97,6 +102,8 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
 
         #Data for tables
         generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfQueries, npTerms.mean, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession.mean, npTime.mean, numberOfExpansions, 100.0 * numberOfExpansions/ numberOfQueries , numberOfShrinkage, 100 * numberOfShrinkage/ numberOfQueries, numberOfReformulations, 100 * numberOfReformulations/numberOfQueries, numberOfRepetitions, 100 * numberOfRepetitions/numberOfQueries] )
+        meshTableRow.append( [ dataName, countingMesh["A"], countingMesh["B"], countingMesh["C"], countingMesh["D"], countingMesh["E"], countingMesh["F"], countingMesh["G"], countingMesh["H"], countingMesh["I"], countingMesh["J"], countingMesh["K"], countingMesh["L"], countingMesh["M"], countingMesh["N"], countingMesh["V"], countingMesh["Z"]  ] )
+        diseaseTableRow.append( [ dataName,  countingDisease["C01"], countingDisease["C02"], countingDisease["C03"], countingDisease["C04"], countingDisease["C05"], countingDisease["C06"], countingDisease["C07"], countingDisease["C08"], countingDisease["C09"], countingDisease["C10"], countingDisease["C11"], countingDisease["C12"], countingDisease["C13"], countingDisease["C14"], countingDisease["C15"], countingDisease["C16"], countingDisease["C17"], countingDisease["C18"], countingDisease["C19"], countingDisease["C20"], countingDisease["C21"], countingDisease["C22"], countingDisease["C23"], countingDisease["C24"], countingDisease["C25"], countingDisease["C26"] ] )
 
     myPlotter = plotter()
     
@@ -118,8 +125,17 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
     #Print latex tables:
     latexWriter = latexPrinter() 
     for l in generalTableRow: 
-        tableHeader.append( l )
-    latexWriter.addTable(tableHeader, caption="General Numbers", transpose=True)
+        tableGeneralHeader.append( l )
+   
+    for l in meshTableRow:
+        tableMeshHeader.append( l )
+    
+    for l in diseaseTableRow:
+        tableDiseasesHeader.append( l )
+
+    latexWriter.addTable(tableGeneralHeader, caption="General Numbers", transpose=True)
+    latexWriter.addTable(tableMeshHeader, caption="Mesh Table", transpose=True)
+    latexWriter.addTable(tableDiseasesHeader, caption="Diseases Table", transpose=True)
 
 def calculateMesh(data):
    
@@ -620,7 +636,7 @@ def printMeshClassificationMetrics(writer, countingMesh, countingDisease):
         writer.write('{0:>15} ------- {1:<10}\n'.format( k, v ))
 
     writer.write("-" * 40 + "\n")
-    writer.write('{0:45} ==> {1:30}\n'.format("Number of Only Disesase identifiers", sum(countingDisease.values())) )
+    writer.write('{0:45} ==> {1:30}\n'.format("Number of Disesase identifiers", sum(countingDisease.values())) )
     writer.write("-" * 40 + "\n")
     
     for k,v in countingDisease.iteritems():

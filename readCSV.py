@@ -104,11 +104,11 @@ def readHONDataSet(filename):
     else:
         csvfile = open(filename, 'rb')
     
-    reader = csv.reader(csvfile, delimiter=',', quotechar='"', escapechar="\\")
+    reader = csv.reader(csvfile, delimiter=',', quotechar="\"", escapechar='\\')
     
     #Sort the data by user and datetime to construct sessions
     reader = sorted(reader, key= lambda k: (k[11], k[1]))  
-    
+
     #Data in the first line
     previousRow = reader[0]
     # (0) msql-id, (1) date, (2) engine, (3) language, (4) nb_terms, (5) orig_query, (6) query_id, (7) session_id, (8) source, (9) user_id, (10) loaded_file_id, (11) ip_address_id, (12) refere
@@ -118,9 +118,9 @@ def readHONDataSet(filename):
     for row in reader[1:]:
         if row:
             if checkSession(previousRow, row, idIndex=11, dateIndex=1, dateFormat='%Y-%m-%d %H:%M:%S'):
-                temp = DataSet(dttime=row[1], userId=row[11], category=None, publication=None, keywords=row[5].strip("\""), rank=None, clickurl=None, previouskeywords=previousRow[5].strip("\""))
+                temp = DataSet(dttime=row[1], userId=row[11], category=None, publication=None, keywords=row[5], rank=None, clickurl=None, previouskeywords=previousRow[5].strip("\""))
             else:
-                temp = DataSet(dttime=row[1], userId=row[11], category=None, publication=None, keywords=row[5].strip("\""), rank=None, clickurl=None, previouskeywords=None)
+                temp = DataSet(dttime=row[1], userId=row[11], category=None, publication=None, keywords=row[5], rank=None, clickurl=None, previouskeywords=None)
             data.append(temp)
             previousRow = row
     
