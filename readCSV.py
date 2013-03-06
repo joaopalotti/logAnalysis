@@ -32,7 +32,7 @@ def readMyFormat(filename):
     else:
         csvfile = open(filename, 'rb')
 
-    reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+    reader = csv.reader(csvfile, delimiter=',', quotechar='"', escapechar="\\", doublequote=False)
     
     #Sort the data by user and datetime to construct sessions
     reader = sorted(reader, key= lambda k: (k[1], k[0]))  
@@ -104,7 +104,7 @@ def readHONDataSet(filename):
     else:
         csvfile = open(filename, 'rb')
     
-    reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+    reader = csv.reader(csvfile, delimiter=',', quotechar='"', escapechar="\\")
     
     #Sort the data by user and datetime to construct sessions
     reader = sorted(reader, key= lambda k: (k[11], k[1]))  
@@ -117,7 +117,7 @@ def readHONDataSet(filename):
 
     for row in reader[1:]:
         if row:
-            if checkSession(previousRow, row, idIndex=11, dateIndex=1, dateFormat='"%Y-%m-%d %H:%M:%S"'):
+            if checkSession(previousRow, row, idIndex=11, dateIndex=1, dateFormat='%Y-%m-%d %H:%M:%S'):
                 temp = DataSet(dttime=row[1], userId=row[11], category=None, publication=None, keywords=row[5].strip("\""), rank=None, clickurl=None, previouskeywords=previousRow[5].strip("\""))
             else:
                 temp = DataSet(dttime=row[1], userId=row[11], category=None, publication=None, keywords=row[5].strip("\""), rank=None, clickurl=None, previouskeywords=None)

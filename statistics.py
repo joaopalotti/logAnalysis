@@ -50,7 +50,8 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
     countingTokensList = []
     countingQueriesList = []
     countingQueriesPerSessionList = []
-    countingMesh = []
+    countingMeshList = []
+    countingDiseaseList = []
     
     tableHeader = [ ["Dtst", "#Days", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Exp", "Exp(%)", "Shr", "Shr(%)", "Ref", "Ref(%)", "Rep", "Rep(%)"] ]
     generalTableRow = []
@@ -64,15 +65,14 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
         percentageAcronym, countingAcronyms = calculateAcronyms(data)
         numberOfUsers = calculateUsers(data)
         npTerms, countingTokens, coOccurrenceList, greatestQuery, countingQueries = calculateTerms(data)
-        numberOfSessions, countingQueriesPerSession, npNumQueriesInSession,\
-                countingTimePerSession, npTime,\
+        numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
                 numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions = calculateQueriesPerSession(data)
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
 
         numberOfQueries = sum(countingQueries.values())
 
-        #if usingMesh:
-        #    coutingMesh = calculateMesh(data)
+        if usingMesh:
+            countingMesh, countingDisease = calculateMesh(data)
 
 
         # Print statistics
@@ -84,15 +84,19 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
             printMetricsForSessions(f, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime,\
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
                                    countingSessionsPerDay, meanSessionsPerDay)
+            printMeshClassificationMetrics(f, countingMesh, countingDisease)
 
         countingAcronymsList.append([dataName, countingAcronyms])
         countingTimePerSessionList.append( [ dataName , countingTimePerSession ])
         countingTokensList.append( [dataName, countingTokens] )
         countingQueriesList.append([dataName, countingQueries] )
         countingQueriesPerSessionList.append([dataName, countingQueriesPerSession])
+        if usingMesh:
+            countingMeshList.append([dataName, countingMesh])
+            countingDiseaseList.append([dataName, countingDisease])
 
         #Data for tables
-        generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfQueries, npTerms.mean, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession.mean, npTime.mean, numberOfExpansions, 100.0 * numberOfExpansions/ numberOfQueries , numberOfShrinkage, 100 * numberOfShrinkage/ numberOfQueries, numberOfReformulations, 100 * numberOfReformulations/numberOfQueries, numberOfRepetitions, 100 * numberOfRepetitions/numberOfQueries])
+        generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfQueries, npTerms.mean, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession.mean, npTime.mean, numberOfExpansions, 100.0 * numberOfExpansions/ numberOfQueries , numberOfShrinkage, 100 * numberOfShrinkage/ numberOfQueries, numberOfReformulations, 100 * numberOfReformulations/numberOfQueries, numberOfRepetitions, 100 * numberOfRepetitions/numberOfQueries] )
 
     myPlotter = plotter()
     
@@ -117,9 +121,22 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
         tableHeader.append( l )
     latexWriter.addTable(tableHeader, caption="General Numbers", transpose=True)
 
+def calculateMesh(data):
+   
+    #We take only the first letter here
+    meshValues = ( member.mesh.strip().split(";") for member in data if member.mesh )
+    meshValues = [ v for values in meshValues for v in values if v != '' ]
+
+    meshDiseases = ( values for values in meshValues if values.startswith('C') )
+    meshValues = ( values[0] for values in meshValues )
+    countingDisease = Counter(meshDiseases)
+    countingMesh = Counter(meshValues)
+    
+    print countingDisease, countingMesh
+    return countingMesh, countingDisease 
 
 def calculateUsers(data):
-    return   len(set( [ member.userId for member in data] ))
+    return len(set( [ member.userId for member in data] ))
 
 def calculateDates(data):
 
@@ -587,6 +604,28 @@ def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQuer
     writer.write('{0:45} ==> {1:15}{2:.3f}(%)\n'.format("Number of Repetitions", str(numberOfRepetitions), numberOfRepetitions/numberOfQueries))    
     writer.write("-" * 40 + "\n")
     writer.write('{0:45} ==> {1:30}\n'.format("Mean Number of Sessions Per Day", str(meanSessionsPerDay)))    
+    writer.write("-" * 40 + "\n")
+    writer.write("-" * 80 + "\n")
+
+def printMeshClassificationMetrics(writer, countingMesh, countingDisease):
+    
+    writer.write("-" * 80 + "\n")
+    writer.write("-" * 40 + "\n")
+    writer.write("MESH CLASSIFICATION:\n")
+    writer.write("-" * 40 + "\n")
+    writer.write('{0:45} ==> {1:30}\n'.format("Number of Mesh identifiers", sum(countingMesh.values()) ))
+    
+    writer.write("-" * 40 + "\n")
+    for k,v in countingMesh.iteritems():
+        writer.write('{0:>15} ------- {1:<10}\n'.format( k, v ))
+
+    writer.write("-" * 40 + "\n")
+    writer.write('{0:45} ==> {1:30}\n'.format("Number of Only Disesase identifiers", sum(countingDisease.values())) )
+    writer.write("-" * 40 + "\n")
+    
+    for k,v in countingDisease.iteritems():
+        writer.write('{0:>15} ------- {1:<10}\n'.format( k, v ))
+    
     writer.write("-" * 40 + "\n")
     writer.write("-" * 80 + "\n")
 
