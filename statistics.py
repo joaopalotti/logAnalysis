@@ -69,7 +69,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
 
         percentageAcronym, countingAcronyms = calculateAcronyms(data)
         numberOfUsers = calculateUsers(data)
-        npTerms, countingTokens, coOccurrenceList, greatestQuery, countingQueries = calculateTerms(data)
+        npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries = calculateTerms(data)
         numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
                 numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions = calculateQueriesPerSession(data)
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
@@ -79,12 +79,12 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
         if usingMesh:
             countingMesh, countingDisease = calculateMesh(data)
 
-
         # Print statistics
         with open(dataName + ".result", "w") as f:
+            print "Writing file ", dataName + ".result..."
             f.write("Metrics calculated:\n")
             printGeneralMetrics(f, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay)
-            printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList, percentageAcronym, countingAcronyms)
+            printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms)
             printMetricsForQueries(f, greatestQuery, countingQueries, countingQueriesPerDay, meanQueriesPerDay)
             printMetricsForSessions(f, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime,\
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
@@ -111,8 +111,10 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
         plotQueriesPerSession(myPlotter, countingQueriesPerSessionList, printValuesToFile)
     if printPlotFrequencyOfTerms:
         plotFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile)
+        plotLogLogFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile)
     if printPlotFrequencyOfQueries:
         plotFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile)
+        plotLogLogFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile)
     if printTimePerSession:
         plotTimePerSession(myPlotter, countingTimePerSessionList, printValuesToFile)
     if printPlotAcronymFrequency:
@@ -148,7 +150,7 @@ def calculateMesh(data):
     countingDisease = Counter(meshDiseases)
     countingMesh = Counter(meshValues)
     
-    print countingDisease, countingMesh
+    #print countingDisease, countingMesh
     return countingMesh, countingDisease 
 
 def calculateUsers(data):
@@ -255,18 +257,36 @@ def plotAcronymFrequency(myPlotter, countingAcronymsList, printValuesToFile):
     dataName, countingAcronyms = countingAcronymsPair[0], countingAcronymsPair[1]
     myPlotter.plotFrequency(countingAcronyms.values(), "Acronyms Repetition", label=dataName, saveName="acronymFreq", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
 
-def plotFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile):
-    
+def plotLogLogFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile):
     for countingQueriesPair in countingQueriesList[:-1]:
         dataName, countingQueries = countingQueriesPair[0], countingQueriesPair[1]
-        myPlotter.plotFrequency(countingQueries.values(), "Query Repetition", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="queriesFre")
+        myPlotter.plotLogLogFrequency(countingQueries.values(), "Query Frequency (log)", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="queriesLogLogFreq")
+
+    countingQueriesPair = countingQueriesList[-1]
+    dataName, countingQueries = countingQueriesPair[0], countingQueriesPair[1]
+    myPlotter.plotLogLogFrequency(countingQueries.values(), "Query Frequency (log)", label=dataName, saveName="queriesLogLogFreq", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
+
+
+def plotFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile):
+    for countingQueriesPair in countingQueriesList[:-1]:
+        dataName, countingQueries = countingQueriesPair[0], countingQueriesPair[1]
+        myPlotter.plotFrequency(countingQueries.values(), "Query Repetition", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="queriesFreq")
 
     countingQueriesPair = countingQueriesList[-1]
     dataName, countingQueries = countingQueriesPair[0], countingQueriesPair[1]
     myPlotter.plotFrequency(countingQueries.values(), "Query Repetition", label=dataName, saveName="queriesFreq", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
 
-def plotFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile):
+def plotLogLogFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile):
+    for countingTokensPair in countingTokensList[:-1]:
+        dataName, countingTokens = countingTokensPair[0], countingTokensPair[1]
+        myPlotter.plotLogLogFrequency(countingTokens.values(), "Term Repetition (log)", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="termLogLogFreq")
+    
+    countingTokensPair = countingTokensList[-1]
+    dataName, countingTokens = countingTokensPair[0], countingTokensPair[1]
+    myPlotter.plotLogLogFrequency(countingTokens.values(), "Term Repetition (log)", label=dataName, saveName="termLogLogFreq", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
 
+
+def plotFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile):
     for countingTokensPair in countingTokensList[:-1]:
         dataName, countingTokens = countingTokensPair[0], countingTokensPair[1]
         myPlotter.plotFrequency(countingTokens.values(), "Term Repetition", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="termFreq")
@@ -494,6 +514,8 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
     # Filter the results using the parameter coOccurrenceThreshold and generate the coOccurrenceList
     numberOfQueries = len(listOfQueries)
     coOccurrenceList = []
+    simpleCoOccurrenceList = []
+
     for d1 in matrix:
         for d2 in matrix[d1]:
             #print d1, d2, countingTokens[d1], countingTokens[d2]
@@ -501,11 +523,12 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
                matrix[d1][d2] / countingTokens[d2] >= coOccurrenceThreshold:
                 #print d1, d2, matrix[d1][d2]
                 coOccurrenceList.append( [d1, d2, matrix[d1][d2], matrix[d1][d2]/numberOfQueries, matrix[d1][d2]/countingTokens[d1], matrix[d1][d2]/countingTokens[d2]] )
+            simpleCoOccurrenceList.append( [d1, d2, matrix[d1][d2], matrix[d1][d2]/numberOfQueries, matrix[d1][d2]/countingTokens[d1], matrix[d1][d2]/countingTokens[d2]] )
 
     # Calculate basic metrics
     npTerms = generateStatsVector(queryInNumbers)
     
-    return npTerms, countingTokens, coOccurrenceList, greatestQuery, countingQueries
+    return npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries
 
 
 def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay):
@@ -520,7 +543,7 @@ def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions
     writer.write('{0:45} ==> {1:30}\n'.format("How may days? ", str((lastDay - firstDay).days)))
     writer.write("-" * 45 + "\n")
  
-def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, percentageAcronym, countingAcronyms):
+def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms):
     
     writer.write("For TERMS:\n")
     writer.write("-" * 45 + "\n")
@@ -553,12 +576,21 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, perc
     writer.write( "-" * 45 + "\n")
 
     writer.write("Co-ocorrence pairs: \n")
-    writer.write('{0:30} | {1:30} | {2:4} | {3:4} | {4:7} | {5:7}\n'.format("Word1","Word2","Tog.","% Tog.","W1W2","W2W1"))
+    writer.write('{0:30} | {1:30} | {2:4} | {3:4} | {4:7} | {5:7}\n'.format("Word1","Word2","Freq","%Freq.","W1W2","W2W1"))
     #writer.write("Word1\tWord2\t\t\tTimes together\tSupport W1W2\tConfidence W1->W2\t Confidence W2->W1" + "\n")
     coOccurrenceList = sorted(coOccurrenceList, key=operator.itemgetter(3),reverse=True)
-    for nestedList in coOccurrenceList:
+    for nestedList in coOccurrenceList[:50]:
         writer.write('{0:30} | {1:30} | {2:4d} | {3:.4f} | {4:.5f} | {5:.5f}\n'.format(nestedList[0],nestedList[1],nestedList[2],nestedList[3],nestedList[4],nestedList[5]))
         #writer.write( nestedList[0], '\t',  nestedList[1], '\t\t\t' , nestedList[2], '\t', nestedList[3], '\t', nestedList[4], '\t', nestedList[5]
+
+    writer.write("-" * 45 + "\n")
+    writer.write("-" * 45 + "\n")
+    writer.write("Simple Co-ocorrence pairs: \n")
+    writer.write('{0:30} | {1:30} | {2:4} | {3:4} | {4:7} | {5:7}\n'.format("Word1","Word2","Freq","%Freq.","W1W2","W2W1"))
+    simpleCoOccurrenceList = sorted(simpleCoOccurrenceList, key=operator.itemgetter(3),reverse=True)
+    for nestedList in simpleCoOccurrenceList[:50]:
+        writer.write('{0:30} | {1:30} | {2:4d} | {3:.4f} | {4:.5f} | {5:.5f}\n'.format(nestedList[0],nestedList[1],nestedList[2],nestedList[3],nestedList[4],nestedList[5]))
+
     writer.write("-" * 80 + "\n")
 
 

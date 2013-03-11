@@ -38,7 +38,7 @@ if __name__ == "__main__":
     #convertFile(PATH_TO_DATASETS + "tripTest4.csv", "trip", "tripSmall.dataset",gzipIt=False)
     #convertFile(PATH_TO_DATASETS + "aolHealthSites.csv", "aol", "aolHealthSites.dataset")
     #convertFile(PATH_TO_DATASETS + "honSmall.csv", "hon", "honSmall.dataset", gzipIt=False)
-    convertFile(PATH_TO_DATASETS + "honSmall2.csv", "hon", "honSmall2.dataset", gzipIt=True)
+    #convertFile(PATH_TO_DATASETS + "honSmall2.csv", "hon", "honSmall2.dataset", gzipIt=True)
 
     #test = readMyFormat(PATH_TO_DATASETS + "output.csv")
     #test2 = readMyFormat(PATH_TO_DATASETS + "output.csv")
@@ -48,12 +48,13 @@ if __name__ == "__main__":
     
     #trip = readTripDataSet(PATH_TO_DATASETS + "tripTest4.csv")
     #aol = readHONDataSet(PATH_TO_DATASETS + "honSmall2.csv")
-    #hon = readHONDataSet(PATH_TO_DATASETS + "honSmall.csv")
+    hon = readHONDataSet(PATH_TO_DATASETS + "honSmall.csv")
     #aolNotHealth = readAolDataSet(PATH_TO_DATASETS + "aolNotHealthsitesSmall.csv")
     #goldminer = readGoldMiner(PATH_TO_DATASETS + "goldminer-v4.txt")
     
     #calculateMetrics([ [aol, "Aol"], [ trip, "Trip"], [hon, "HoN" ] ]) 
     #calculateMetrics([ [trip, "Trip"] ] ) 
+    calculateMetrics([ [hon, "Hon"] ] ) 
     #calculateMetrics([ [aol, "Aol"] ] ) 
     #calculateMetrics([ [aolNotHealth, "~aol"] ] ) 
     #calculateMetrics([ [goldminer, "goldMinerTest"] ] ) 

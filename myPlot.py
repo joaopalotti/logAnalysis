@@ -14,8 +14,14 @@ class plotter:
         self.pp.close()
         print "Good bye!"
 
-    def __finalPlot(self, x, y, label_, format_="o", saveName=None, showIt=True, closeIt=True):
-        plot( x, y, format_, label=label_)
+    def __finalPlot(self, x, y, label_, format_="o", saveName=None, showIt=True, closeIt=True, loglogFormat=False):
+        
+        if loglogFormat:
+            # Reduntant...
+            loglog(x, y, format_, label=label_)
+        else:
+            plot( x, y, format_, label=label_)
+    
         legend()
 
         if saveName and closeIt:
@@ -68,13 +74,23 @@ class plotter:
         elif yStartRange is None and yEndRange is not None:
             ylim(ymax=yEndRange)
      
-    def plotFrequency(self, data1, xlabelName, label=None, saveName=None, data2=None, label2=None, xStartRange=None, xEndRange=None, yStartRange=None, yEndRange=None, showIt=True, lastOne=True, relative=False, printValuesToFile=False):
+    def plotLogLogFrequency(self, data1, xlabelName, label=None, saveName=None, data2=None, label2=None, xStartRange=None, xEndRange=None, yStartRange=None, yEndRange=None, showIt=True, lastOne=True, relative=False, printValuesToFile=False):
+        self.plotFrequency(data1, xlabelName, label, saveName, data2, label2, xStartRange, xEndRange, yStartRange, yEndRange, showIt, lastOne, relative, printValuesToFile, loglog=True)
+
+
+    def plotFrequency(self, data1, xlabelName, label=None, saveName=None, data2=None, label2=None, xStartRange=None, xEndRange=None, yStartRange=None, yEndRange=None, showIt=True, lastOne=True, relative=False, printValuesToFile=False, loglog=False):
 
         ylabel("Frequency")
         xlabel(xlabelName)
         
         dataInt = [ floor(v) for v in data1] 
         c1 =  Counter(dataInt)  
+
+        if loglog:
+            #print "Ploting log-log"
+            ylabel("Frequency (log)")
+            xscale('log')
+            yscale('log')
         
         if relative:
             total = sum(c1.values())
@@ -92,4 +108,4 @@ class plotter:
                 for x, y in c1.iteritems():
                     f.write(str(x) + "," + str(y) + "\n")
         
-        self.__finalPlot(c1.keys(), c1.values(), label, "o", saveName, showIt, closeIt=lastOne)
+        self.__finalPlot(c1.keys(), c1.values(), label, "o", saveName, showIt, closeIt=lastOne, loglogFormat=loglog)
