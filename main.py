@@ -42,13 +42,13 @@ if __name__ == "__main__":
 
     #test = readMyFormat(PATH_TO_DATASETS + "output.csv")
     #test2 = readMyFormat(PATH_TO_DATASETS + "output.csv")
-    #test = readMyFormat(PATH_TO_DATASETS + "honSmall.dataset")
+    hon = readMyFormat(PATH_TO_DATASETS + "honEnglish.972")
     #test = readMyFormat(PATH_TO_DATASETS + "tripSmall.dataset")
     #calculateMetrics([ [test, "test"],[test2, "test2" ]] ) 
     
     #trip = readTripDataSet(PATH_TO_DATASETS + "tripTest4.csv")
     #aol = readHONDataSet(PATH_TO_DATASETS + "honSmall2.csv")
-    hon = readHONDataSet(PATH_TO_DATASETS + "honSmall.csv")
+    #hon = readHONDataSet(PATH_TO_DATASETS + "honSmall.csv")
     #aolNotHealth = readAolDataSet(PATH_TO_DATASETS + "aolNotHealthsitesSmall.csv")
     #goldminer = readGoldMiner(PATH_TO_DATASETS + "goldminer-v4.txt")
     
