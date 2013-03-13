@@ -39,13 +39,19 @@ def readMyFormat(filename):
 
     ## The concept of session should already be defined when this file was created. 
     for row in reader:
+        #print row
+        
+        if len(row) != 6:
+            continue
+        
+        #No keywords in this line, skip it
         if len(row[2]) == 0 or row[2] == None:
             continue
 
-        temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4])
+        temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4], semanticTypes=row[5])
+
         data.append(temp)
     return data
-
 
 def readGoldMiner(filename):
     

@@ -1,42 +1,16 @@
 from __future__ import division
 from collections import defaultdict, Counter
 import operator
-from myPlot import plotter
-import statsmodels.distributions as sm
-import numpy as np
 from datetime import datetime
-from nltk.tokenize.punkt import PunktWordTokenizer
+
 from metrics import generateStatsVector
+from myPlot import plotter
 from latexTools import latexPrinter
-#from nltk import word_tokenize, wordpunct_tokenize
+from auxiliarFunctions import *
+from plotFunctions import *
 
 ####TODO: Add relative metrics like (X / total of queries are of size Y). Change it along the code!
 
-PATH_TO_AUX_FILES = "auxFiles/"
-
-def preProcessData(data, removeStopWords):
-    data = tokenizeAllData(data)
-    
-    if removeStopWords:
-        data = filterStopWords(data)
-    
-    #Sort Data by id/datetime, just to be sure
-    data = sorted(data, key= lambda member: (member.userId, member.datetime))
-
-    return data
-
-def multikeysort(items, columns):
-#http://wiki.python.org/moin/SortingListsOfDictionaries
-    from operator import itemgetter
-    comparers = [ ((itemgetter(col[1:].strip()), -1) if col.startswith('-') else (itemgetter(col.strip()), 1)) for col in columns]  
-    def comparer(left, right):
-        for fn, mult in comparers:
-            result = cmp(fn(left), fn(right))
-            if result:
-                return mult * result
-        else:
-            return 0
-    return sorted(items, cmp=comparer)
 
 def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSizeOfWords=True, printPlotSizeOfQueries=True,\
                      printPlotFrequencyOfQueries=True, printPlotFrequencyOfTerms=True, printPlotAcronymFrequency=True,\
@@ -73,6 +47,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
         numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
                 numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions = calculateQueriesPerSession(data)
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
+        countingReAccess = calculateReAccess(data)
 
         numberOfQueries = sum(countingQueries.values())
 
@@ -149,10 +124,13 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
     latexWriter.addTable(tableMeshHeader, caption="Mesh Table", transpose=True)
     latexWriter.addTable(tableDiseasesHeader, caption="Diseases Table", transpose=True)
 
+
 def calculateMesh(data):
    
     #We take only the first letter here
-    meshValues = ( member.mesh.strip().split(";") for member in data if member.mesh )
+
+##TODO: check if it is still working
+    meshValues = ( member.mesh for member in data if member.mesh )
     meshValues = [ v for values in meshValues for v in values if v != '' ]
 
     hasMeshValues =  sum( 1 for member in data if member.mesh )
@@ -217,159 +195,6 @@ def calculateAcronyms(data):
     #print hasAcronym
     return percentageAcronym, countingAcronyms
 
-def plotCountingTimePerSessionListAcc(myPlotter, countingTimePerSessionList, printValuesToFile):
-    
-    for countingTimePerSessionPair in countingTimePerSessionList[:-1]:
-        dataName = countingTimePerSessionPair[0]
-        countingTimePerSession = countingTimePerSessionPair[1]
-
-        ecdf = sm.ECDF( list(countingTimePerSession.elements()) )
-        x = np.linspace(min(countingTimePerSession.keys()), max(countingTimePerSession.keys()))
-        y = ecdf(x)
-        myPlotter.plotXY(x, y, label=dataName, ylabelName="Frequency", xlabelName="Acc Time Per Session", showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="accTimePerSession")
-    
-    dataName, countingTimePerSession = countingTimePerSessionList[-1][0], countingTimePerSessionList[-1][1]
-    ecdf = sm.ECDF( list(countingTimePerSession.elements()) )
-    x = np.linspace(min(countingTimePerSession.keys()), max(countingTimePerSession.keys()))
-    y = ecdf(x)
-    
-    myPlotter.plotXY(x, y, label=dataName, ylabelName="Frequency", xlabelName="Acc Time Per Session", saveName="accTimePerSession", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
-
-def plotTimePerSession(myPlotter, countingTimePerSessionList, printValuesToFile):
-    
-    plotCountingTimePerSessionListAcc(myPlotter, countingTimePerSessionList, printValuesToFile)
-    
-    for countingTimePerSessionPair in countingTimePerSessionList[:-1]:
-        dataName, countingTimePerSession = countingTimePerSessionPair[0], countingTimePerSessionPair[1]
-        myPlotter.plotCounter(countingTimePerSession, label=dataName, ylabelName="Frequency", xlabelName="Time Per Session (Seconds)", showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="timePerSession")
-
-    countingTimePerSessionPair = countingTimePerSessionList[-1]
-    dataName, countingTimePerSession = countingTimePerSessionPair[0], countingTimePerSessionPair[1]
-    myPlotter.plotCounter(countingTimePerSession, label=dataName, ylabelName="Frequency", xlabelName="Time Per Session (Seconds)", \
-                saveName="timePerSession", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
-
-
-def plotQueriesPerSession(myPlotter, countingQueriesPerSessionList, printValuesToFile):
-
-    for countingQueriesPerSessionPair in countingQueriesPerSessionList[:-1]:
-        dataName, countingQueriesPerSession = countingQueriesPerSessionPair[0], countingQueriesPerSessionPair[1]
-        myPlotter.plotCounter(countingQueriesPerSession, label=dataName, xlabelName="Queries Per Session", ylabelName="Frequency", showIt=False, lastOne=False, printValuesToFile=printValuesToFile,saveName="queriesPerSession")
-    
-    countingQueriesPerSessionPair = countingQueriesPerSessionList[-1]
-    dataName, countingQueriesPerSession = countingQueriesPerSessionPair[0], countingQueriesPerSessionPair[1]
-    myPlotter.plotCounter(countingQueriesPerSession, label=dataName, xlabelName="Queries Per Session", ylabelName="Frequency", saveName="queriesPerSession", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
-
-def plotAcronymFrequency(myPlotter, countingAcronymsList, printValuesToFile):
-    
-    for countingAcronymsPair in countingAcronymsList[:-1]:
-        dataName, countingAcronyms = countingAcronymsPair[0], countingAcronymsPair[1]
-        myPlotter.plotFrequency(countingAcronyms.values(), "Acronyms Repetition", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="acronymFreq")
-    
-    countingAcronymsPair = countingAcronymsList[-1]
-    dataName, countingAcronyms = countingAcronymsPair[0], countingAcronymsPair[1]
-    myPlotter.plotFrequency(countingAcronyms.values(), "Acronyms Repetition", label=dataName, saveName="acronymFreq", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
-
-def plotLogLogFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile):
-    for countingQueriesPair in countingQueriesList[:-1]:
-        dataName, countingQueries = countingQueriesPair[0], countingQueriesPair[1]
-        myPlotter.plotLogLogFrequency(countingQueries.values(), "Query Frequency (log)", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="queriesLogLogFreq")
-
-    countingQueriesPair = countingQueriesList[-1]
-    dataName, countingQueries = countingQueriesPair[0], countingQueriesPair[1]
-    myPlotter.plotLogLogFrequency(countingQueries.values(), "Query Frequency (log)", label=dataName, saveName="queriesLogLogFreq", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
-
-
-def plotFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile):
-    for countingQueriesPair in countingQueriesList[:-1]:
-        dataName, countingQueries = countingQueriesPair[0], countingQueriesPair[1]
-        myPlotter.plotFrequency(countingQueries.values(), "Query Repetition", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="queriesFreq")
-
-    countingQueriesPair = countingQueriesList[-1]
-    dataName, countingQueries = countingQueriesPair[0], countingQueriesPair[1]
-    myPlotter.plotFrequency(countingQueries.values(), "Query Repetition", label=dataName, saveName="queriesFreq", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
-
-def plotLogLogFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile):
-    for countingTokensPair in countingTokensList[:-1]:
-        dataName, countingTokens = countingTokensPair[0], countingTokensPair[1]
-        myPlotter.plotLogLogFrequency(countingTokens.values(), "Term Repetition (log)", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="termLogLogFreq")
-    
-    countingTokensPair = countingTokensList[-1]
-    dataName, countingTokens = countingTokensPair[0], countingTokensPair[1]
-    myPlotter.plotLogLogFrequency(countingTokens.values(), "Term Repetition (log)", label=dataName, saveName="termLogLogFreq", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
-
-
-def plotFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile):
-    for countingTokensPair in countingTokensList[:-1]:
-        dataName, countingTokens = countingTokensPair[0], countingTokensPair[1]
-        myPlotter.plotFrequency(countingTokens.values(), "Term Repetition", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="termFreq")
-    
-    countingTokensPair = countingTokensList[-1]
-    dataName, countingTokens = countingTokensPair[0], countingTokensPair[1]
-    myPlotter.plotFrequency(countingTokens.values(), "Term Repetition", label=dataName, saveName="termFreq", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
-
-def plotSizeOfQueries(myPlotter, dataList, printValuesToFile):
-    
-    queriesSize = []
-    for dataItem in dataList[:-1]:
-        data, dataName = dataItem[0], dataItem[1]
-        queriesSize = [ len(member.keywords) for member in data ] 
-        myPlotter.plotFrequency(queriesSize, "Query Size", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="queriesSize")
-
-    data, dataName = dataList[-1][0], dataList[-1][1]
-    queriesSize = [ len(member.keywords) for member in data ] 
-    myPlotter.plotFrequency(queriesSize, "Query Size", label=dataName, saveName="queriesSize", showIt=False, lastOne=True, relative=True, printValuesToFile=printValuesToFile)
-
-def plotSizeOfWords(myPlotter, dataList, printValuesToFile):
-    
-    wordsSize = []
-    for dataItem in dataList[:-1]:
-        data, dataName = dataItem[0], dataItem[1]
-        queriesSize = [ len(member.keywords) for member in data ] 
-        wordsSize = [ len(word) for member in data for word in member.keywords]
-        myPlotter.plotFrequency(wordsSize, "Word Size", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="wordSize")
-
-    wordsSize = [ len(word) for member in dataList[-1][0] for word in member.keywords]
-    dataName = dataList[-1][1]
-    myPlotter.plotFrequency(wordsSize, "Word Size", label=dataName, saveName="wordSize", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
-
-def tokenizeAllData(data):
-    
-    for member in data:
-        member.keywords = tokenize(member.keywords)
-        if member.previouskeywords:
-            member.previouskeywords = tokenize(member.previouskeywords)
-    return data
-
-def filterStopWords(data):
-    
-    stopWords = set()
-    #Using as reference: http://jmlr.csail.mit.edu/papers/volume5/lewis04a/a11-smart-stop-list/english.stop
-    with open(PATH_TO_AUX_FILES + "stopWords.txt","r") as f:
-        for line in f:
-            stopWords.add(line.strip())
-
-    for member in data:
-        noStopWords = [ keyword for keyword in member.keywords if keyword not in stopWords]
-        member.keywords = noStopWords[:]
-        if member.previouskeywords:
-            noStopWords = [ keyword for keyword in member.previouskeywords if keyword not in stopWords]
-            member.previouskeywords = noStopWords[:]
-
-    return data
-
-def compareSets(set1, set2):
-    #print "Comparing ", set1, " and ", set2
-    #numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions
-    if set1 == set2:
-        return 0,0,0,1
-    elif set1 > set2:
-        return 0,1,0,0
-    elif set1 < set2:
-        return 1,0,0,0
-    else: 
-        return 0,0,1,0
-    
-
 def calculateExpansionShrinkageReformulations(sessions, ignoreRepetition=True):
     
     numberOfExpansions = 0
@@ -421,21 +246,21 @@ def calculateQueriesPerSession(data):
 
         # There are no previous keywords and no sessions of this id -> create the first one sessions[id][1] = list
         if member.previouskeywords is None and not sessions[member.userId]:
-            sessions[member.userId][1] = [[member.datetime, member.keywords]]
+            sessions[member.userId][1] = [[member.datetime, member.keywords, member.semanticTypes]]
 
         # There are no previous keywords and there is at least one sessions of this id 
         elif member.previouskeywords is None and sessions[member.userId]:
-            sessions[member.userId][ len(sessions[member.userId]) + 1 ] = [[member.datetime, member.keywords]]
+            sessions[member.userId][ len(sessions[member.userId]) + 1 ] = [[member.datetime, member.keywords, member.semanticTypes]]
         
         elif member.previouskeywords is not None and not sessions[member.userId]:
             # This situation should not happen, but it does. It means that a session was not created but there were previous keywords.
             #print "ERROR!"
             #print member.userId, member.datetime, member.keywords, "previous ---> ", member.previouskeywords
-            sessions[member.userId][1] = [[member.datetime, member.keywords]]
+            sessions[member.userId][1] = [[member.datetime, member.keywords, member.semanticTypes]]
 
         # There are previous keywords!
         else:
-            sessions[member.userId][ len(sessions[member.userId]) ] += [[member.datetime,member.keywords]]
+            sessions[member.userId][ len(sessions[member.userId]) ] += [[member.datetime,member.keywords, member.semanticTypes]]
 
     #for session, date in sessions.iteritems():
     #    print session, date
@@ -459,7 +284,10 @@ def calculateQueriesPerSession(data):
     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions,\
             vectorOfModifiedSessions = calculateExpansionShrinkageReformulations(sessions)
     modifiedQueries = numberOfExpansions + numberOfShrinkage + numberOfReformulations + numberOfRepetitions 
-    
+   
+
+    calculateSemanticTypes(sessions)
+
     # The number of sessions with more that 2 queries HAVE to be the same that the number of modified session
     #print "SUM = ", sum(vectorOfModifiedSessions), " More than one = ", sessionsWithMoreThanOneQuery, " rep =", numberOfRepetitions
     #print vectorOfModifiedSessions
@@ -472,13 +300,79 @@ def calculateQueriesPerSession(data):
             countingTimePerSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions,\
             vectorOfModifiedSessions
 
-def tokenize(keywordList):
-    # split query into words and eliminate blank spaces
+
+def analyzeSequencyOfActions(sequence):
+    cause, symptom, remedy = 0,0,0
+    hasCause, hasSymptom, hasRemedy = 0,0,0
+
+    for action in sequence:
+        if action is "cause":
+            cause += 1
+            hasCause += 1
+        elif action is "symptom":
+            symptom += 1
+            hasSymptom += 1
+        elif action is "remedy":
+            remedy += 1
+            hasRemedy += 1
     
-    #return [ w.strip().lower() for w in keywordList.split(" ") if w.strip() ]
-    #return [ w.strip().lower() for w in nltk.wordpunct_tokenize(keywordList) if w.strip() ]
-    return [ w.strip().lower() for w in PunktWordTokenizer().tokenize(keywordList) if w.strip() ]
-    
+    index = int( str(hasRemedy) + str(hasCause) + str(hasSymptom), 2) #binary transformation here
+    print index, hasRemedy, hasCause, hasSymptom
+    return index
+
+"""
+    Input:
+        sessions ---> { id: { sessionCounter: [ [Query1], [Q2], [Q3] ], sessionCounter2: [[Q1], [Q2], [Q3]]  }  }
+        id -> user identification
+        QueryX -> [ datetime, keywords, semanticTypes]
+        sessionCounter -> counter starting from 1
+
+    Some important semantic types (list: http://metamap.nlm.nih.gov/SemanticTypeMappings_2011AA.txt)
+        -> Symptom   -> sosy (Sign or Symptom)
+        -> Cause     -> bact (Bacterium), virs (Virus), dsyn (Disease or Syndrome), orgm (Organism)
+        -> Remedy    -> drdd (Drug Delivery Device), clnd (Clinical Drug), amas (Amino Acid Sequence ?)
+        -> where     -> bpoc (Body Part, Organ, or Organ Component), bsoj (Body Space or Junction)
+"""
+def calculateSemanticTypes(sessions):
+
+    countingSemantics = { "symptom":0, "cause": 0, "remedy": 0, "where": 0 }
+    countingPureSemanticTypes = defaultdict(int)
+    vectorOfActionSequence = [0] * 8 # [ 2^{remedy,cause,symptom} in this order ] 
+
+    for session in sessions.values():
+        for subSession in session.values():
+            print subSession
+            
+            actionSequency = []
+            for query in subSession:
+                if query[2] is not None:
+                    print "Semantic Type => ", query[2]
+                    
+                    for st in query[2]:
+                        countingPureSemanticTypes[st] += 1
+                        
+                        if st in ["sosy"]:
+                            actionSequency.append("symptom")
+                            countingSemantics["symptom"] += 1
+                        elif st in ["bact", "virs", "dsyn", "orgm"]:
+                            actionSequency.append("cause")
+                            countingSemantics["cause"] += 1
+                        elif st in ["drdd", "clnd", "amas"]:
+                            actionSequency.append("remedy")
+                            countingSemantics["remedy"] += 1
+                        elif st in ["bpoc", "bsoj"]:
+                            actionSequency.append("where")
+                            countingSemantics["where"] += 1
+
+            #analyse the sequence of symptom followed by causes, etc.
+            index = analyzeSequencyOfActions(actionSequency)
+            print "INDEX = ", index
+            vectorOfActionSequence[index] += 1
+
+    print countingSemantics
+    print countingPureSemanticTypes
+    print "Vector of Action Sequence ", vectorOfActionSequence
+    return countingSemantics, countingPureSemanticTypes, vectorOfActionSequence
 
 def calculateTerms(data, coOccurrenceThreshold=0.6):
     """
@@ -542,6 +436,20 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
     
     return npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries
 
+
+def calculateReAccess(data):
+    #TODO: terminar!
+    countingReAccess = []
+    userQuery = ( (member.userId , member.keywords) for member in data )
+
+    #print Counter(userQuery)
+    #userQueryMap = defaultdict(str)
+    #for uq in userQuery:
+    #    userQueryMap[uq[0]] = uq[1]
+
+    #print userQueryMap
+
+    return countingReAccess
 
 def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay):
     writer.write("-" * 80 + "\n")

@@ -3,7 +3,7 @@ import re, sys, csv
 
 class DataSet(object):
     
-    def __init__(self, dttime, userId, keywords, previouskeywords=None, category=None, publication=None, rank=None, clickurl=None, mesh=None, usingTimestamp=False):
+    def __init__(self, dttime, userId, keywords, previouskeywords=None, category=None, publication=None, rank=None, clickurl=None, mesh=None, semanticTypes=None, usingTimestamp=False):
       
         withMs = re.compile("(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).(\d{3})")
         withMsAndQuote = re.compile("\"(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).(\d{3})\"")
@@ -36,10 +36,11 @@ class DataSet(object):
         self.previouskeywords = None if not previouskeywords or previouskeywords  == "Null" or previouskeywords == "NULL" else previouskeywords
         self.rank = rank if rank else None
         self.clickurl = clickurl if clickurl else None
-        self.mesh = mesh if mesh else None
+        self.mesh = mesh.strip().split(";") if mesh else None
+        self.semanticTypes = semanticTypes.strip().split(";") if semanticTypes else None
         
     def printMe(self, out=sys.stdout):
         writer = csv.writer(out, delimiter=',', quoting=csv.QUOTE_ALL, quotechar ='"', escapechar='\\', doublequote=False)
         # Should add here any important information and modify the corresponding readCSV
-        writer.writerow( [ str(self.datetime) ,  self.userId, self.keywords, self.previouskeywords, self.mesh ])
+        writer.writerow( [ str(self.datetime) ,  self.userId, self.keywords, self.previouskeywords, self.mesh, self.semanticTypes ])
         
