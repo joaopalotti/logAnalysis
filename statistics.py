@@ -12,7 +12,7 @@ from plotFunctions import *
 ####TODO: Add relative metrics like (X / total of queries are of size Y). Change it along the code!
 
 
-def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSizeOfWords=True, printPlotSizeOfQueries=True,\
+def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotSizeOfWords=True, printPlotSizeOfQueries=True,\
                      printPlotFrequencyOfQueries=True, printPlotFrequencyOfTerms=True, printPlotAcronymFrequency=True,\
                      printQueriesPerSession=True, printTimePerSession=True, printValuesToFile=True):
     """
@@ -30,10 +30,14 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
     tableGeneralHeader = [ ["Dtst", "#Days", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Exp", "Exp(%)", "Shr", "Shr(%)", "Ref", "Ref(%)", "Rep", "Rep(%)", "QrsWithMesh", "MeshIds", "DiseIds"] ]
     tableMeshHeader = [ ["Dtst","A","B","C","D","E","F","G","H","I","J","K","L","M","N","V","Z"] ]
     tableDiseasesHeader = [ ["Dtst","C01","C02","C03","C04","C05","C06","C07","C08","C09","C10","C11","C12","C13","C14","C15","C16","C17","C18","C19","C20","C21","C22","C23","C24","C25","C26"] ]
+    tableSemanticFocusHeader = [ ["Dtst", "Nothing", "Symptom", "Cause", "Remedy", "SymptomCause", "SymptomRemedy", "CauseRemedy", "SymptomCauseRemedy"] ]
+    tableModifiedSessionHeader = [["Dtst","Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]] 
 
     generalTableRow = []
     meshTableRow = []
     diseaseTableRow = []
+    semanticFocusRow = []
+    modifiedSessionRow = []
 
     for dataPair in dataList:
         data, dataName = dataPair[0], dataPair[1]
@@ -45,9 +49,10 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
         numberOfUsers = calculateUsers(data)
         npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries = calculateTerms(data)
         numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
-                numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions = calculateQueriesPerSession(data)
+                numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
+                countingSemantics, countingPureSemanticTypes, vectorOfActionSequence,\
+                countingReAccess = calculateQueriesPerSession(data)
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
-        countingReAccess = calculateReAccess(data)
 
         numberOfQueries = sum(countingQueries.values())
 
@@ -64,7 +69,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
             printMetricsForQueries(f, greatestQuery, countingQueries, countingQueriesPerDay, meanQueriesPerDay)
             printMetricsForSessions(f, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime,\
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
-                                   countingSessionsPerDay, meanSessionsPerDay)
+                                   countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers)
             printMeshClassificationMetrics(f, countingMesh, countingDisease)
 
         countingAcronymsList.append([dataName, countingAcronyms])
@@ -89,6 +94,12 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
         
         meshTableRow.append( [ dataName, countingMesh["A"]/ numberOfMeshTerms, countingMesh["B"]/ numberOfMeshTerms, countingMesh["C"]/ numberOfMeshTerms, countingMesh["D"]/ numberOfMeshTerms, countingMesh["E"]/ numberOfMeshTerms, countingMesh["F"]/ numberOfMeshTerms, countingMesh["G"]/ numberOfMeshTerms, countingMesh["H"]/ numberOfMeshTerms, countingMesh["I"]/ numberOfMeshTerms, countingMesh["J"]/ numberOfMeshTerms, countingMesh["K"]/ numberOfMeshTerms, countingMesh["L"]/ numberOfMeshTerms, countingMesh["M"]/ numberOfMeshTerms, countingMesh["N"]/ numberOfMeshTerms, countingMesh["V"]/ numberOfMeshTerms, countingMesh["Z"]/ numberOfMeshTerms  ] )
         diseaseTableRow.append( [ dataName,  countingDisease["C01"]/ numberOfMeshDiseases, countingDisease["C02"]/ numberOfMeshDiseases, countingDisease["C03"]/ numberOfMeshDiseases, countingDisease["C04"]/ numberOfMeshDiseases, countingDisease["C05"]/ numberOfMeshDiseases, countingDisease["C06"]/ numberOfMeshDiseases, countingDisease["C07"]/ numberOfMeshDiseases, countingDisease["C08"]/ numberOfMeshDiseases, countingDisease["C09"]/ numberOfMeshDiseases, countingDisease["C10"]/ numberOfMeshDiseases, countingDisease["C11"]/ numberOfMeshDiseases, countingDisease["C12"]/ numberOfMeshDiseases, countingDisease["C13"]/ numberOfMeshDiseases, countingDisease["C14"]/ numberOfMeshDiseases, countingDisease["C15"]/ numberOfMeshDiseases, countingDisease["C16"]/ numberOfMeshDiseases, countingDisease["C17"]/ numberOfMeshDiseases, countingDisease["C18"]/ numberOfMeshDiseases, countingDisease["C19"]/ numberOfMeshDiseases, countingDisease["C20"]/ numberOfMeshDiseases, countingDisease["C21"]/ numberOfMeshDiseases, countingDisease["C22"]/ numberOfMeshDiseases, countingDisease["C23"]/ numberOfMeshDiseases, countingDisease["C24"]/ numberOfMeshDiseases, countingDisease["C25"]/ numberOfMeshDiseases, countingDisease["C26"]/ numberOfMeshDiseases ] )
+
+        # ["Dtst", "Nothing", "Symptom", "Cause", "Remedy", "SymptomCause", "SymptomRemedy", "CauseRemedy", "SymptomCauseRemedy"]
+        semanticFocusRow.append( [ dataName, vectorOfActionSequence[0], vectorOfActionSequence[1], vectorOfActionSequence[2], vectorOfActionSequence[4], vectorOfActionSequence[3], vectorOfActionSequence[5], vectorOfActionSequence[6], vectorOfActionSequence[7] ] )
+
+        #["Dtst","Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]
+        modifiedSessionRow.append( [dataName, vectorOfModifiedSessions[0], vectorOfModifiedSessions[4], vectorOfModifiedSessions[2], vectorOfModifiedSessions[1], vectorOfModifiedSessions[6], vectorOfModifiedSessions[5], vectorOfModifiedSessions[3], vectorOfModifiedSessions[7] ] )
 
     myPlotter = plotter()
     
@@ -120,16 +131,22 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=True, printPlotSi
     for l in diseaseTableRow:
         tableDiseasesHeader.append( l )
 
+    for l in semanticFocusRow:
+        tableSemanticFocusHeader.append(l)
+
+    for l in modifiedSessionRow:
+        tableModifiedSessionHeader.append(l)
+
     latexWriter.addTable(tableGeneralHeader, caption="General Numbers", transpose=True)
+    latexWriter.addTable(tableModifiedSessionHeader, caption="Modifications in a session", transpose=True)
     latexWriter.addTable(tableMeshHeader, caption="Mesh Table", transpose=True)
     latexWriter.addTable(tableDiseasesHeader, caption="Diseases Table", transpose=True)
+    latexWriter.addTable(tableSemanticFocusHeader, caption="Semantic Focus", transpose=True)
 
 
 def calculateMesh(data):
    
     #We take only the first letter here
-
-##TODO: check if it is still working
     meshValues = ( member.mesh for member in data if member.mesh )
     meshValues = [ v for values in meshValues for v in values if v != '' ]
 
@@ -210,16 +227,18 @@ def calculateExpansionShrinkageReformulations(sessions, ignoreRepetition=True):
             
             modifiedSubSession = False
             previousQuery = subSession[0]
-            subQueryE, subQueryS, subQueryRef, subQueryRep = 0,0,0,0
+            subQueryE, subQueryS, subQueryRef, subQueryRep = 0, 0, 0, 0
+            
             for query in subSession[1:]:
-                e, s, ref, rep = compareSets( set(previousQuery[1]), set(query[1]))
+                e, s, ref, rep = compareSets( set(previousQuery[1]), set(query[1]) )
                 numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions =\
                         e + numberOfExpansions, s + numberOfShrinkage, ref + numberOfReformulations, rep + numberOfRepetitions
                 subQueryE, subQueryS, subQueryRef, subQueryRep = subQueryE + e, subQueryS + s, subQueryRef + ref, subQueryRep + rep
                 
-                #print "Session === ", subSession
+                #print "Session === ", subSession, "\n"
                 #print "Q1  = ", set(previousQuery[1]), " Q2 = ", set(query[1])
                 #print " numberOfExpansions = ", numberOfExpansions, " numberOfShrinkage = ", numberOfShrinkage, " numberOfReformulations = ", numberOfReformulations, " numberOfRepetitions = ", numberOfRepetitions
+                #print 
 
                 # If a repetition occurs, we do not consider it as a modified session
                 if e > 0 or s > 0 or ref > 0:
@@ -229,11 +248,10 @@ def calculateExpansionShrinkageReformulations(sessions, ignoreRepetition=True):
             if modifiedSubSession:
                 be, bs, bref, brep = 0 if subQueryE == 0 else 1, 0 if subQueryS == 0 else 1, 0 if subQueryRef == 0 else 1, 0 if subQueryRep == 0 else 1
                 indexVal =  int( str(be) + str(bs) + str(bref), 2) if ignoreRepetition else int( str(be) + str(bs) + str(bref) + str(brep), 2)
-                #print "INDEX = ", indexVal
+
+                #print "INDEX = ", indexVal, " exp : ", be, " shr: ", bs, " ref:", bref
                 vectorOfModifiedSessions[indexVal] += 1
                 
-                
-    
     return numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions
 
 def calculateQueriesPerSession(data):
@@ -285,21 +303,58 @@ def calculateQueriesPerSession(data):
             vectorOfModifiedSessions = calculateExpansionShrinkageReformulations(sessions)
     modifiedQueries = numberOfExpansions + numberOfShrinkage + numberOfReformulations + numberOfRepetitions 
    
+    # calculate all semantic stuff
+    countingSemantics, countingPureSemanticTypes, vectorOfActionSequence = calculateSemanticTypes(sessions)
 
-    calculateSemanticTypes(sessions)
-
+    #Calculate the number of re-access to some information in different sessions!i
+    countingReAccess = calculateReAccessInDifferentSessions(sessions)
+    
     # The number of sessions with more that 2 queries HAVE to be the same that the number of modified session
     #print "SUM = ", sum(vectorOfModifiedSessions), " More than one = ", sessionsWithMoreThanOneQuery, " rep =", numberOfRepetitions
     #print vectorOfModifiedSessions
     ###TODO CHECK code :
     #assert sum(vectorOfModifiedSessions) == sessionsWithMoreThanOneQuery
     
-
     #print numberOfSessions, npNumQueriesInSession, npTime
     return numberOfSessions, countingQueriesPerSession, npNumQueriesInSession,\
             countingTimePerSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions,\
-            vectorOfModifiedSessions
+            vectorOfModifiedSessions, countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, countingReAccess
 
+
+def calculateReAccessInDifferentSessions(sessions):
+    countingReAccess = defaultdict(int) # { usedId: numberOfReAcess } 
+    '''
+    Number of users who had a re-access: len(countingReAccess)
+    Total number of re-access: sum(countingReAccess.values())
+    '''
+    
+    for userId, session in sessions.iteritems():
+        
+        uniqueQueries = {}
+        pastQueries = {}
+
+        for subSession in session.values():
+            queries = {}
+
+            for query in subSession:
+                queries[ tuple(set(query[1])) ] = 1 #using set to ignore order
+                #print "usedId =>", userId, "Query => ", query[1]
+
+                if tuple(set(query[1])) in pastQueries:
+                    #print "FOUND RE ACCESS HERE ---> ", query[1]
+                    countingReAccess[userId] += 1
+
+                #print "set(queries) =  ", queries
+
+            pastQueries.update(queries)
+            #print "Qs ---> ", queries
+            #print "PastQueries ----> ", pastQueries
+    
+    
+    print "countingReAccess ->> ", countingReAccess
+    #print len(countingReAccess)
+    #print sum(countingReAccess.values())
+    return countingReAccess
 
 def analyzeSequencyOfActions(sequence):
     cause, symptom, remedy = 0,0,0
@@ -308,16 +363,16 @@ def analyzeSequencyOfActions(sequence):
     for action in sequence:
         if action is "cause":
             cause += 1
-            hasCause += 1
+            hasCause = 1
         elif action is "symptom":
             symptom += 1
-            hasSymptom += 1
+            hasSymptom = 1
         elif action is "remedy":
             remedy += 1
-            hasRemedy += 1
+            hasRemedy = 1
     
     index = int( str(hasRemedy) + str(hasCause) + str(hasSymptom), 2) #binary transformation here
-    print index, hasRemedy, hasCause, hasSymptom
+    #print "index = ", index, "remedy =", hasRemedy, "cause", hasCause,"symptom", hasSymptom
     return index
 
 """
@@ -341,12 +396,12 @@ def calculateSemanticTypes(sessions):
 
     for session in sessions.values():
         for subSession in session.values():
-            print subSession
+            #print subSession
             
             actionSequency = []
             for query in subSession:
                 if query[2] is not None:
-                    print "Semantic Type => ", query[2]
+                    #print "Semantic Type => ", query[2]
                     
                     for st in query[2]:
                         countingPureSemanticTypes[st] += 1
@@ -366,12 +421,12 @@ def calculateSemanticTypes(sessions):
 
             #analyse the sequence of symptom followed by causes, etc.
             index = analyzeSequencyOfActions(actionSequency)
-            print "INDEX = ", index
+            #print "INDEX = ", index
             vectorOfActionSequence[index] += 1
 
-    print countingSemantics
-    print countingPureSemanticTypes
-    print "Vector of Action Sequence ", vectorOfActionSequence
+    #print countingSemantics
+    #print countingPureSemanticTypes
+    #print "Vector of Action Sequence ", vectorOfActionSequence
     return countingSemantics, countingPureSemanticTypes, vectorOfActionSequence
 
 def calculateTerms(data, coOccurrenceThreshold=0.6):
@@ -436,20 +491,6 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
     
     return npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries
 
-
-def calculateReAccess(data):
-    #TODO: terminar!
-    countingReAccess = []
-    userQuery = ( (member.userId , member.keywords) for member in data )
-
-    #print Counter(userQuery)
-    #userQueryMap = defaultdict(str)
-    #for uq in userQuery:
-    #    userQueryMap[uq[0]] = uq[1]
-
-    #print userQueryMap
-
-    return countingReAccess
 
 def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay):
     writer.write("-" * 80 + "\n")
@@ -538,7 +579,7 @@ def printMetricsForQueries(writer, greatestQuery, countingQueries, countingQueri
     writer.write("-" * 80 + "\n")
     
 
-def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions, countingSessionsPerDay, meanSessionsPerDay):
+def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions, countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers):
 
     writer.write("-" * 80 + "\n")
     writer.write("-" * 40 + "\n")
@@ -573,6 +614,9 @@ def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQuer
     writer.write("-" * 40 + "\n")
     writer.write('{0:45} ==> {1:30}\n'.format("Mean Number of Sessions Per Day", str(meanSessionsPerDay)))    
     writer.write("-" * 40 + "\n")
+    writer.write("-" * 40 + "\n")
+    writer.write('{0:45} ==> {1:d}, {2:.2f}(%)\n'.format("Number of users re-accessing information:",len(countingReAccess),100*len(countingReAccess)/numberOfUsers))
+    writer.write('{0:45} ==> {1:d}\n'.format("Total number of re-access inter sessions:", sum(countingReAccess.values())))    
     writer.write("-" * 80 + "\n")
 
 def printMeshClassificationMetrics(writer, countingMesh, countingDisease):

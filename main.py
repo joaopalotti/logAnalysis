@@ -42,8 +42,8 @@ if __name__ == "__main__":
 
     #test = readMyFormat(PATH_TO_DATASETS + "output.csv")
     #test2 = readMyFormat(PATH_TO_DATASETS + "output.csv")
-    trip = readMyFormat(PATH_TO_DATASETS + "tripResultNotCompleted.dataset.gz")
-    hon = readMyFormat(PATH_TO_DATASETS + "honEnglishNotCompleted.dataset.gz")
+    #trip = readMyFormat(PATH_TO_DATASETS + "tripSmall.dataset")
+    hon = readMyFormat(PATH_TO_DATASETS + "honEnglishSmall.dataset")
     #calculateMetrics([ [test, "test"],[test2, "test2" ]] ) 
     
     #trip = readTripDataSet(PATH_TO_DATASETS + "tripTest4.csv")
@@ -54,8 +54,8 @@ if __name__ == "__main__":
     
     #calculateMetrics([ [aol, "Aol"], [ trip, "Trip"], [hon, "HoN" ] ]) 
     #calculateMetrics([ [trip, "Trip"] ] ) 
-    #calculateMetrics([ [hon, "Hon"] ] ) 
-    calculateMetrics([ [hon, "Hon"], [trip, "Trip"] ] ) 
+    calculateMetrics([ [hon, "Hon"] ] ) 
+    #calculateMetrics([ [hon, "Hon"], [trip, "Trip"] ] ) 
     #calculateMetrics([ [aol, "Aol"] ] ) 
     #calculateMetrics([ [aolNotHealth, "~aol"] ] ) 
     #calculateMetrics([ [goldminer, "goldMinerTest"] ] ) 

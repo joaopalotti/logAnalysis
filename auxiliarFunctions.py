@@ -38,7 +38,9 @@ def filterStopWords(data):
 
 def compareSets(set1, set2):
     #print "Comparing ", set1, " and ", set2
-    #numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions
+    #print "set1 == set2 --> " , set1 == set2
+    #print "set1 > set2 --> " , set1 > set2
+    #print "set1 < set2 --> " , set1 < set2
     if set1 == set2:
         return 0,0,0,1
     elif set1 > set2:

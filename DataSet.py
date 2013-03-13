@@ -21,7 +21,7 @@ class DataSet(object):
         elif usingTimestamp:
             self.datetime = datetime.fromtimestamp(float(dttime))
         else:
-            print "ERROR: Invalid date format found!"
+            print "ERROR: Invalid date format found! : ", dttime
             self.datetime = None
             assert False
 
