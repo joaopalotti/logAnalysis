@@ -53,6 +53,8 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
                 countingSemantics, countingPureSemanticTypes, vectorOfActionSequence,\
                 countingReAccess = calculateQueriesPerSession(data)
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
+        countingNL = calculateNLuse(data)
+
 
         numberOfQueries = sum(countingQueries.values())
 
@@ -65,7 +67,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
             print "Writing file ", dataName + ".result..."
             f.write("Metrics calculated:\n")
             printGeneralMetrics(f, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay)
-            printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms)
+            printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers)
             printMetricsForQueries(f, greatestQuery, countingQueries, countingQueriesPerDay, meanQueriesPerDay)
             printMetricsForSessions(f, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime,\
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
@@ -143,6 +145,28 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     latexWriter.addTable(tableDiseasesHeader, caption="Diseases Table", transpose=True)
     latexWriter.addTable(tableSemanticFocusHeader, caption="Semantic Focus", transpose=True)
 
+
+
+def hasNLword(words):
+    #TODO: find a better list:
+    # possibility: use Noun + Verb Phrase or other structures like that
+    interestingWords = ["would", "wouldn't", "wouldnt", "could", "couldn't", "couldnt", "should", "shouldn't", "shouldnt", "how", "when", "where", "which", "who", "whom", "can", "cannot", "why", "what", "we", "they", "i", "do", "does"]
+    return len( [ w for w in words if w.lower() in interestingWords ] ) > 0
+
+def calculateNLuse(data):
+
+    #TODO: to finish it!
+    countingNL = defaultdict(int)
+    userKeywords = ( (member.userId, member.keywords) for member in data )
+
+    for u, k in userKeywords:
+        #print u, k
+        if hasNLword(k):
+            #print "FOUND Word here", k 
+            countingNL[u] += 1 
+
+    #print countingNL
+    return countingNL
 
 def calculateMesh(data):
    
@@ -351,7 +375,7 @@ def calculateReAccessInDifferentSessions(sessions):
             #print "PastQueries ----> ", pastQueries
     
     
-    print "countingReAccess ->> ", countingReAccess
+    #print "countingReAccess ->> ", countingReAccess
     #print len(countingReAccess)
     #print sum(countingReAccess.values())
     return countingReAccess
@@ -504,7 +528,7 @@ def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions
     writer.write('{0:45} ==> {1:30}\n'.format("How may days? ", str((lastDay - firstDay).days)))
     writer.write("-" * 45 + "\n")
  
-def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms):
+def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers):
     
     writer.write("For TERMS:\n")
     writer.write("-" * 45 + "\n")
@@ -552,6 +576,12 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simp
     for nestedList in simpleCoOccurrenceList[:50]:
         writer.write('{0:30} | {1:30} | {2:4d} | {3:.4f} | {4:.5f} | {5:.5f}\n'.format(nestedList[0],nestedList[1],nestedList[2],nestedList[3],nestedList[4],nestedList[5]))
 
+    
+    writer.write("-" * 45 + "\n")
+    writer.write("-" * 45 + "\n")
+    writer.write('{0:45} ==> {1:d}, {2:.2f}(%)\n'.format("Number of users using NL:", len(countingNL), 100*len(countingNL)/numberOfUsers))
+    writer.write('{0:45} ==> {1:d}\n'.format("Total number of NL in queries:", sum(countingNL.values())))    
+    writer.write("-" * 45 + "\n")
     writer.write("-" * 80 + "\n")
 
 
@@ -615,7 +645,7 @@ def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQuer
     writer.write('{0:45} ==> {1:30}\n'.format("Mean Number of Sessions Per Day", str(meanSessionsPerDay)))    
     writer.write("-" * 40 + "\n")
     writer.write("-" * 40 + "\n")
-    writer.write('{0:45} ==> {1:d}, {2:.2f}(%)\n'.format("Number of users re-accessing information:",len(countingReAccess),100*len(countingReAccess)/numberOfUsers))
+    writer.write('{0:45} ==> {1:d}, {2:.2f}(%)\n'.format("Number of users re-accessing information:", len(countingReAccess), 100*len(countingReAccess)/numberOfUsers))
     writer.write('{0:45} ==> {1:d}\n'.format("Total number of re-access inter sessions:", sum(countingReAccess.values())))    
     writer.write("-" * 80 + "\n")
 
