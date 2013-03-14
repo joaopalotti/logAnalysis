@@ -9,8 +9,15 @@ from latexTools import latexPrinter
 from auxiliarFunctions import *
 from plotFunctions import *
 
-####TODO: Add relative metrics like (X / total of queries are of size Y). Change it along the code!
+"""
+SOME IMPORTANT NOTES:
+    -> Keeping the stop words.
+    -> Considering that more than 100 queries in one unique session is way too much. So, the session is removed.
+"""
 
+# GLOBAL VARIABLES:
+numberOfQueriesInASessionThreshold = 100
+removeOutliers=True
 
 def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotSizeOfWords=True, printPlotSizeOfQueries=True,\
                      printPlotFrequencyOfQueries=True, printPlotFrequencyOfTerms=True, printPlotAcronymFrequency=True,\
@@ -27,9 +34,9 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     countingMeshList = []
     countingDiseaseList = []
     
-    tableGeneralHeader = [ ["Dtst", "#Days", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Exp", "Exp(%)", "Shr", "Shr(%)", "Ref", "Ref(%)", "Rep", "Rep(%)", "QrsWithMesh", "MeshIds", "DiseIds"] ]
-    tableMeshHeader = [ ["Dtst","A","B","C","D","E","F","G","H","I","J","K","L","M","N","V","Z"] ]
-    tableDiseasesHeader = [ ["Dtst","C01","C02","C03","C04","C05","C06","C07","C08","C09","C10","C11","C12","C13","C14","C15","C16","C17","C18","C19","C20","C21","C22","C23","C24","C25","C26"] ]
+    tableGeneralHeader = [ ["Dtst", "#Days", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Exp", "Exp(%)", "Shr", "Shr(%)", "Ref", "Ref(%)", "Rep", "Rep(%)", "QrsWithMesh", "% QrsWithMesh", "MeshIds", "MeshIds/#Qrs", "DiseIds", "DiseIds/#Qrs"] ]
+    tableMeshHeader = [ ["Dtst(%)","A","B","C","D","E","F","G","H","I","J","K","L","M","N","V","Z"] ]
+    tableDiseasesHeader = [ ["Dtst(%)","C01","C02","C03","C04","C05","C06","C07","C08","C09","C10","C11","C12","C13","C14","C15","C16","C17","C18","C19","C20","C21","C22","C23","C24","C25","C26"] ]
     tableSemanticFocusHeader = [ ["Dtst", "Nothing", "Symptom", "Cause", "Remedy", "SymptomCause", "SymptomRemedy", "CauseRemedy", "SymptomCauseRemedy"] ]
     tableModifiedSessionHeader = [["Dtst","Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]] 
 
@@ -44,14 +51,25 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         print "Processing information for data: ", dataName
 
         data = preProcessData(data, removeStopWords)
+        
+        '''
+        It is important to run the session analyse first because it is going to eliminate users considered as robots (more than X queries in one unique session)
+        X -> numberOfQueriesInASessionThreshold, but you may want to check it later
+        '''
+        numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
+            numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
+            countingSemantics, countingPureSemanticTypes, vectorOfActionSequence,\
+            countingReAccess, idMaxQueriesInSession, outliersToRemove = calculateQueriesPerSession(data)
+
+        if removeOutliers:
+            newData = [member for member in data if member.userId not in outliersToRemove]
+            data = newData
 
         percentageAcronym, countingAcronyms = calculateAcronyms(data)
         numberOfUsers = calculateUsers(data)
         npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries = calculateTerms(data)
-        numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
-                numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
-                countingSemantics, countingPureSemanticTypes, vectorOfActionSequence,\
-                countingReAccess = calculateQueriesPerSession(data)
+        
+               
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
         countingNL = calculateNLuse(data)
 
@@ -71,8 +89,11 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
             printMetricsForQueries(f, greatestQuery, countingQueries, countingQueriesPerDay, meanQueriesPerDay)
             printMetricsForSessions(f, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime,\
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
-                                   countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers)
-            printMeshClassificationMetrics(f, countingMesh, countingDisease)
+                                   countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers, idMaxQueriesInSession)
+            printMeshClassificationMetrics(f, countingMesh, countingDisease, numberOfQueries, hasMeshValues)
+            printSemanticFocus(f, vectorOfActionSequence)
+            printOutliers(f, outliersToRemove)
+
 
         countingAcronymsList.append([dataName, countingAcronyms])
         countingTimePerSessionList.append( [ dataName , countingTimePerSession ])
@@ -88,20 +109,22 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         numberOfMeshDiseases = sum(countingDisease.values())
 
 
-        generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfQueries, npTerms.mean, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession.mean, npTime.mean, numberOfExpansions, 100.0 * numberOfExpansions/ numberOfQueries , numberOfShrinkage, 100 * numberOfShrinkage/ numberOfQueries, numberOfReformulations, 100 * numberOfReformulations/numberOfQueries, numberOfRepetitions, 100 * numberOfRepetitions/numberOfQueries, hasMeshValues, numberOfMeshTerms, numberOfMeshDiseases] )
+        generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfQueries, npTerms.mean, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession.mean, npTime.mean, numberOfExpansions, 100.0 * numberOfExpansions/ numberOfQueries , numberOfShrinkage, 100 * numberOfShrinkage/ numberOfQueries, numberOfReformulations, 100 * numberOfReformulations/numberOfQueries, numberOfRepetitions, 100 * numberOfRepetitions/numberOfQueries, hasMeshValues, 100.0 * hasMeshValues/numberOfQueries, numberOfMeshTerms, numberOfMeshTerms/numberOfQueries, numberOfMeshDiseases, numberOfMeshDiseases/numberOfQueries] )
         
         #To avoid division by zero
         numberOfMeshTerms = numberOfMeshTerms if numberOfMeshTerms != 0 else 1
         numberOfMeshDiseases = numberOfMeshDiseases if numberOfMeshDiseases != 0 else 1
         
-        meshTableRow.append( [ dataName, countingMesh["A"]/ numberOfMeshTerms, countingMesh["B"]/ numberOfMeshTerms, countingMesh["C"]/ numberOfMeshTerms, countingMesh["D"]/ numberOfMeshTerms, countingMesh["E"]/ numberOfMeshTerms, countingMesh["F"]/ numberOfMeshTerms, countingMesh["G"]/ numberOfMeshTerms, countingMesh["H"]/ numberOfMeshTerms, countingMesh["I"]/ numberOfMeshTerms, countingMesh["J"]/ numberOfMeshTerms, countingMesh["K"]/ numberOfMeshTerms, countingMesh["L"]/ numberOfMeshTerms, countingMesh["M"]/ numberOfMeshTerms, countingMesh["N"]/ numberOfMeshTerms, countingMesh["V"]/ numberOfMeshTerms, countingMesh["Z"]/ numberOfMeshTerms  ] )
-        diseaseTableRow.append( [ dataName,  countingDisease["C01"]/ numberOfMeshDiseases, countingDisease["C02"]/ numberOfMeshDiseases, countingDisease["C03"]/ numberOfMeshDiseases, countingDisease["C04"]/ numberOfMeshDiseases, countingDisease["C05"]/ numberOfMeshDiseases, countingDisease["C06"]/ numberOfMeshDiseases, countingDisease["C07"]/ numberOfMeshDiseases, countingDisease["C08"]/ numberOfMeshDiseases, countingDisease["C09"]/ numberOfMeshDiseases, countingDisease["C10"]/ numberOfMeshDiseases, countingDisease["C11"]/ numberOfMeshDiseases, countingDisease["C12"]/ numberOfMeshDiseases, countingDisease["C13"]/ numberOfMeshDiseases, countingDisease["C14"]/ numberOfMeshDiseases, countingDisease["C15"]/ numberOfMeshDiseases, countingDisease["C16"]/ numberOfMeshDiseases, countingDisease["C17"]/ numberOfMeshDiseases, countingDisease["C18"]/ numberOfMeshDiseases, countingDisease["C19"]/ numberOfMeshDiseases, countingDisease["C20"]/ numberOfMeshDiseases, countingDisease["C21"]/ numberOfMeshDiseases, countingDisease["C22"]/ numberOfMeshDiseases, countingDisease["C23"]/ numberOfMeshDiseases, countingDisease["C24"]/ numberOfMeshDiseases, countingDisease["C25"]/ numberOfMeshDiseases, countingDisease["C26"]/ numberOfMeshDiseases ] )
+        meshTableRow.append( [ dataName, 100 * countingMesh["A"]/ numberOfMeshTerms, 100 * countingMesh["B"]/ numberOfMeshTerms, 100 * countingMesh["C"]/ numberOfMeshTerms, 100 * countingMesh["D"]/ numberOfMeshTerms, 100 * countingMesh["E"]/ numberOfMeshTerms, 100 * countingMesh["F"]/ numberOfMeshTerms, 100 * countingMesh["G"]/ numberOfMeshTerms, 100 * countingMesh["H"]/ numberOfMeshTerms, 100 * countingMesh["I"]/ numberOfMeshTerms, 100 * countingMesh["J"]/ numberOfMeshTerms, 100 * countingMesh["K"]/ numberOfMeshTerms, 100 * countingMesh["L"]/ numberOfMeshTerms, 100 * countingMesh["M"]/ numberOfMeshTerms, 100 * countingMesh["N"]/ numberOfMeshTerms, 100 * countingMesh["V"]/ numberOfMeshTerms, 100 * countingMesh["Z"]/ numberOfMeshTerms  ] )
+        diseaseTableRow.append( [ dataName,  100 * countingDisease["C01"]/ numberOfMeshDiseases, 100 * countingDisease["C02"]/ numberOfMeshDiseases, 100 * countingDisease["C03"]/ numberOfMeshDiseases, 100 * countingDisease["C04"]/ numberOfMeshDiseases, 100 * countingDisease["C05"]/ numberOfMeshDiseases, 100 * countingDisease["C06"]/ numberOfMeshDiseases, 100 * countingDisease["C07"]/ numberOfMeshDiseases, 100 * countingDisease["C08"]/ numberOfMeshDiseases, 100 * countingDisease["C09"]/ numberOfMeshDiseases, 100 * countingDisease["C10"]/ numberOfMeshDiseases, 100 * countingDisease["C11"]/ numberOfMeshDiseases, 100 * countingDisease["C12"]/ numberOfMeshDiseases, 100 * countingDisease["C13"]/ numberOfMeshDiseases, 100 * countingDisease["C14"]/ numberOfMeshDiseases, 100 * countingDisease["C15"]/ numberOfMeshDiseases, 100 * countingDisease["C16"]/ numberOfMeshDiseases, 100 * countingDisease["C17"]/ numberOfMeshDiseases, 100 * countingDisease["C18"]/ numberOfMeshDiseases, 100 * countingDisease["C19"]/ numberOfMeshDiseases, 100 * countingDisease["C20"]/ numberOfMeshDiseases, 100 * countingDisease["C21"]/ numberOfMeshDiseases, 100 * countingDisease["C22"]/ numberOfMeshDiseases, 100 * countingDisease["C23"]/ numberOfMeshDiseases, 100 * countingDisease["C24"]/ numberOfMeshDiseases, 100 * countingDisease["C25"]/ numberOfMeshDiseases, 100 * countingDisease["C26"]/ numberOfMeshDiseases ] )
 
         # ["Dtst", "Nothing", "Symptom", "Cause", "Remedy", "SymptomCause", "SymptomRemedy", "CauseRemedy", "SymptomCauseRemedy"]
-        semanticFocusRow.append( [ dataName, vectorOfActionSequence[0], vectorOfActionSequence[1], vectorOfActionSequence[2], vectorOfActionSequence[4], vectorOfActionSequence[3], vectorOfActionSequence[5], vectorOfActionSequence[6], vectorOfActionSequence[7] ] )
+        totalActions = sum(vectorOfActionSequence)
+        semanticFocusRow.append( [ dataName, 100 * vectorOfActionSequence[0]/totalActions, 100 * vectorOfActionSequence[1]/totalActions, 100 * vectorOfActionSequence[2]/totalActions, 100 * vectorOfActionSequence[4]/totalActions, 100 * vectorOfActionSequence[3]/totalActions, 100 * vectorOfActionSequence[5]/totalActions, 100 * vectorOfActionSequence[6]/totalActions, 100 * vectorOfActionSequence[7]/totalActions ] )
 
         #["Dtst","Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]
-        modifiedSessionRow.append( [dataName, vectorOfModifiedSessions[0], vectorOfModifiedSessions[4], vectorOfModifiedSessions[2], vectorOfModifiedSessions[1], vectorOfModifiedSessions[6], vectorOfModifiedSessions[5], vectorOfModifiedSessions[3], vectorOfModifiedSessions[7] ] )
+        totalOfModifiedSessions = sum(vectorOfModifiedSessions)
+        modifiedSessionRow.append( [dataName, 100 * vectorOfModifiedSessions[0]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[4]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[2]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[1]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[6]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[5]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[3]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[7]/totalOfModifiedSessions ] )
 
     myPlotter = plotter()
     
@@ -278,6 +301,28 @@ def calculateExpansionShrinkageReformulations(sessions, ignoreRepetition=True):
                 
     return numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions
 
+
+"""
+    If the number of queries in a single session is greater that the numberOfQueriesInASessionThreshold, 
+    the user is considered illegal (robot?) and removed from the sessions.
+"""
+def removeOutliers(sessions):
+    usersToRemove = set()
+
+    for userId, session in sessions.iteritems():
+        #print userId, session.values()
+        m = max( len(subSession) for subSession in session.values() )
+        if m > numberOfQueriesInASessionThreshold:
+            print "ROBOT FOUND ----> ", userId, " Session Length: ", m
+            usersToRemove.add(userId)
+    
+    for user in usersToRemove:
+        print "DELETING USER ----> ", user
+        del sessions[user]
+    
+    return usersToRemove
+
+    
 def calculateQueriesPerSession(data):
     '''
         I am considering all sessions here. An alternative option would be to consider only the sessions with more that X queries. (e.g. X > 3)
@@ -290,12 +335,12 @@ def calculateQueriesPerSession(data):
         if member.previouskeywords is None and not sessions[member.userId]:
             sessions[member.userId][1] = [[member.datetime, member.keywords, member.semanticTypes]]
 
-        # There are no previous keywords and there is at least one sessions of this id 
+        # There are no previous keywords and there is at least one sessions of this id -> another session
         elif member.previouskeywords is None and sessions[member.userId]:
             sessions[member.userId][ len(sessions[member.userId]) + 1 ] = [[member.datetime, member.keywords, member.semanticTypes]]
         
         elif member.previouskeywords is not None and not sessions[member.userId]:
-            # This situation should not happen, but it does. It means that a session was not created but there were previous keywords.
+            # This situation should not happen, but it does (some error in the logs). It means that a session was not created but there were previous keywords.
             #print "ERROR!"
             #print member.userId, member.datetime, member.keywords, "previous ---> ", member.previouskeywords
             sessions[member.userId][1] = [[member.datetime, member.keywords, member.semanticTypes]]
@@ -307,9 +352,23 @@ def calculateQueriesPerSession(data):
     #for session, date in sessions.iteritems():
     #    print session, date
 
+    outliersToRemove = removeOutliers(sessions)
+
     numberOfSessions = sum( len(s) for s in sessions.values() )
     queriesPerSession = [ len(q) for session in sessions.values() for q in session.values() ]
     sessionsWithMoreThanOneQuery = len([ 1 for session in sessions.values() for q in session.values() if len(q) > 1 ])
+    
+    maxId, maxValue = -1, -1
+    for userId, session in sessions.iteritems():
+        #print userId, session.values()
+        m = max( len(subSession) for subSession in session.values() )
+        #print " m ----> ", m
+        if m > maxValue:
+            maxId, maxValue = userId, m
+    
+    #print "MAXs =",  maxId, maxValue
+    idMaxQueriesInSession = maxId
+
     countingQueriesPerSession = Counter(queriesPerSession)
 
     allSessions = [ span for session in sessions.values() for span in session.values() ]
@@ -342,7 +401,8 @@ def calculateQueriesPerSession(data):
     #print numberOfSessions, npNumQueriesInSession, npTime
     return numberOfSessions, countingQueriesPerSession, npNumQueriesInSession,\
             countingTimePerSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions,\
-            vectorOfModifiedSessions, countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, countingReAccess
+            vectorOfModifiedSessions, countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, countingReAccess, idMaxQueriesInSession,\
+            outliersToRemove
 
 
 def calculateReAccessInDifferentSessions(sessions):
@@ -462,8 +522,7 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
     """
    
     # I had to transforme the list into a tuple to use the counter
-    allQueries = [ tuple(sorted(member.keywords)) for member in data ] 
-    countingQueries = Counter(allQueries)
+    countingQueries = Counter( [ tuple(sorted(member.keywords)) for member in data ] )
 
     # separate the information about the queries from the rest of the data
     listOfQueries = [ member.keywords for member in data ]
@@ -482,19 +541,27 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
     countingTokens = Counter(tokens)
 
     # Calculate the Co-occurrence matrix
-    matrix = defaultdict(dict)
-    for query in listOfQueries:
+    matrix = {}
+    for queryComplete in listOfQueries:
         #print "Q = ", query
+        ## Remove duplicates from a query
+        query = list(set(queryComplete))
+
         for i in range(len(query) - 1):
             first = query[i].lower()
             
             for j in range(i + 1, len(query)):
                 second = query[j].lower()
-
+                #print "first ==> ", first, "second ==> ", second
                 d1, d2 = min(first,second), max(first,second)
-                if not d2 in matrix[d1]:
+
+                if d1 not in matrix:
                     matrix[d1] = defaultdict(int)
+                if d2 not in matrix[d1]:
+                    matrix[d1][d2] = 0
+
                 matrix[d1][d2] += 1
+                #print "matrix[",d1,"][",d2,"] = ", matrix[d1][d2]
 
     # Filter the results using the parameter coOccurrenceThreshold and generate the coOccurrenceList
     numberOfQueries = len(listOfQueries)
@@ -503,7 +570,7 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
 
     for d1 in matrix:
         for d2 in matrix[d1]:
-            #print d1, d2, countingTokens[d1], countingTokens[d2]
+            #print d1, d2, matrix[d1][d2], countingTokens[d1], countingTokens[d2]
             if matrix[d1][d2] / countingTokens[d1] >= coOccurrenceThreshold or\
                matrix[d1][d2] / countingTokens[d2] >= coOccurrenceThreshold:
                 #print d1, d2, matrix[d1][d2]
@@ -594,11 +661,11 @@ def printMetricsForQueries(writer, greatestQuery, countingQueries, countingQueri
 
     uniqueQueries = len(countingQueries)
     allQueries = sum(countingQueries.values())
-    writer.write('{0:45} ==> {1:30}\n'.format('Total Number of Unique Queries', str(uniqueQueries)))
-    writer.write('{0:45} ==> {1:30}\n'.format('Total Number of Queries', str(allQueries)))
+    writer.write('{0:45} ==> {1:d}\n'.format('Total Number of Unique Queries', uniqueQueries))
+    writer.write('{0:45} ==> {1:d}\n'.format('Total Number of Queries', allQueries))
     writer.write('{0:45} ==> {1:.3f} %\n'.format('Percentage Of Repeated queries ', 100 * (allQueries - uniqueQueries)/allQueries ))
     writer.write('{0:45} ==> {1:30}\n'.format('Greatest Query', ' '.join(greatestQuery)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Mean number of Queries per day", str(meanQueriesPerDay)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Mean number of Queries per day", meanQueriesPerDay))
     
     writer.write("-" * 45 + "\n")
     writer.write("10 Most Common Queries:\n")
@@ -609,7 +676,7 @@ def printMetricsForQueries(writer, greatestQuery, countingQueries, countingQueri
     writer.write("-" * 80 + "\n")
     
 
-def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions, countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers):
+def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions, countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers, idMaxQueriesInSession):
 
     writer.write("-" * 80 + "\n")
     writer.write("-" * 40 + "\n")
@@ -619,7 +686,7 @@ def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQuer
     writer.write("-" * 40 + "\n")
     writer.write("Session Length in Queries\n")
     writer.write("-" * 40 + "\n")
-    writer.write('{0:45} ==> {1:.3f}\n'.format("Maximum number of Queries in a session", (npNumQueriesInSession.max)))
+    writer.write('{0:45} ==> {1:.3f} (id = {2:d})\n'.format("Maximum number of Queries in a session", (npNumQueriesInSession.max), int(idMaxQueriesInSession)))
     writer.write('{0:45} ==> {1:.3f}\n'.format("Minimum number of Queries in a session", (npNumQueriesInSession.min)))
     writer.write('{0:45} ==> {1:.3f}\n'.format("Mean number of Queries in a session", (npNumQueriesInSession.mean)))
     writer.write('{0:45} ==> {1:.3f}\n'.format("Median number of Queries in a session", (npNumQueriesInSession.median)))
@@ -634,42 +701,99 @@ def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQuer
     writer.write('{0:45} ==> {1:.3f}\n'.format("Std dev. of duration of a session", npTime.std))
     writer.write("-" * 40 + "\n")
     writer.write('{0:45} ==> {1:30}\n'.format("Vector Of Modified Session ", str(vectorOfModifiedSessions)))
-    writer.write('{0:45} ==> {1:30}\n'.format("Number of Modified Session ", str(sum(vectorOfModifiedSessions))))
-    writer.write('{0:45} ==> {1:.3f}\n'.format("Percentage of Modified Session ", sum(vectorOfModifiedSessions)/numberOfSessions))
-    writer.write('{0:45} ==> {1:30}\n'.format("Number of Modified Queries", str(numberOfExpansions + numberOfShrinkage + numberOfReformulations + numberOfRepetitions)))
-    writer.write('{0:45} ==> {1:15}{2:.3f}(%)\n'.format("Number of Expansions", str(numberOfExpansions),numberOfExpansions/numberOfQueries))    
-    writer.write('{0:45} ==> {1:15}{2:.3f}(%)\n'.format("Number of Shrinkages", str(numberOfShrinkage), numberOfShrinkage/numberOfQueries))    
-    writer.write('{0:45} ==> {1:15}{2:.3f}(%)\n'.format("Number of Reformulations", str(numberOfReformulations), numberOfReformulations/numberOfQueries))    
-    writer.write('{0:45} ==> {1:15}{2:.3f}(%)\n'.format("Number of Repetitions", str(numberOfRepetitions), numberOfRepetitions/numberOfQueries))    
+    #["Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]
+    #[vectorOfModifiedSessions[0], vectorOfModifiedSessions[4], vectorOfModifiedSessions[2], vectorOfModifiedSessions[1], vectorOfModifiedSessions[6], vectorOfModifiedSessions[5], vectorOfModifiedSessions[3], vectorOfModifiedSessions[7]
+    writer.write('{0:45} ==> {1:10d} ({2:.3f}%)\n'.format("Expansions", vectorOfModifiedSessions[4], 100.0 * vectorOfModifiedSessions[4]/numberOfSessions))
+    writer.write('{0:45} ==> {1:10d} ({2:.3f}%)\n'.format("Shrinkages", vectorOfModifiedSessions[2], 100.0 * vectorOfModifiedSessions[2]/numberOfSessions))
+    writer.write('{0:45} ==> {1:10d} ({2:.3f}%)\n'.format("Reformulations", vectorOfModifiedSessions[1], 100.0 * vectorOfModifiedSessions[1]/numberOfSessions))
+    writer.write('{0:45} ==> {1:10d} ({2:.3f}%)\n'.format("ExpansionsShrinkages", vectorOfModifiedSessions[6], 100.0 * vectorOfModifiedSessions[6]/numberOfSessions))
+    writer.write('{0:45} ==> {1:10d} ({2:.3f}%)\n'.format("ExpansionsReformulations", vectorOfModifiedSessions[5], 100.0 * vectorOfModifiedSessions[5]/numberOfSessions))
+    writer.write('{0:45} ==> {1:10d} ({2:.3f}%)\n'.format("ShrinkagesReformulations", vectorOfModifiedSessions[3], 100.0 * vectorOfModifiedSessions[3]/numberOfSessions))
+    writer.write('{0:45} ==> {1:10d} ({2:.3f}%)\n'.format("ExpansionsShrinkagesReformulations", vectorOfModifiedSessions[7], 100.0 * vectorOfModifiedSessions[7]/numberOfSessions))
     writer.write("-" * 40 + "\n")
-    writer.write('{0:45} ==> {1:30}\n'.format("Mean Number of Sessions Per Day", str(meanSessionsPerDay)))    
+    writer.write("-" * 40 + "\n")
+
+
+    totalOfModifiedSessions = sum(vectorOfModifiedSessions)
+    writer.write('{0:45} ==> {1:10d} ({2:.3f}%)\n'.format("Number of Modified Session ", totalOfModifiedSessions, 100.0 * totalOfModifiedSessions/numberOfSessions))
+    modifiedQueries = (numberOfExpansions + numberOfShrinkage + numberOfReformulations + numberOfRepetitions)
+    writer.write('{0:45} ==> {1:10d} ({2:.3f}%)\n'.format("Number of Modified Queries", modifiedQueries, 100.0 * modifiedQueries/numberOfQueries))
+    writer.write('{0:45} ==> {1:10d} ({2:.3f}%)\n'.format("Number of Expansions", numberOfExpansions, 100.0 * numberOfExpansions/numberOfQueries))    
+    writer.write('{0:45} ==> {1:10d} ({2:.3f}%)\n'.format("Number of Shrinkages", numberOfShrinkage, 100.0 * numberOfShrinkage/numberOfQueries))    
+    writer.write('{0:45} ==> {1:10d} ({2:.3f}%)\n'.format("Number of Reformulations", numberOfReformulations, 100.0 * numberOfReformulations/numberOfQueries))    
+    writer.write('{0:45} ==> {1:10d} ({2:.3f}%)\n'.format("Number of Repetitions", numberOfRepetitions, 100.0 * numberOfRepetitions/numberOfQueries))    
+    writer.write("-" * 40 + "\n")
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Mean Number of Sessions Per Day", meanSessionsPerDay))    
     writer.write("-" * 40 + "\n")
     writer.write("-" * 40 + "\n")
     writer.write('{0:45} ==> {1:d}, {2:.2f}(%)\n'.format("Number of users re-accessing information:", len(countingReAccess), 100*len(countingReAccess)/numberOfUsers))
     writer.write('{0:45} ==> {1:d}\n'.format("Total number of re-access inter sessions:", sum(countingReAccess.values())))    
     writer.write("-" * 80 + "\n")
 
-def printMeshClassificationMetrics(writer, countingMesh, countingDisease):
+def printMeshClassificationMetrics(writer, countingMesh, countingDisease, numberOfQueries, hasMeshValues):
     
     writer.write("-" * 80 + "\n")
     writer.write("-" * 40 + "\n")
     writer.write("MESH CLASSIFICATION:\n")
     writer.write("-" * 40 + "\n")
+    writer.write('{0:45} ==> {1:10d}\n'.format("Number of Queries with mesh identifiers", int(hasMeshValues)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("HasMeshValues / #Queries ", hasMeshValues/numberOfQueries))
+    writer.write("-" * 40 + "\n")
+    
     totalMesh = sum (countingMesh.values() )
-    writer.write('{0:45} ==> {1:30}\n'.format("Number of Mesh identifiers", totalMesh ))
+    writer.write('{0:45} ==> {1:10d}\n'.format("Number of Mesh identifiers", totalMesh ))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("(Mean) Mesh Identifies / #Queries ", totalMesh/numberOfQueries))
     
     writer.write("-" * 40 + "\n")
     for k,v in countingMesh.iteritems():
-        writer.write('{0:>15} ------- {1:<10} ({2:.2f}%)\n'.format( k, v, v/totalMesh ))
+        writer.write('{0:>15} ------- {1:10d} ({2:.2f}%)\n'.format( k, v, 100 * v/totalMesh ))
 
     writer.write("-" * 40 + "\n")
     totalDisease = sum(countingDisease.values() )
     writer.write('{0:45} ==> {1:30}\n'.format("Number of Disesase identifiers", totalDisease ) )
+    writer.write('{0:45} ==> {1:.3f}\n'.format("(Mean) Diseases / #Queries ", totalDisease/numberOfQueries))
     writer.write("-" * 40 + "\n")
     
     for k,v in countingDisease.iteritems():
-        writer.write('{0:>15} ------- {1:<10} ({2:.2f}%)\n'.format( k, v, v/totalDisease ))
+        writer.write('{0:>15} ------- {1:<10} ({2:.2f}%)\n'.format( k, v, 100 * v/totalDisease ))
     
     writer.write("-" * 40 + "\n")
     writer.write("-" * 80 + "\n")
+
+def printSemanticFocus(writer, vectorOfActionSequence):
+
+    writer.write("-" * 80 + "\n")
+    writer.write("-" * 40 + "\n")
+    writer.write("ACTIONS FOCUS:\n")
+    writer.write("-" * 40 + "\n")
+    totalActions = sum(vectorOfActionSequence)
+    writer.write('{0:45} ==> {1:30}\n'.format("Total number of actions (1 per session)", totalActions ))
+    
+    #["Dtst", "Nothing", "Symptom", "Cause", "Remedy", "SymptomCause", "SymptomRemedy", "CauseRemedy", "SymptomCauseRemedy"]
+    #semanticFocusRow.append( [ dataName, vectorOfActionSequence[0], vectorOfActionSequence[1], vectorOfActionSequence[2], vectorOfActionSequence[4], vectorOfActionSequence[3], vectorOfActionSequence[5], vectorOfActionSequence[6], vectorOfActionSequence[7] ] )
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("Nothig", vectorOfActionSequence[0], 100 * vectorOfActionSequence[0]/totalActions))
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("Symptom",vectorOfActionSequence[1], 100 * vectorOfActionSequence[1]/totalActions))
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("Cause", vectorOfActionSequence[2], 100 * vectorOfActionSequence[2]/totalActions))
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("Remedy", vectorOfActionSequence[4], 100 * vectorOfActionSequence[4]/totalActions))
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("SymptomCause", vectorOfActionSequence[3], 100 * vectorOfActionSequence[3]/totalActions))
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("SymptomRemedy", vectorOfActionSequence[5], 100 * vectorOfActionSequence[5]/totalActions))
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("CauseRemedy", vectorOfActionSequence[6], 100 * vectorOfActionSequence[6]/totalActions))
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("SymptomCauseRemedy", vectorOfActionSequence[7], 100 * vectorOfActionSequence[7]/totalActions))
+    writer.write("-" * 40 + "\n")
+    writer.write("-" * 80 + "\n")
+
+
+def printOutliers(writer, outliersToRemove):
+    writer.write("-" * 80 + "\n")
+    writer.write("-" * 40 + "\n")
+    writer.write("OUTLIERS:\n")
+    if removeOutliers:
+        writer.write("--------- THEY WERE REMOVED ------------\n")
+
+    writer.write('{0:45} ==> {1:30}\n'.format("Total of outliers found", len(outliersToRemove)))
+    for id in outliersToRemove:
+        writer.write('{0:45} ==> {1:30}\n'.format("ID", id))
+    writer.write("-" * 40 + "\n")
+    writer.write("-" * 80 + "\n")
+
 
