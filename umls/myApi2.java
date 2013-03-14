@@ -343,6 +343,7 @@ public class myApi2 {
         String inFilename = null;
         String outFile = "output.csv";
         int totalLines = -1;
+        boolean append = false;
 
         InputStream input = System.in;
         PrintStream output = System.out;
@@ -351,18 +352,28 @@ public class myApi2 {
             System.out.println("Enter the filename, please");
             System.exit(0);
         }
-        if(args.length == 1){
-            inFilename = args[0];
-        }else if(args.length == 2){
-            inFilename = args[0];
-            outFile = args[1];
-	    System.out.println("Using file " + outFile );
-
-        }else if(args.length == 3){
-            inFilename = args[0];
-            outFile = args[1];
-            totalLines = new Integer(args[2]);
-	    System.out.println("Using file " + outFile );
+        
+        for( int i = 0; i < args.length; i++){
+            if ( args[i].equals("-a") ){
+                append = true; // it is necessary to write "true"
+	            System.out.println("I will try to use the content from the output file" );
+            }
+            else if(args[i].equals("-n")){
+                totalLines = new Integer(args[i+1]);
+	            System.out.println("Using information about the number of lines " + totalLines );
+            }
+            else if(args[i].equals("-o")){
+                outFile = args[i+1];
+	            System.out.println("Writing output to file " + outFile );
+            }
+            else if(args[i].equals("-i")){
+                inFilename = args[i+1];
+	            System.out.println("Input file is " + inFilename);
+            }
+        }
+        if(inFilename == null){
+	            System.out.println("Error...use -i <filename> to enter the filename you want.");
+	            System.exit(0);
         }
 
         //StringBuffer termBuf = new StringBuffer();
@@ -456,27 +467,60 @@ public class myApi2 {
                 BufferedReader ib = new BufferedReader(new InputStreamReader(gzip));
                 CSVReader reader = new CSVReader(ib, ',', '\"' , '\\');
 
-                
-                CSVWriter writer = new CSVWriter(new FileWriter(outFile), ',', '\"', '\\');
+                String lastTime = null;
+                String lastUserId = null;
+
+                if(append){
+                    
+                    System.out.println("Recoving starts now!!!!! ");
+                    CSVReader internalReader = new CSVReader(new FileReader(outFile), ',', '\"' , '\\');
+                    String[] nextLine;
+                    String[] previousLine = null;
+
+                    while ( (nextLine = internalReader.readNext()) != null) {
+                        previousLine = nextLine;
+                    }
+                    if(previousLine != null){
+                        lastTime = previousLine[0];
+                        lastUserId = previousLine[1];
+                    }
+                    if(lastTime != null && lastUserId != null){
+                        System.out.println("Recovered last time = " + lastTime + " and last user id = " + lastUserId);
+                    }
+                }
+
+                CSVWriter writer = new CSVWriter(new FileWriter(outFile, append), ',', '\"', '\\');
         
                 String [] nextLine;
-                /*
-                nextLine = reader.readNext();
-                System.out.println(nextLine[0] + "," + nextLine[1] + ", " + nextLine[2] + ", " + nextLine[3] + ", " + nextLine[4]);
-                String inString = nextLine[2];
-                System.out.println("INPUT = " + nextLine[2]);
-                frontEnd.process( inString, output, options);
-                */
-                
                 int lineNumber = 0;
+                boolean recovered = false;
                 
                 while ((nextLine = reader.readNext()) != null) {
                     
+                    if(append && !recovered){
+                        if( nextLine[0].equals(lastTime) && nextLine[1].equals(lastUserId)){
+                            recovered = true;
+                            continue;
+                        }
+                        if(!recovered){
+                            continue;
+                        }
+                    }
+
                     //System.out.println(nextLine[0] + "," + nextLine[1] + ", " + nextLine[2] + ", " + nextLine[3] + ", " + nextLine[4]);
                     
                     String inString = nextLine[2];
-                    System.out.println("INPUT = " + nextLine[2]);
-                    
+                    System.out.println("INPUT = " + inString);
+
+                    if( inString.matches(".* 's$") ){
+                        System.out.println("BAD STRING FOUND. Skipping it ---> " + inString);
+                        continue;
+                    }
+                    if( inString.matches("(^|.* )[pP][mM][iI][dD]:.*")){
+                        System.out.println("BAD STRING FOUND. Skipping it ---> " + inString);
+                        continue;
+                    }
+                            
                     List<String> processed = frontEnd.process( inString, output, options);
                     if (processed == null){
                         continue;
@@ -497,6 +541,7 @@ public class myApi2 {
 
 
                     writer.writeNext(toWrite, false);
+                    writer.flush();
                     lineNumber++;
 
                     if(totalLines < 0){
