@@ -34,7 +34,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     countingMeshList = []
     countingDiseaseList = []
     
-    tableGeneralHeader = [["Dtst", "#Days", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion"]]
+    tableGeneralHeader = [["Dtst", "#Days", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Users #NL", "Users %NL", "QueriesNL", "%QueriesNL", "%UsersReAccess", "%SssnsReAccess"]]
 
     tableGeneralMeshHeader = [["Dtst", "QrsWithMesh", "% QrsWithMesh", "MeshIds", "MeshIds/#Qrs", "DiseIds", "DiseIds/#Qrs"]]
     tableMeshHeader = [ ["Dtst(%)","A (Anatomy)","B (Organisms)","C (Diseases)","D (Chemicals/Drugs)","E (Analytical, Diagnostic)","F(Psychiatry/Psychology)","G(Phenomena/Processes)","H(Disciplines/Occupations)","I(Anthropology/Education)","J(Technology/Industry)","K(Humanities)","L(Information Science)","M(Named Groups)","N(Health Care)","V(Publication Chars)","Z(Geographicals)"] ]
@@ -92,7 +92,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
             print "Writing file ", dataName + ".result..."
             f.write("Metrics calculated:\n")
             printGeneralMetrics(f, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay)
-            printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTerms)
+            printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTerms, numberOfQueries)
             printMetricsForQueries(f, greatestQuery, countingQueries, countingQueriesPerDay, meanQueriesPerDay)
             printMetricsForSessions(f, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime,\
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
@@ -114,7 +114,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         numberOfMeshTerms = sum(countingMesh.values())
         numberOfMeshDiseases = sum(countingDisease.values())
 
-        generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfQueries, npTerms.mean, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession.mean, npTime.mean] )
+        generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfQueries, npTerms.mean, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession.mean, npTime.mean, len(countingNL), 100*len(countingNL)/numberOfUsers, sum(countingNL.values()), 100 * sum(countingNL.values())/numberOfQueries, 100*len(countingReAccess)/numberOfUsers, 100*sum(countingReAccess.values())/numberOfSessions] )
         generalModifiedRow.append( [dataName, numberOfExpansions, 100.0 * numberOfExpansions/ numberOfQueries , numberOfShrinkage, 100 * numberOfShrinkage/ numberOfQueries, numberOfReformulations, 100 * numberOfReformulations/numberOfQueries, numberOfRepetitions, 100 * numberOfRepetitions/numberOfQueries] )
         generalMeshRow.append( [dataName,  hasMeshValues, 100.0 * hasMeshValues/numberOfQueries, numberOfMeshTerms, numberOfMeshTerms/numberOfQueries, numberOfMeshDiseases, numberOfMeshDiseases/numberOfQueries ] ) 
 
@@ -432,26 +432,30 @@ def calculateReAccessInDifferentSessions(sessions):
     for userId, session in sessions.iteritems():
         
         uniqueQueries = {}
-        pastQueries = {}
+        pastQueries = set()
 
         for subSession in session.values():
-            queries = {}
+            queries = set()
+            reAccessThisSession = False
 
             for query in subSession:
-                queries[ tuple(set(query[1])) ] = 1 #using set to ignore order
+                queries.add( tuple(set(query[1])) ) #using set to ignore order
                 #print "usedId =>", userId, "Query => ", query[1]
+
+                if reAccessThisSession:
+                    continue
 
                 if tuple(set(query[1])) in pastQueries:
                     #print "FOUND RE ACCESS HERE ---> ", query[1]
+                    # We want to count the re-access only once per session
                     countingReAccess[userId] += 1
+                    reAccessThisSession = True
 
                 #print "set(queries) =  ", queries
 
             pastQueries.update(queries)
             #print "Qs ---> ", queries
             #print "PastQueries ----> ", pastQueries
-    
-    
     #print "countingReAccess ->> ", countingReAccess
     #print len(countingReAccess)
     #print sum(countingReAccess.values())
@@ -668,7 +672,7 @@ def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions
     writer.write('{0:45} ==> {1:30}\n'.format("How may days? ", str((lastDay - firstDay).days)))
     writer.write("-" * 45 + "\n")
  
-def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTerms):
+def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTerms, numberOfQueries):
     
     writer.write("For TERMS:\n")
     writer.write("-" * 45 + "\n")
@@ -721,11 +725,10 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simp
     for nestedList in simpleCoOccurrenceList[:50]:
         writer.write('{0:30} | {1:30} | {2:4d} | {3:.4f} | {4:.5f} | {5:.5f}\n'.format(nestedList[0],nestedList[1],nestedList[2],nestedList[3],nestedList[4],nestedList[5]))
 
-    
     writer.write("-" * 45 + "\n")
     writer.write("-" * 45 + "\n")
     writer.write('{0:45} ==> {1:d}, {2:.2f}(%)\n'.format("Number of users using NL:", len(countingNL), 100*len(countingNL)/numberOfUsers))
-    writer.write('{0:45} ==> {1:d}\n'.format("Total number of NL in queries:", sum(countingNL.values())))    
+    writer.write('{0:45} ==> {1:d}, {2:.2f}(%)\n'.format("Total number of NL in queries:", sum(countingNL.values()), 100 * sum(countingNL.values()) / numberOfQueries))    
     writer.write("-" * 45 + "\n")
     writer.write("-" * 80 + "\n")
 
@@ -805,7 +808,7 @@ def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQuer
     writer.write("-" * 40 + "\n")
     writer.write("-" * 40 + "\n")
     writer.write('{0:45} ==> {1:d}, {2:.2f}(%)\n'.format("Number of users re-accessing information:", len(countingReAccess), 100*len(countingReAccess)/numberOfUsers))
-    writer.write('{0:45} ==> {1:d}\n'.format("Total number of re-access inter sessions:", sum(countingReAccess.values())))    
+    writer.write('{0:45} ==> {1:d}, {2:.2f}(%)\n'.format("Total number of re-access inter sessions:", sum(countingReAccess.values()), 100.0*sum(countingReAccess.values())/numberOfSessions))    
     writer.write("-" * 80 + "\n")
 
 def printMeshClassificationMetrics(writer, countingMesh, countingDisease, numberOfQueries, hasMeshValues):
