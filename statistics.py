@@ -34,7 +34,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     countingMeshList = []
     countingDiseaseList = []
     
-    tableGeneralHeader = [["Dtst", "#Days", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Users #NL", "Users %NL", "QueriesNL", "%QueriesNL", "%UsersReAccess", "%SssnsReAccess"]]
+    tableGeneralHeader = [["Dtst", "#Days", "#Users", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Users #NL", "Users %NL", "QueriesNL", "%QueriesNL", "%UsersReAccess", "%SssnsReAccess"]]
 
     tableGeneralMeshHeader = [["Dtst", "QrsWithMesh", "% QrsWithMesh", "MeshIds", "MeshIds/#Qrs", "DiseIds", "DiseIds/#Qrs"]]
     tableMeshHeader = [ ["Dtst(%)","A (Anatomy)","B (Organisms)","C (Diseases)","D (Chemicals/Drugs)","E (Analytical, Diagnostic)","F(Psychiatry/Psychology)","G(Phenomena/Processes)","H(Disciplines/Occupations)","I(Anthropology/Education)","J(Technology/Industry)","K(Humanities)","L(Information Science)","M(Named Groups)","N(Health Care)","V(Publication Chars)","Z(Geographicals)"] ]
@@ -114,7 +114,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         numberOfMeshTerms = sum(countingMesh.values())
         numberOfMeshDiseases = sum(countingDisease.values())
 
-        generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfQueries, npTerms.mean, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession.mean, npTime.mean, len(countingNL), 100*len(countingNL)/numberOfUsers, sum(countingNL.values()), 100 * sum(countingNL.values())/numberOfQueries, 100*len(countingReAccess)/numberOfUsers, 100*sum(countingReAccess.values())/numberOfSessions] )
+        generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfUsers, numberOfQueries, npTerms.mean, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession.mean, npTime.mean, len(countingNL), 100*len(countingNL)/numberOfUsers, sum(countingNL.values()), 100 * sum(countingNL.values())/numberOfQueries, 100*len(countingReAccess)/numberOfUsers, 100*sum(countingReAccess.values())/numberOfSessions] )
         generalModifiedRow.append( [dataName, numberOfExpansions, 100.0 * numberOfExpansions/ numberOfQueries , numberOfShrinkage, 100 * numberOfShrinkage/ numberOfQueries, numberOfReformulations, 100 * numberOfReformulations/numberOfQueries, numberOfRepetitions, 100 * numberOfRepetitions/numberOfQueries] )
         generalMeshRow.append( [dataName,  hasMeshValues, 100.0 * hasMeshValues/numberOfQueries, numberOfMeshTerms, numberOfMeshTerms/numberOfQueries, numberOfMeshDiseases, numberOfMeshDiseases/numberOfQueries ] ) 
 
