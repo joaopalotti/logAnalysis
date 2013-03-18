@@ -34,18 +34,25 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     countingMeshList = []
     countingDiseaseList = []
     
-    tableGeneralHeader = [ ["Dtst", "#Days", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Exp", "Exp(%)", "Shr", "Shr(%)", "Ref", "Ref(%)", "Rep", "Rep(%)", "QrsWithMesh", "% QrsWithMesh", "MeshIds", "MeshIds/#Qrs", "DiseIds", "DiseIds/#Qrs"] ]
-    tableMeshHeader = [ ["Dtst(%)","A","B","C","D","E","F","G","H","I","J","K","L","M","N","V","Z"] ]
-    tableDiseasesHeader = [ ["Dtst(%)","C01","C02","C03","C04","C05","C06","C07","C08","C09","C10","C11","C12","C13","C14","C15","C16","C17","C18","C19","C20","C21","C22","C23","C24","C25","C26"] ]
+    tableGeneralHeader = [["Dtst", "#Days", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion"]]
+
+    tableGeneralMeshHeader = [["Dtst", "QrsWithMesh", "% QrsWithMesh", "MeshIds", "MeshIds/#Qrs", "DiseIds", "DiseIds/#Qrs"]]
+    tableMeshHeader = [ ["Dtst(%)","A (Anatomy)","B (Organisms)","C (Diseases)","D (Chemicals/Drugs)","E (Analytical, Diagnostic)","F(Psychiatry/Psychology)","G(Phenomena/Processes)","H(Disciplines/Occupations)","I(Anthropology/Education)","J(Technology/Industry)","K(Humanities)","L(Information Science)","M(Named Groups)","N(Health Care)","V(Publication Chars)","Z(Geographicals)"] ]
+    tableDiseasesHeader = [ ["Dtst(%)","C01(Bacterial)","C02(Viral)","C03(Parasitic)","C04(Neoplasms)","C05(Musculoskeletal)","C06(Digestive)","C07(Stomatognathic)","C08(Respiratory)","C09(Otorhinolaryngologic)","C10(Nervous)","C11(Eye)","C12(Male Urogenital)","C13(Female Urogenital)","C14(Cardiovascular)","C15(Hemic and Lymphatic)","C16(Congenital)","C17(Skin)","C18(Nutritional)","C19(Endocrine)","C20(Immune)","C21(Environmental)","C22(Animal)","C23(Pathological Conditions)","C24(Occupational)","C25(Substance-Related)","C26(Wounds and Injuries)"] ]
+
     tableSemanticFocusHeader = [ ["Dtst", "Nothing", "Symptom", "Cause", "Remedy", "SymptomCause", "SymptomRemedy", "CauseRemedy", "SymptomCauseRemedy"] ]
     tableCicleSequenceHeader = [["Dtst","SCS","SRS","CSC","CRC","RSR","RCR"]] 
+    
     tableModifiedSessionHeader = [["Dtst","Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]] 
+    tableGeneralModifiedHeader = [["Dtst", "Exp", "Exp(%)", "Shr", "Shr(%)", "Ref", "Ref(%)", "Rep", "Rep(%)" ]]
 
     generalTableRow = []
+    generalMeshRow = []
     meshTableRow = []
     diseaseTableRow = []
     semanticFocusRow = []
     cicleSequenceRow = []
+    generalModifiedRow = []
     modifiedSessionRow = []
 
     for dataPair in dataList:
@@ -94,7 +101,6 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
             printSemanticFocus(f, vectorOfActionSequence, vectorOfCicleSequence)
             printOutliers(f, outliersToRemove)
 
-
         countingAcronymsList.append([dataName, countingAcronyms])
         countingTimePerSessionList.append( [ dataName , countingTimePerSession ])
         countingTokensList.append( [dataName, countingTokens] )
@@ -108,9 +114,10 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         numberOfMeshTerms = sum(countingMesh.values())
         numberOfMeshDiseases = sum(countingDisease.values())
 
+        generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfQueries, npTerms.mean, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession.mean, npTime.mean] )
+        generalModifiedRow.append( [dataName, numberOfExpansions, 100.0 * numberOfExpansions/ numberOfQueries , numberOfShrinkage, 100 * numberOfShrinkage/ numberOfQueries, numberOfReformulations, 100 * numberOfReformulations/numberOfQueries, numberOfRepetitions, 100 * numberOfRepetitions/numberOfQueries] )
+        generalMeshRow.append( [dataName,  hasMeshValues, 100.0 * hasMeshValues/numberOfQueries, numberOfMeshTerms, numberOfMeshTerms/numberOfQueries, numberOfMeshDiseases, numberOfMeshDiseases/numberOfQueries ] ) 
 
-        generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfQueries, npTerms.mean, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession.mean, npTime.mean, numberOfExpansions, 100.0 * numberOfExpansions/ numberOfQueries , numberOfShrinkage, 100 * numberOfShrinkage/ numberOfQueries, numberOfReformulations, 100 * numberOfReformulations/numberOfQueries, numberOfRepetitions, 100 * numberOfRepetitions/numberOfQueries, hasMeshValues, 100.0 * hasMeshValues/numberOfQueries, numberOfMeshTerms, numberOfMeshTerms/numberOfQueries, numberOfMeshDiseases, numberOfMeshDiseases/numberOfQueries] )
-        
         #To avoid division by zero
         numberOfMeshTerms = numberOfMeshTerms if numberOfMeshTerms != 0 else 1
         numberOfMeshDiseases = numberOfMeshDiseases if numberOfMeshDiseases != 0 else 1
@@ -157,24 +164,25 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     latexWriter = latexPrinter() 
     for l in generalTableRow: 
         tableGeneralHeader.append( l )
-   
+    for l in generalMeshRow:
+        tableGeneralMeshHeader.append(l)
     for l in meshTableRow:
         tableMeshHeader.append( l )
-    
     for l in diseaseTableRow:
         tableDiseasesHeader.append( l )
-
     for l in semanticFocusRow:
         tableSemanticFocusHeader.append(l)
-
     for l in modifiedSessionRow:
         tableModifiedSessionHeader.append(l)
-
+    for l in generalModifiedRow:
+        tableGeneralModifiedHeader.append(l)
     for l in cicleSequenceRow:
         tableCicleSequenceHeader.append(l)
     
     latexWriter.addTable(tableGeneralHeader, caption="General Numbers", transpose=True)
     latexWriter.addTable(tableModifiedSessionHeader, caption="Modifications in a session", transpose=True)
+    latexWriter.addTable(tableGeneralModifiedHeader, caption="General Modified Statistics (Divided by the \#Queries", transpose=True)
+    latexWriter.addTable(tableGeneralMeshHeader, caption="General Mesh Statistics", transpose=True)
     latexWriter.addTable(tableMeshHeader, caption="Mesh Table", transpose=True)
     latexWriter.addTable(tableDiseasesHeader, caption="Diseases Table", transpose=True)
     latexWriter.addTable(tableSemanticFocusHeader, caption="Semantic Focus", transpose=True)
