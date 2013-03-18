@@ -8,10 +8,10 @@ PATH_TO_DATASETS = "dataSets/"
 if __name__ == "__main__":
 
     #goldMiner = readMyFormat(PATH_TO_DATASETS + "goldMiner.output")
-    hon = readMyFormat(PATH_TO_DATASETS + "honEnglishResult.v3.dataset")
+    #hon = readMyFormat(PATH_TO_DATASETS + "honEnglishResult.v3.dataset")
     #calculateMetrics([ [test, "test"],[test2, "test2" ]] ) 
     
-    #trip = readTripDataSet(PATH_TO_DATASETS + "tripTest4.csv")
+    hon = readMyFormat(PATH_TO_DATASETS + "tripSmall.dataset.cicle")
     #aol = readHONDataSet(PATH_TO_DATASETS + "honSmall2.csv")
     #hon = readHONDataSet(PATH_TO_DATASETS + "honSmall.csv")
     #aolNotHealth = readAolDataSet(PATH_TO_DATASETS + "aolNotHealthsitesSmall.csv")

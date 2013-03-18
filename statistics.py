@@ -38,12 +38,14 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     tableMeshHeader = [ ["Dtst(%)","A","B","C","D","E","F","G","H","I","J","K","L","M","N","V","Z"] ]
     tableDiseasesHeader = [ ["Dtst(%)","C01","C02","C03","C04","C05","C06","C07","C08","C09","C10","C11","C12","C13","C14","C15","C16","C17","C18","C19","C20","C21","C22","C23","C24","C25","C26"] ]
     tableSemanticFocusHeader = [ ["Dtst", "Nothing", "Symptom", "Cause", "Remedy", "SymptomCause", "SymptomRemedy", "CauseRemedy", "SymptomCauseRemedy"] ]
+    tableCicleSequenceHeader = [["Dtst","SCS","SRS","CSC","CRC","RSR","RCR"]] 
     tableModifiedSessionHeader = [["Dtst","Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]] 
 
     generalTableRow = []
     meshTableRow = []
     diseaseTableRow = []
     semanticFocusRow = []
+    cicleSequenceRow = []
     modifiedSessionRow = []
 
     for dataPair in dataList:
@@ -59,7 +61,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
             numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
             countingSemantics, countingPureSemanticTypes, vectorOfActionSequence,\
-            countingReAccess, idMaxQueriesInSession, outliersToRemove = calculateQueriesPerSession(data)
+            countingReAccess, idMaxQueriesInSession, outliersToRemove, vectorOfCicleSequence = calculateQueriesPerSession(data)
 
         if removeOutliers:
             newData = [member for member in data if member.userId not in outliersToRemove]
@@ -68,11 +70,9 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         percentageAcronym, countingAcronyms = calculateAcronyms(data)
         numberOfUsers = calculateUsers(data)
         npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries = calculateTerms(data)
-        
                
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
         countingNL = calculateNLuse(data)
-
 
         numberOfQueries = sum(countingQueries.values())
 
@@ -91,7 +91,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
                                    countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers, idMaxQueriesInSession)
             printMeshClassificationMetrics(f, countingMesh, countingDisease, numberOfQueries, hasMeshValues)
-            printSemanticFocus(f, vectorOfActionSequence)
+            printSemanticFocus(f, vectorOfActionSequence, vectorOfCicleSequence)
             printOutliers(f, outliersToRemove)
 
 
@@ -129,6 +129,10 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         totalOfModifiedSessions = 1/100 if totalOfModifiedSessions == 0 else totalOfModifiedSessions
 
         modifiedSessionRow.append( [dataName, 100 * vectorOfModifiedSessions[0]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[4]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[2]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[1]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[6]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[5]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[3]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[7]/totalOfModifiedSessions ] )
+        
+        totalCicleSequence = sum(vectorOfCicleSequence)
+        cicleSequenceRow.append( [dataName, vectorOfCicleSequence[0]/totalCicleSequence, vectorOfCicleSequence[1]/totalCicleSequence, vectorOfCicleSequence[2]/totalCicleSequence, vectorOfCicleSequence[3]/totalCicleSequence, vectorOfCicleSequence[4]/totalCicleSequence, vectorOfCicleSequence[5]/totalCicleSequence] )
+
 
     myPlotter = plotter()
     
@@ -166,12 +170,15 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     for l in modifiedSessionRow:
         tableModifiedSessionHeader.append(l)
 
+    for l in cicleSequenceRow:
+        tableCicleSequenceHeader.append(l)
+    
     latexWriter.addTable(tableGeneralHeader, caption="General Numbers", transpose=True)
     latexWriter.addTable(tableModifiedSessionHeader, caption="Modifications in a session", transpose=True)
     latexWriter.addTable(tableMeshHeader, caption="Mesh Table", transpose=True)
     latexWriter.addTable(tableDiseasesHeader, caption="Diseases Table", transpose=True)
     latexWriter.addTable(tableSemanticFocusHeader, caption="Semantic Focus", transpose=True)
-
+    latexWriter.addTable(tableCicleSequenceHeader, caption="Cicle Sequence", transpose=True)
 
 
 def hasNLword(words):
@@ -391,7 +398,7 @@ def calculateQueriesPerSession(data):
     modifiedQueries = numberOfExpansions + numberOfShrinkage + numberOfReformulations + numberOfRepetitions 
    
     # calculate all semantic stuff
-    countingSemantics, countingPureSemanticTypes, vectorOfActionSequence = calculateSemanticTypes(sessions)
+    countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, vectorOfCicleSequence = calculateSemanticTypes(sessions)
 
     #Calculate the number of re-access to some information in different sessions!i
     countingReAccess = calculateReAccessInDifferentSessions(sessions)
@@ -406,7 +413,7 @@ def calculateQueriesPerSession(data):
     return numberOfSessions, countingQueriesPerSession, npNumQueriesInSession,\
             countingTimePerSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions,\
             vectorOfModifiedSessions, countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, countingReAccess, idMaxQueriesInSession,\
-            outliersToRemove
+            outliersToRemove, vectorOfCicleSequence
 
 
 def calculateReAccessInDifferentSessions(sessions):
@@ -473,9 +480,12 @@ def contains(subSequence, sequence):
             if e == sequence[i]:
                 startIndex = i + 1
                 found = True
-                continue
+                break
         if not found:
             break
+        else:
+            found = False
+
     #Else is executed only and if only the break inside the for is not activeted
     else:
         return True
@@ -488,16 +498,26 @@ def cicleAnalyze(sequence):
     srs = ["symptom", "remedy", "symptom"]
     csc = ["cause", "symptom", "cause"]
     crc = ["cause", "remedy", "cause"]
-    rcr = ["remedy", "cause", "remedy"]
     rsr = ["remedy", "symptom", "remedy"]
-
-    contains(scs, sequence) 
+    rcr = ["remedy", "cause", "remedy"]
     
+    vectorOfCicleSequence = [0] * 6 # {scs, srs, csc, crc, rsr, rcr}
+    
+    if contains(scs, sequence):
+        vectorOfCicleSequence[0] += 1
+    if contains(srs, sequence):
+        vectorOfCicleSequence[1] += 1
+    if contains(csc, sequence):
+        vectorOfCicleSequence[2] += 1
+    if contains(crc, sequence):
+        vectorOfCicleSequence[3] += 1
+    if contains(rsr, sequence):
+        vectorOfCicleSequence[4] += 1
+    if contains(rcr , sequence):
+        vectorOfCicleSequence[5] += 1
 
-
-    return 0
-
-
+    #print "VECTOR ==== ", vectorOfCicleSequence
+    return vectorOfCicleSequence
 
 """
     Input:
@@ -517,12 +537,13 @@ def calculateSemanticTypes(sessions):
     countingSemantics = { "symptom":0, "cause": 0, "remedy": 0, "where": 0 }
     countingPureSemanticTypes = defaultdict(int)
     vectorOfActionSequence = [0] * 8 # [ 2^{remedy,cause,symptom} in this order ] 
+    vectorOfCicleSequence = [0] * 6 # {scs, srs, csc, crc, rsr, rcr}
 
     for session in sessions.values():
         for subSession in session.values():
             #print subSession
             
-            actionSequency = []
+            actionSequence = []
             for query in subSession:
                 if query[2] is not None:
                     #print "Semantic Type => ", query[2]
@@ -531,28 +552,31 @@ def calculateSemanticTypes(sessions):
                         countingPureSemanticTypes[st] += 1
                         
                         if st in ["sosy"]:
-                            actionSequency.append("symptom")
+                            actionSequence.append("symptom")
                             countingSemantics["symptom"] += 1
                         elif st in ["bact", "virs", "dsyn", "orgm"]:
-                            actionSequency.append("cause")
+                            actionSequence.append("cause")
                             countingSemantics["cause"] += 1
                         elif st in ["drdd", "clnd", "amas"]:
-                            actionSequency.append("remedy")
+                            actionSequence.append("remedy")
                             countingSemantics["remedy"] += 1
                         elif st in ["bpoc", "bsoj"]:
-                            actionSequency.append("where")
+                            actionSequence.append("where")
                             countingSemantics["where"] += 1
 
             #analyse the sequence of symptom followed by causes, etc.
-            index = analyzeSequencyOfActions(actionSequency)
-            #cicleIndex = cicleAnalyze(actionsSequency)
+            index = analyzeSequencyOfActions(actionSequence)
+            cicleVector = cicleAnalyze(actionSequence)
+
+            vectorOfCicleSequence = [ al + bl for al, bl in zip(cicleVector,vectorOfCicleSequence) ]
+
             #print "INDEX = ", index
             vectorOfActionSequence[index] += 1
 
     #print countingSemantics
     #print countingPureSemanticTypes
     #print "Vector of Action Sequence ", vectorOfActionSequence
-    return countingSemantics, countingPureSemanticTypes, vectorOfActionSequence
+    return countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, vectorOfCicleSequence
 
 def calculateTerms(data, coOccurrenceThreshold=0.6):
     """
@@ -801,7 +825,7 @@ def printMeshClassificationMetrics(writer, countingMesh, countingDisease, number
     writer.write("-" * 40 + "\n")
     writer.write("-" * 80 + "\n")
 
-def printSemanticFocus(writer, vectorOfActionSequence):
+def printSemanticFocus(writer, vectorOfActionSequence, vectorOfCicleSequence):
 
     writer.write("-" * 80 + "\n")
     writer.write("-" * 40 + "\n")
@@ -820,6 +844,19 @@ def printSemanticFocus(writer, vectorOfActionSequence):
     writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("SymptomRemedy", vectorOfActionSequence[5], 100 * vectorOfActionSequence[5]/totalActions))
     writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("CauseRemedy", vectorOfActionSequence[6], 100 * vectorOfActionSequence[6]/totalActions))
     writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("SymptomCauseRemedy", vectorOfActionSequence[7], 100 * vectorOfActionSequence[7]/totalActions))
+    writer.write("-" * 40 + "\n")
+    writer.write("-" * 40 + "\n")
+    writer.write("CICLE SEQUENCE:\n")
+    writer.write("-" * 40 + "\n")
+    totalCicleSequence = sum(vectorOfCicleSequence)
+    writer.write('{0:45} ==> {1:30}\n'.format("Total of cicle sequencies found", totalCicleSequence))
+    ### {scs, srs, csc, crc, rsr, rcr}
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("SCS", vectorOfCicleSequence[0], 100 * vectorOfCicleSequence[0]/totalCicleSequence))
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("SRS", vectorOfCicleSequence[1], 100 * vectorOfCicleSequence[1]/totalCicleSequence))
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("CSC", vectorOfCicleSequence[2], 100 * vectorOfCicleSequence[2]/totalCicleSequence))
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("CRC", vectorOfCicleSequence[3], 100 * vectorOfCicleSequence[3]/totalCicleSequence))
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("RSR", vectorOfCicleSequence[4], 100 * vectorOfCicleSequence[4]/totalCicleSequence))
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("RCR", vectorOfCicleSequence[5], 100 * vectorOfCicleSequence[5]/totalCicleSequence))
     writer.write("-" * 40 + "\n")
     writer.write("-" * 80 + "\n")
 
