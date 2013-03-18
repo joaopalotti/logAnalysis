@@ -405,7 +405,7 @@ def calculateQueriesPerSession(data):
    
     # calculate all semantic stuff
     countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, vectorOfCicleSequence = calculateSemanticTypes(sessions)
-    smt = [s for member in data for s in member.semanticTypes]
+    smt = [ s for member in data if member.semanticTypes is not None for s in member.semanticTypes if member.semanticTypes]
     countingFullSemanticTypes = Counter(smt)
     #print countingFullSemanticTypes
 
