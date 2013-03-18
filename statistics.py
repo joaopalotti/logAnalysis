@@ -463,6 +463,42 @@ def analyzeSequencyOfActions(sequence):
     #print "index = ", index, "remedy =", hasRemedy, "cause", hasCause,"symptom", hasSymptom
     return index
 
+def contains(subSequence, sequence):
+    startIndex = 0
+    found = False
+
+    for j in range(0, len(subSequence)):
+        e = subSequence[j]
+        for i in range(startIndex, len(sequence)):
+            if e == sequence[i]:
+                startIndex = i + 1
+                found = True
+                continue
+        if not found:
+            break
+    #Else is executed only and if only the break inside the for is not activeted
+    else:
+        return True
+
+    return False
+
+
+def cicleAnalyze(sequence):
+    scs = ["symptom", "cause", "symptom"]
+    srs = ["symptom", "remedy", "symptom"]
+    csc = ["cause", "symptom", "cause"]
+    crc = ["cause", "remedy", "cause"]
+    rcr = ["remedy", "cause", "remedy"]
+    rsr = ["remedy", "symptom", "remedy"]
+
+    contains(scs, sequence) 
+    
+
+
+    return 0
+
+
+
 """
     Input:
         sessions ---> { id: { sessionCounter: [ [Query1], [Q2], [Q3] ], sessionCounter2: [[Q1], [Q2], [Q3]]  }  }
@@ -509,6 +545,7 @@ def calculateSemanticTypes(sessions):
 
             #analyse the sequence of symptom followed by causes, etc.
             index = analyzeSequencyOfActions(actionSequency)
+            #cicleIndex = cicleAnalyze(actionsSequency)
             #print "INDEX = ", index
             vectorOfActionSequence[index] += 1
 
@@ -690,7 +727,7 @@ def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQuer
     writer.write("-" * 40 + "\n")
     writer.write("Session Length in Queries\n")
     writer.write("-" * 40 + "\n")
-    writer.write('{0:45} ==> {1:.3f} (id = {2:d})\n'.format("Maximum number of Queries in a session", (npNumQueriesInSession.max), int(idMaxQueriesInSession)))
+    writer.write('{0:45} ==> {1:.3f} (id = {2:30})\n'.format("Maximum number of Queries in a session", (npNumQueriesInSession.max), idMaxQueriesInSession))
     writer.write('{0:45} ==> {1:.3f}\n'.format("Minimum number of Queries in a session", (npNumQueriesInSession.min)))
     writer.write('{0:45} ==> {1:.3f}\n'.format("Mean number of Queries in a session", (npNumQueriesInSession.mean)))
     writer.write('{0:45} ==> {1:.3f}\n'.format("Median number of Queries in a session", (npNumQueriesInSession.median)))
