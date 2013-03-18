@@ -20,7 +20,6 @@ def tokenizeAllData(data):
     return data
 
 def filterStopWords(data):
-    
     stopWords = set()
     #Using as reference: http://jmlr.csail.mit.edu/papers/volume5/lewis04a/a11-smart-stop-list/english.stop
     with open(PATH_TO_AUX_FILES + "stopWords.txt","r") as f:
@@ -35,6 +34,24 @@ def filterStopWords(data):
             member.previouskeywords = noStopWords[:]
 
     return data
+
+def simpleFilterStopWords(countingTokens):
+    tenMostCommonTerms = {}
+
+    stopWords = set()
+    #Using as reference: http://jmlr.csail.mit.edu/papers/volume5/lewis04a/a11-smart-stop-list/english.stop
+    with open(PATH_TO_AUX_FILES + "stopWords.txt","r") as f:
+        for line in f:
+            stopWords.add(line.strip())
+    
+    for pair in countingTokens.most_common():
+        if pair[0] not in stopWords:
+            tenMostCommonTerms[pair[0]] = pair[1]
+        
+        if len(tenMostCommonTerms) == 10:
+            return tenMostCommonTerms
+        
+    return tenMostCommonTerms
 
 def compareSets(set1, set2):
     #print "Comparing ", set1, " and ", set2

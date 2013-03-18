@@ -41,7 +41,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     tableDiseasesHeader = [ ["Dtst(%)","C01(Bacterial)","C02(Viral)","C03(Parasitic)","C04(Neoplasms)","C05(Musculoskeletal)","C06(Digestive)","C07(Stomatognathic)","C08(Respiratory)","C09(Otorhinolaryngologic)","C10(Nervous)","C11(Eye)","C12(Male Urogenital)","C13(Female Urogenital)","C14(Cardiovascular)","C15(Hemic and Lymphatic)","C16(Congenital)","C17(Skin)","C18(Nutritional)","C19(Endocrine)","C20(Immune)","C21(Environmental)","C22(Animal)","C23(Pathological Conditions)","C24(Occupational)","C25(Substance-Related)","C26(Wounds and Injuries)"] ]
 
     tableSemanticFocusHeader = [ ["Dtst", "Nothing", "Symptom", "Cause", "Remedy", "SymptomCause", "SymptomRemedy", "CauseRemedy", "SymptomCauseRemedy"] ]
-    tableCicleSequenceHeader = [["Dtst","SCS","SRS","CSC","CRC","RSR","RCR"]] 
+    tableCicleSequenceHeader = [["Dtst", "Gross", "Perc", "SCS", "SRS", "CSC", "CRC", "RSR", "RCR"]] 
     
     tableModifiedSessionHeader = [["Dtst","Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]] 
     tableGeneralModifiedHeader = [["Dtst", "Exp", "Exp(%)", "Shr", "Shr(%)", "Ref", "Ref(%)", "Rep", "Rep(%)" ]]
@@ -76,7 +76,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
 
         percentageAcronym, countingAcronyms = calculateAcronyms(data)
         numberOfUsers = calculateUsers(data)
-        npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries = calculateTerms(data)
+        npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTerms = calculateTerms(data)
                
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
         countingNL = calculateNLuse(data)
@@ -92,7 +92,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
             print "Writing file ", dataName + ".result..."
             f.write("Metrics calculated:\n")
             printGeneralMetrics(f, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay)
-            printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers)
+            printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTerms)
             printMetricsForQueries(f, greatestQuery, countingQueries, countingQueriesPerDay, meanQueriesPerDay)
             printMetricsForSessions(f, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime,\
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
@@ -138,8 +138,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         modifiedSessionRow.append( [dataName, 100 * vectorOfModifiedSessions[0]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[4]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[2]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[1]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[6]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[5]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[3]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[7]/totalOfModifiedSessions ] )
         
         totalCicleSequence = sum(vectorOfCicleSequence)
-        cicleSequenceRow.append( [dataName, vectorOfCicleSequence[0]/totalCicleSequence, vectorOfCicleSequence[1]/totalCicleSequence, vectorOfCicleSequence[2]/totalCicleSequence, vectorOfCicleSequence[3]/totalCicleSequence, vectorOfCicleSequence[4]/totalCicleSequence, vectorOfCicleSequence[5]/totalCicleSequence] )
-
+        cicleSequenceRow.append( [dataName, totalCicleSequence, 100.0 * totalCicleSequence/numberOfSessions, vectorOfCicleSequence[0]/totalCicleSequence, vectorOfCicleSequence[1]/totalCicleSequence, vectorOfCicleSequence[2]/totalCicleSequence, vectorOfCicleSequence[3]/totalCicleSequence, vectorOfCicleSequence[4]/totalCicleSequence, vectorOfCicleSequence[5]/totalCicleSequence] )
 
     myPlotter = plotter()
     
@@ -181,13 +180,12 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     
     latexWriter.addTable(tableGeneralHeader, caption="General Numbers", transpose=True)
     latexWriter.addTable(tableModifiedSessionHeader, caption="Modifications in a session", transpose=True)
-    latexWriter.addTable(tableGeneralModifiedHeader, caption="General Modified Statistics (Divided by the \#Queries", transpose=True)
+    latexWriter.addTable(tableGeneralModifiedHeader, caption="General Modified Statistics (Divided by the \#Queries)", transpose=True)
     latexWriter.addTable(tableGeneralMeshHeader, caption="General Mesh Statistics", transpose=True)
     latexWriter.addTable(tableMeshHeader, caption="Mesh Table", transpose=True)
     latexWriter.addTable(tableDiseasesHeader, caption="Diseases Table", transpose=True)
     latexWriter.addTable(tableSemanticFocusHeader, caption="Semantic Focus", transpose=True)
     latexWriter.addTable(tableCicleSequenceHeader, caption="Cicle Sequence", transpose=True)
-
 
 def hasNLword(words):
     #TODO: find a better list:
@@ -612,6 +610,8 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
     # Transform the query into a list of simple tokens and count them
     tokens = [ t.lower() for sublist in listOfQueries for t in sublist]
     countingTokens = Counter(tokens)
+    
+    tenMostCommonTerms = simpleFilterStopWords(countingTokens) 
 
     # Calculate the Co-occurrence matrix
     matrix = {}
@@ -653,7 +653,7 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
     # Calculate basic metrics
     npTerms = generateStatsVector(queryInNumbers)
     
-    return npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries
+    return npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTerms
 
 
 def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay):
@@ -668,7 +668,7 @@ def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions
     writer.write('{0:45} ==> {1:30}\n'.format("How may days? ", str((lastDay - firstDay).days)))
     writer.write("-" * 45 + "\n")
  
-def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers):
+def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTerms):
     
     writer.write("For TERMS:\n")
     writer.write("-" * 45 + "\n")
@@ -694,6 +694,11 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simp
         writer.write('{0:45} ==> {1:30}\n'.format(pair[0], str(pair[1])))
     writer.write("-" * 45 + "\n")
      
+    writer.write("10 Most Common Terms: (not stop words)\n")
+    for pair in tenMostCommonTerms.iteritems():
+        writer.write('{0:45} ==> {1:30}\n'.format(pair[0], str(pair[1])))
+    writer.write("-" * 45 + "\n")
+
     writer.write("10 Most Common Acronyms:\n")
     writer.write("-" * 45 + "\n")
     for pair in countingAcronyms.most_common(10): 
