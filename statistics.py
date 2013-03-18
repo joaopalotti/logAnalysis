@@ -68,7 +68,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
             numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
             countingSemantics, countingPureSemanticTypes, vectorOfActionSequence,\
-            countingReAccess, idMaxQueriesInSession, outliersToRemove, vectorOfCicleSequence = calculateQueriesPerSession(data)
+            countingReAccess, idMaxQueriesInSession, outliersToRemove, vectorOfCicleSequence, countingFullSemanticTypes = calculateQueriesPerSession(data)
 
         if removeOutliers:
             newData = [member for member in data if member.userId not in outliersToRemove]
@@ -98,7 +98,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
                                    countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers, idMaxQueriesInSession)
             printMeshClassificationMetrics(f, countingMesh, countingDisease, numberOfQueries, hasMeshValues)
-            printSemanticFocus(f, vectorOfActionSequence, vectorOfCicleSequence)
+            printSemantic(f, vectorOfActionSequence, vectorOfCicleSequence, countingFullSemanticTypes)
             printOutliers(f, outliersToRemove)
 
         countingAcronymsList.append([dataName, countingAcronyms])
@@ -405,6 +405,9 @@ def calculateQueriesPerSession(data):
    
     # calculate all semantic stuff
     countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, vectorOfCicleSequence = calculateSemanticTypes(sessions)
+    smt = [s for member in data for s in member.semanticTypes]
+    countingFullSemanticTypes = Counter(smt)
+    #print countingFullSemanticTypes
 
     #Calculate the number of re-access to some information in different sessions!i
     countingReAccess = calculateReAccessInDifferentSessions(sessions)
@@ -419,7 +422,7 @@ def calculateQueriesPerSession(data):
     return numberOfSessions, countingQueriesPerSession, npNumQueriesInSession,\
             countingTimePerSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions,\
             vectorOfModifiedSessions, countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, countingReAccess, idMaxQueriesInSession,\
-            outliersToRemove, vectorOfCicleSequence
+            outliersToRemove, vectorOfCicleSequence, countingFullSemanticTypes
 
 
 def calculateReAccessInDifferentSessions(sessions):
@@ -841,7 +844,7 @@ def printMeshClassificationMetrics(writer, countingMesh, countingDisease, number
     writer.write("-" * 40 + "\n")
     writer.write("-" * 80 + "\n")
 
-def printSemanticFocus(writer, vectorOfActionSequence, vectorOfCicleSequence):
+def printSemantic(writer, vectorOfActionSequence, vectorOfCicleSequence, countingFullSemanticTypes):
 
     writer.write("-" * 80 + "\n")
     writer.write("-" * 40 + "\n")
@@ -873,6 +876,11 @@ def printSemanticFocus(writer, vectorOfActionSequence, vectorOfCicleSequence):
     writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("CRC", vectorOfCicleSequence[3], 100 * vectorOfCicleSequence[3]/totalCicleSequence))
     writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("RSR", vectorOfCicleSequence[4], 100 * vectorOfCicleSequence[4]/totalCicleSequence))
     writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("RCR", vectorOfCicleSequence[5], 100 * vectorOfCicleSequence[5]/totalCicleSequence))
+    writer.write("-" * 40 + "\n") 
+    writer.write("FULL SEMANTIC TYPES IN ORDER:\n")
+    writer.write("-" * 40 + "\n")
+    for pair in countingFullSemanticTypes.most_common():
+        writer.write('{0:45} ==> {1:30}\n'.format(pair[0], str(pair[1])))
     writer.write("-" * 40 + "\n")
     writer.write("-" * 80 + "\n")
 
