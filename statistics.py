@@ -120,10 +120,14 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
 
         # ["Dtst", "Nothing", "Symptom", "Cause", "Remedy", "SymptomCause", "SymptomRemedy", "CauseRemedy", "SymptomCauseRemedy"]
         totalActions = sum(vectorOfActionSequence)
+        totalActions = 1/100 if totalActions == 0 else totalActions
+
         semanticFocusRow.append( [ dataName, 100 * vectorOfActionSequence[0]/totalActions, 100 * vectorOfActionSequence[1]/totalActions, 100 * vectorOfActionSequence[2]/totalActions, 100 * vectorOfActionSequence[4]/totalActions, 100 * vectorOfActionSequence[3]/totalActions, 100 * vectorOfActionSequence[5]/totalActions, 100 * vectorOfActionSequence[6]/totalActions, 100 * vectorOfActionSequence[7]/totalActions ] )
 
         #["Dtst","Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]
         totalOfModifiedSessions = sum(vectorOfModifiedSessions)
+        totalOfModifiedSessions = 1/100 if totalOfModifiedSessions == 0 else totalOfModifiedSessions
+
         modifiedSessionRow.append( [dataName, 100 * vectorOfModifiedSessions[0]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[4]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[2]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[1]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[6]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[5]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[3]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[7]/totalOfModifiedSessions ] )
 
     myPlotter = plotter()

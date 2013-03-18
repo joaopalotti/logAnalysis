@@ -39,10 +39,10 @@ def readMyFormat(filename):
 
     ## The concept of session should already be defined when this file was created. 
     for row in reader:
-        #print row
+        #print row, len(row)
         
-        if len(row) != 6:
-            continue
+        #if len(row) != 6:
+        #    continue
         
         #No keywords in this line, skip it
         if len(row[2]) == 0 or row[2] == None:

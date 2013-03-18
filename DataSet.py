@@ -38,9 +38,16 @@ class DataSet(object):
         self.clickurl = clickurl if clickurl else None
         self.mesh = mesh.strip().split(";") if mesh else None
         self.semanticTypes = semanticTypes.strip().split(";") if semanticTypes else None
+
+        #print "UserId = ", self.userId, " time =", self.datetime, " keywords = ", self.keywords
         
-    def printMe(self, out=sys.stdout):
+    def printMe(self, out=sys.stdout, converting=False):
         writer = csv.writer(out, delimiter=',', quoting=csv.QUOTE_ALL, quotechar ='"', escapechar='\\', doublequote=False)
         # Should add here any important information and modify the corresponding readCSV
-        writer.writerow( [ str(self.datetime) ,  self.userId, self.keywords, self.previouskeywords, self.mesh, self.semanticTypes ])
+        if converting:
+            # Not printing the mesh and semanticTypes when converting -> the myApi2.java should not receive this fields
+            writer.writerow( [ str(self.datetime) ,  self.userId, self.keywords, self.previouskeywords]) 
+        else:
+            writer.writerow( [ str(self.datetime) ,  self.userId, self.keywords, self.previouskeywords, self.mesh, self.semanticTypes ])
+
         

@@ -24,7 +24,7 @@ def convertFile(filename, filetype, outputname=None, gzipIt=True):
         f = open( outputname, "w")
 
     for line in tmp:
-        line.printMe(f)
+        line.printMe(f, converting=True)
     f.close()
     
 

@@ -5,38 +5,9 @@ import gzip
 
 PATH_TO_DATASETS = "dataSets/"
 
-def convertFile(filename, filetype, outputname=None, gzipIt=True):
-    if not outputname:
-        outputname = PATH_TO_DATASETS + filename + ".dataset"
-    else:
-        outputname = PATH_TO_DATASETS + outputname
-    
-    if filetype is "trip":
-        tmp = readTripDataSet(filename)
-    elif filetype is "aol":
-        tmp = readAolDataSet(filename)
-    elif filetype is "hon":
-        tmp = readHONDataSet(filename)
-    elif filetype is "goldminer":
-        tmp = readGoldMiner(filename)
-    
-        
-    if gzipIt:
-        print "Creating file ", outputname + ".gz"
-        f = gzip.open( outputname + ".gz", "wb")
-    else:
-        print "Creating file ", outputname
-        f = open( outputname, "w")
-
-    for line in tmp:
-        line.printMe(f)
-    f.close()
-    
-
 if __name__ == "__main__":
 
-    #convertFile(PATH_TO_DATASETS + "tripTest4.csv", "trip", "tripSmall.dataset",gzipIt=False)
-
+    #goldMiner = readMyFormat(PATH_TO_DATASETS + "goldMiner.output")
     hon = readMyFormat(PATH_TO_DATASETS + "honEnglishResult.v3.dataset")
     #calculateMetrics([ [test, "test"],[test2, "test2" ]] ) 
     
@@ -52,5 +23,6 @@ if __name__ == "__main__":
     #calculateMetrics([ [hon, "Hon"], [trip, "Trip"] ] ) 
     #calculateMetrics([ [aol, "Aol"] ] ) 
     #calculateMetrics([ [aolNotHealth, "~aol"] ] ) 
-    #calculateMetrics([ [goldminer, "goldMinerTest"] ] ) 
+    #calculateMetrics([ [goldMiner, "goldMiner"], [hon, "Hon"] ]) 
+    #calculateMetrics([ [goldMiner, "goldMiner"] ]) 
 
