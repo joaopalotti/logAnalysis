@@ -526,19 +526,19 @@ public class myApi2 {
                         continue;
                     }
                     
-                    String [] toWrite = new String [ nextLine.length + processed.size() -1 ];
+                    String [] toWrite = new String [nextLine.length + processed.size() - 2];
                     
                     int j = 0;
-                    for(  ; j < nextLine.length - 1; j++){
+                    //Two last cols should be empty strings
+                    for(  ; j < nextLine.length - 2; j++){
                         toWrite[j] = nextLine[j]; 
                     }
                     
                     for( int k = 0  ; k  < processed.size(); j++, k++){
                         
                         System.out.println(" element ---> " + processed.get(k));
-                        toWrite[ j ] = processed.get( k );
+                        toWrite[j] = processed.get( k );
                     }
-
 
                     writer.writeNext(toWrite, false);
                     writer.flush();

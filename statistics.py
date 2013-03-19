@@ -138,7 +138,8 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         modifiedSessionRow.append( [dataName, 100 * vectorOfModifiedSessions[0]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[4]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[2]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[1]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[6]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[5]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[3]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[7]/totalOfModifiedSessions ] )
         
         totalCicleSequence = sum(vectorOfCicleSequence)
-        cicleSequenceRow.append( [dataName, totalCicleSequence, 100.0 * totalCicleSequence/numberOfSessions, vectorOfCicleSequence[0]/totalCicleSequence, vectorOfCicleSequence[1]/totalCicleSequence, vectorOfCicleSequence[2]/totalCicleSequence, vectorOfCicleSequence[3]/totalCicleSequence, vectorOfCicleSequence[4]/totalCicleSequence, vectorOfCicleSequence[5]/totalCicleSequence] )
+        totalCicleSequence = 1/100 if totalCicleSequence == 0 else totalCicleSequence
+        cicleSequenceRow.append( [dataName, totalCicleSequence, 100.0 * totalCicleSequence/numberOfSessions, 100 * vectorOfCicleSequence[0]/totalCicleSequence, 100 * vectorOfCicleSequence[1]/totalCicleSequence, 100 * vectorOfCicleSequence[2]/totalCicleSequence, 100 * vectorOfCicleSequence[3]/totalCicleSequence, 100 * vectorOfCicleSequence[4]/totalCicleSequence, 100 * vectorOfCicleSequence[5]/totalCicleSequence] )
 
     myPlotter = plotter()
     
@@ -190,7 +191,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
 def hasNLword(words):
     #TODO: find a better list:
     # possibility: use Noun + Verb Phrase or other structures like that
-    interestingWords = ["would", "wouldn't", "wouldnt", "could", "couldn't", "couldnt", "should", "shouldn't", "shouldnt", "how", "when", "where", "which", "who", "whom", "can", "cannot", "why", "what", "we", "they", "i", "do", "does"]
+    interestingWords = ["would", "wouldn't", "wouldnt", "could", "couldn't", "couldnt", "should", "shouldn't", "shouldnt", "how", "when", "where", "which", "who", "whom", "can", "cannot", "why", "what", "we", "they", "i", "do", "does", "must", "ought"]
     return len( [ w for w in words if w.lower() in interestingWords ] ) > 0
 
 def calculateNLuse(data):
@@ -541,9 +542,15 @@ def cicleAnalyze(sequence):
 
     Some important semantic types (list: http://metamap.nlm.nih.gov/SemanticTypeMappings_2011AA.txt)
         -> Symptom   -> sosy (Sign or Symptom)
-        -> Cause     -> bact (Bacterium), virs (Virus), dsyn (Disease or Syndrome), orgm (Organism)
-        -> Remedy    -> drdd (Drug Delivery Device), clnd (Clinical Drug), amas (Amino Acid Sequence ?)
-        -> where     -> bpoc (Body Part, Organ, or Organ Component), bsoj (Body Space or Junction)
+        
+        -> Cause     -> bact (Bacterium), virs (Virus), dsyn (Disease or Syndrome), orgm (? Organism ?)
+        
+        -> Remedy    -> drdd (Drug Delivery Device), clnd (Clinical Drug), amas (Amino Acid Sequence ?), antb (Antibiotic), aapp(Amino Acid, Peptide, or Protein?), phsu (Pharmacologic Substance), imft (Immunologic Factor - vaccine, e.g.), vita (Vitamin)
+
+        -> where     -> bpoc (Body Part, Organ, or Organ Component), bsoj (Body Space or Junction), tisu (tissue), bdsy (Body System), blor (Body Location or Region)
+
+        ->>> Important and missing classification: inpo (Injury or Poisoning),  diap (Diagnostic Procedure), irda (Indicator, Reagent, or Diagnostic Aid), fndg (Finding), ftcn (Functional Concept), gngm (Gene or Genome), hcro (Health Care Related Organization), hlca (Health Care Activity), horm|Hormone, inch|Inorganic Chemical, lbpr|Laboratory Procedure, mobd|Mental or Behavioral Dysfunction
+
 """
 def calculateSemanticTypes(sessions):
 
@@ -570,10 +577,10 @@ def calculateSemanticTypes(sessions):
                         elif st in ["bact", "virs", "dsyn", "orgm"]:
                             actionSequence.append("cause")
                             countingSemantics["cause"] += 1
-                        elif st in ["drdd", "clnd", "amas"]:
+                        elif st in ["drdd", "clnd", "amas", "antb","aapp","phsu","imft","vita"]:
                             actionSequence.append("remedy")
                             countingSemantics["remedy"] += 1
-                        elif st in ["bpoc", "bsoj"]:
+                        elif st in ["bpoc", "bsoj","tisu","bdsy","blor"]:
                             actionSequence.append("where")
                             countingSemantics["where"] += 1
 
@@ -870,6 +877,7 @@ def printSemantic(writer, vectorOfActionSequence, vectorOfCicleSequence, countin
     totalCicleSequence = sum(vectorOfCicleSequence)
     writer.write('{0:45} ==> {1:30}\n'.format("Total of cicle sequencies found", totalCicleSequence))
     ### {scs, srs, csc, crc, rsr, rcr}
+    totalCicleSequence = 1e1000 if totalCicleSequence == 0 else totalCicleSequence
     writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("SCS", vectorOfCicleSequence[0], 100 * vectorOfCicleSequence[0]/totalCicleSequence))
     writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("SRS", vectorOfCicleSequence[1], 100 * vectorOfCicleSequence[1]/totalCicleSequence))
     writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("CSC", vectorOfCicleSequence[2], 100 * vectorOfCicleSequence[2]/totalCicleSequence))

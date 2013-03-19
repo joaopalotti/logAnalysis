@@ -3,7 +3,7 @@ from readCSV import readTripDataSet, readAolDataSet, readHONDataSet, readGoldMin
 from statistics import calculateMetrics
 import gzip
 
-PATH_TO_DATASETS = "dataSets/"
+PATH_TO_DATASETS = "dataSetsOfficials/hon/"
 
 if __name__ == "__main__":
 
@@ -11,15 +11,20 @@ if __name__ == "__main__":
     #hon = readMyFormat(PATH_TO_DATASETS + "honEnglishResult.v3.dataset")
     #calculateMetrics([ [test, "test"],[test2, "test2" ]] ) 
     
-    hon = readMyFormat(PATH_TO_DATASETS + "tripSmall.dataset.cicle")
-    #aol = readHONDataSet(PATH_TO_DATASETS + "honSmall2.csv")
+    trip = readMyFormat("trip.dataset")
+
+    #hon = readMyFormat(PATH_TO_DATASETS + "honEnglish.dataset")
+    #hon = readHONDataSet(PATH_TO_DATASETS + "honEnglish.dataset")
     #hon = readHONDataSet(PATH_TO_DATASETS + "honSmall.csv")
     #aolNotHealth = readAolDataSet(PATH_TO_DATASETS + "aolNotHealthsitesSmall.csv")
     #goldminer = readGoldMiner(PATH_TO_DATASETS + "goldminer-v4.txt")
     
+    #for member in hon:
+    #    member.normalPrint()
+
     #calculateMetrics([ [aol, "Aol"], [ trip, "Trip"], [hon, "HoN" ] ]) 
     #calculateMetrics([ [trip, "Trip"] ] ) 
-    calculateMetrics([ [hon, "Hon"] ] ) 
+    #calculateMetrics([ [hon, "Hon"] ] ) 
     #calculateMetrics([ [hon, "Hon"], [trip, "Trip"] ] ) 
     #calculateMetrics([ [aol, "Aol"] ] ) 
     #calculateMetrics([ [aolNotHealth, "~aol"] ] ) 

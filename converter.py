@@ -15,7 +15,6 @@ def convertFile(filename, filetype, outputname=None, gzipIt=True):
     elif filetype is "goldminer":
         tmp = readGoldMiner(filename)
     
-        
     if gzipIt:
         print "Creating file ", outputname + ".gz"
         f = gzip.open( outputname + ".gz", "wb")
@@ -24,7 +23,8 @@ def convertFile(filename, filetype, outputname=None, gzipIt=True):
         f = open( outputname, "w")
 
     for line in tmp:
-        line.printMe(f, converting=True)
+        line.printMe(f)
+        #line.normalPrint()
     f.close()
     
 
@@ -32,5 +32,7 @@ if __name__ == "__main__":
 
     pathToFile = sys.argv[1]
     print "Using file: " + pathToFile
-    convertFile( pathToFile, "goldminer", "goldMiner.dataset", gzipIt=True)
+    #convertFile( pathToFile, "goldminer", "goldMiner.dataset", gzipIt=True)
+    #convertFile( pathToFile, "hon", "hon.dataset", gzipIt=False)
+    convertFile( pathToFile, "trip", "trip.dataset", gzipIt=False)
 

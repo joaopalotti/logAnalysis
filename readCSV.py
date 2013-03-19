@@ -41,8 +41,9 @@ def readMyFormat(filename):
     for row in reader:
         #print row, len(row)
         
-        #if len(row) != 6:
-        #    continue
+        if len(row) != 6:
+            print row
+            continue
         
         #No keywords in this line, skip it
         if len(row[2]) == 0 or row[2] == None:
@@ -118,13 +119,13 @@ def readHONDataSet(filename):
     #Data in the first line
     previousRow = reader[0]
     # (0) msql-id, (1) date, (2) engine, (3) language, (4) nb_terms, (5) orig_query, (6) query_id, (7) session_id, (8) source, (9) user_id, (10) loaded_file_id, (11) ip_address_id, (12) refere
-    temp = DataSet(dttime=previousRow[1], userId=previousRow[11], category=None, publication=None, keywords=previousRow[5].strip("\""), rank=None, clickurl=None, previouskeywords=None)
+    temp = DataSet(dttime=previousRow[1], userId=previousRow[11], category=None, publication=None, keywords=previousRow[5], rank=None, clickurl=None, previouskeywords=None)
     data.append(temp)             
 
     for row in reader[1:]:
         if row:
             if checkSession(previousRow, row, idIndex=11, dateIndex=1, dateFormat='%Y-%m-%d %H:%M:%S'):
-                temp = DataSet(dttime=row[1], userId=row[11], category=None, publication=None, keywords=row[5], rank=None, clickurl=None, previouskeywords=previousRow[5].strip("\""))
+                temp = DataSet(dttime=row[1], userId=row[11], category=None, publication=None, keywords=row[5], rank=None, clickurl=None, previouskeywords=previousRow[5])
             else:
                 temp = DataSet(dttime=row[1], userId=row[11], category=None, publication=None, keywords=row[5], rank=None, clickurl=None, previouskeywords=None)
             data.append(temp)
