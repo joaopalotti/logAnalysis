@@ -58,7 +58,7 @@ public class myApi2 {
         System.out.println( "READING MESH FILE ");
 
         try{
-            FileInputStream fstream = new FileInputStream("meshMap");
+            FileInputStream fstream = new FileInputStream("meshMapComplete");
             BufferedReader br = new BufferedReader(new InputStreamReader(new DataInputStream(fstream)));
             String strLine;
             //Read File Line By Line

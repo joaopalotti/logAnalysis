@@ -33,6 +33,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     countingQueriesPerSessionList = []
     countingMeshList = []
     countingDiseaseList = []
+    countingMeshDepthList = []
     
     tableGeneralHeader = [["Dtst", "#Days", "#Users", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Users #NL", "Users %NL", "QueriesNL", "%QueriesNL", "%UsersReAccess", "%SssnsReAccess"]]
 
@@ -76,7 +77,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
 
         percentageAcronym, countingAcronyms = calculateAcronyms(data)
         numberOfUsers = calculateUsers(data)
-        npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTerms = calculateTerms(data)
+        npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord = calculateTerms(data)
                
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
         countingNL = calculateNLuse(data)
@@ -85,19 +86,19 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
 
         hasMeshValues = 0
         if usingMesh:
-            countingMesh, countingDisease, hasMeshValues = calculateMesh(data)
+            countingMesh, countingDisease, hasMeshValues, countingMeshDepth = calculateMesh(data)
 
         # Print statistics
         with open(dataName + ".result", "w") as f:
             print "Writing file ", dataName + ".result..."
             f.write("Metrics calculated:\n")
             printGeneralMetrics(f, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay)
-            printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTerms, numberOfQueries)
+            printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTermsNoStopWord, numberOfQueries)
             printMetricsForQueries(f, greatestQuery, countingQueries, countingQueriesPerDay, meanQueriesPerDay)
             printMetricsForSessions(f, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime,\
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
                                    countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers, idMaxQueriesInSession)
-            printMeshClassificationMetrics(f, countingMesh, countingDisease, numberOfQueries, hasMeshValues)
+            printMeshClassificationMetrics(f, countingMesh, countingDisease, numberOfQueries, hasMeshValues, countingMeshDepth)
             printSemantic(f, vectorOfActionSequence, vectorOfCicleSequence, countingFullSemanticTypes)
             printOutliers(f, outliersToRemove)
 
@@ -109,6 +110,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         if usingMesh:
             countingMeshList.append([dataName, countingMesh])
             countingDiseaseList.append([dataName, countingDisease])
+            countingMeshDepthList.append([dataName, countingMeshDepth])
 
         #Data for tables
         numberOfMeshTerms = sum(countingMesh.values())
@@ -159,6 +161,8 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         plotSizeOfWords(myPlotter, dataList, printValuesToFile)
     if printPlotSizeOfQueries:
         plotSizeOfQueries(myPlotter, dataList, printValuesToFile)
+    
+    plotMeshDepth(myPlotter, countingMeshDepthList, printValuesToFile)
 
     #Print latex tables:
     latexWriter = latexPrinter() 
@@ -214,16 +218,21 @@ def calculateMesh(data):
     #We take only the first letter here
     meshValues = ( member.mesh for member in data if member.mesh )
     meshValues = [ v for values in meshValues for v in values if v != '' ]
+    
+    meshDepth = [ len(d.split('.')) for d in meshValues]
+    countingMeshDepth = Counter(meshDepth)
 
     hasMeshValues =  sum( 1 for member in data if member.mesh )
-    
+    # Isolate the diseases
     meshDiseases = ( values for values in meshValues if values.startswith('C') )
+
+    # Using only the first letter in the mesh values ( C19.523.232 --> C, D2.312 -> D)
     meshValues = ( values[0] for values in meshValues )
     countingDisease = Counter(meshDiseases)
     countingMesh = Counter(meshValues)
     
     #print countingDisease, countingMesh
-    return countingMesh, countingDisease, hasMeshValues
+    return countingMesh, countingDisease, hasMeshValues, countingMeshDepth
 
 def calculateUsers(data):
     return len(set( [ member.userId for member in data] ))
@@ -625,7 +634,7 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
     tokens = [ t.lower() for sublist in listOfQueries for t in sublist]
     countingTokens = Counter(tokens)
     
-    tenMostCommonTerms = simpleFilterStopWords(countingTokens) 
+    tenMostCommonTermsNoStopWord = simpleFilterStopWords(countingTokens) 
 
     # Calculate the Co-occurrence matrix
     matrix = {}
@@ -667,7 +676,7 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
     # Calculate basic metrics
     npTerms = generateStatsVector(queryInNumbers)
     
-    return npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTerms
+    return npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord
 
 
 def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay):
@@ -682,7 +691,7 @@ def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions
     writer.write('{0:45} ==> {1:30}\n'.format("How may days? ", str((lastDay - firstDay).days)))
     writer.write("-" * 45 + "\n")
  
-def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTerms, numberOfQueries):
+def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTermsNoStopWord, numberOfQueries):
     
     writer.write("For TERMS:\n")
     writer.write("-" * 45 + "\n")
@@ -709,7 +718,7 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simp
     writer.write("-" * 45 + "\n")
      
     writer.write("10 Most Common Terms: (not stop words)\n")
-    for pair in tenMostCommonTerms.iteritems():
+    for pair in tenMostCommonTermsNoStopWord.iteritems():
         writer.write('{0:45} ==> {1:30}\n'.format(pair[0], str(pair[1])))
     writer.write("-" * 45 + "\n")
 
@@ -821,7 +830,7 @@ def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQuer
     writer.write('{0:45} ==> {1:d}, {2:.2f}(%)\n'.format("Total number of re-access inter sessions:", sum(countingReAccess.values()), 100.0*sum(countingReAccess.values())/numberOfSessions))    
     writer.write("-" * 80 + "\n")
 
-def printMeshClassificationMetrics(writer, countingMesh, countingDisease, numberOfQueries, hasMeshValues):
+def printMeshClassificationMetrics(writer, countingMesh, countingDisease, numberOfQueries, hasMeshValues, countingMeshDepth):
     
     writer.write("-" * 80 + "\n")
     writer.write("-" * 40 + "\n")
@@ -844,10 +853,17 @@ def printMeshClassificationMetrics(writer, countingMesh, countingDisease, number
     writer.write('{0:45} ==> {1:30}\n'.format("Number of Disesase identifiers", totalDisease ) )
     writer.write('{0:45} ==> {1:.3f}\n'.format("(Mean) Diseases / #Queries ", totalDisease/numberOfQueries))
     writer.write("-" * 40 + "\n")
-    
     for k,v in countingDisease.iteritems():
         writer.write('{0:>15} ------- {1:<10} ({2:.2f}%)\n'.format( k, v, 100 * v/totalDisease ))
     
+    writer.write("-" * 40 + "\n")
+    writer.write("-" * 40 + "\n")
+    
+    writer.write("MESH DEPTH:\n")
+    writer.write('{0:>15} ------- {1:<10} ({2:>3}) )\n'.format( "Depth","Frequency","%"))
+    totalMeshDepth = sum(countingMeshDepth.values() )
+    for k,v in countingMeshDepth.iteritems():
+        writer.write('{0:>15} ------- {1:<10} ({2:.2f}%)\n'.format( k, v, 100 * v/totalMeshDepth))
     writer.write("-" * 40 + "\n")
     writer.write("-" * 80 + "\n")
 

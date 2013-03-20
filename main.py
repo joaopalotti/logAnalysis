@@ -3,7 +3,7 @@ from readCSV import readTripDataSet, readAolDataSet, readHONDataSet, readGoldMin
 from statistics import calculateMetrics
 import gzip
 
-PATH_TO_DATASETS = "dataSetsOfficials/hon/"
+PATH_TO_DATASETS = "dataSets/"
 
 if __name__ == "__main__":
 
@@ -11,7 +11,9 @@ if __name__ == "__main__":
     #hon = readMyFormat(PATH_TO_DATASETS + "honEnglishResult.v3.dataset")
     #calculateMetrics([ [test, "test"],[test2, "test2" ]] ) 
     
-    trip = readMyFormat("trip.dataset")
+    #trip = readMyFormat("trip.dataset")
+    #hon = readMyFormat(PATH_TO_DATASETS + "honEnglishResult.v3.dataset.gz")
+    hon = readMyFormat(PATH_TO_DATASETS + "dataset.Small")
 
     #hon = readMyFormat(PATH_TO_DATASETS + "honEnglish.dataset")
     #hon = readHONDataSet(PATH_TO_DATASETS + "honEnglish.dataset")
@@ -24,7 +26,7 @@ if __name__ == "__main__":
 
     #calculateMetrics([ [aol, "Aol"], [ trip, "Trip"], [hon, "HoN" ] ]) 
     #calculateMetrics([ [trip, "Trip"] ] ) 
-    #calculateMetrics([ [hon, "Hon"] ] ) 
+    calculateMetrics([ [hon, "Hon"] ] ) 
     #calculateMetrics([ [hon, "Hon"], [trip, "Trip"] ] ) 
     #calculateMetrics([ [aol, "Aol"] ] ) 
     #calculateMetrics([ [aolNotHealth, "~aol"] ] ) 
