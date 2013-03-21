@@ -133,12 +133,19 @@ def plotSizeOfWords(myPlotter, dataList, printValuesToFile):
     myPlotter.plotFrequency(wordsSize, "Word Size", label=dataName, saveName="wordSize", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
 
 def plotMeshDepth(myPlotter, dataList, printValuesToFile):
-    
     for dataItem in dataList[:-1]:
         dataName, data = dataItem[0], dataItem[1]
         myPlotter.plotCounter(data, xlabelName="Mesh Depth", ylabelName="Occurences", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="meshDepth")
 
     dataName, data = dataList[-1]
     myPlotter.plotCounter(data, xlabelName="Mesh Depth", ylabelName="Occurences", label=dataName, saveName="meshDepth", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
+
+def plotUsersByNumberOfQueries(myPlotter, dataList, printValuesToFile):
+    for dataItem in dataList[:-1]:
+        dataName, data = dataItem[0], dataItem[1]
+        myPlotter.plotCounter(data, xlabelName="Number Of Queries", ylabelName="Number Of Users", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="queriesPerUser")
+
+    dataName, data = dataList[-1]
+    myPlotter.plotCounter(data, xlabelName="Number of Queries", ylabelName="Number of Users", label=dataName, saveName="queriesPerUser", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
 
 

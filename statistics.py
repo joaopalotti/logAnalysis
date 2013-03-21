@@ -19,9 +19,7 @@ SOME IMPORTANT NOTES:
 numberOfQueriesInASessionThreshold = 100
 removeOutliers=True
 
-def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotSizeOfWords=True, printPlotSizeOfQueries=True,\
-                     printPlotFrequencyOfQueries=True, printPlotFrequencyOfTerms=True, printPlotAcronymFrequency=True,\
-                     printQueriesPerSession=True, printTimePerSession=True, printValuesToFile=True):
+def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValuesToFile=True):
     """
         Expected a list of list of DataSet (TripData or AolData) objects
     """
@@ -34,6 +32,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     countingMeshList = []
     countingDiseaseList = []
     countingMeshDepthList = []
+    countingQueriesPerUserList = []
     
     tableGeneralHeader = [["Dtst", "#Days", "#Users", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Users #NL", "Users %NL", "QueriesNL", "%QueriesNL", "%UsersReAccess", "%SssnsReAccess"]]
 
@@ -46,6 +45,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     
     tableModifiedSessionHeader = [["Dtst","Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]] 
     tableGeneralModifiedHeader = [["Dtst", "Exp", "Exp(%)", "Shr", "Shr(%)", "Ref", "Ref(%)", "Rep", "Rep(%)" ]]
+    tableMeshDepthHeader = [["Dtst(%)", "Depth 1", "Depth 2", "Depth 3", "Depth 4", "Depth 5", "Depth 6", "Depth 7", "Depth 8", "Depth 9", "Depth 10","Depth 11", "Depth 12"]]
 
     generalTableRow = []
     generalMeshRow = []
@@ -55,6 +55,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     cicleSequenceRow = []
     generalModifiedRow = []
     modifiedSessionRow = []
+    meshDepthRow = []
 
     for dataPair in dataList:
         data, dataName = dataPair[0], dataPair[1]
@@ -81,6 +82,8 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
                
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
         countingNL = calculateNLuse(data)
+        countingQueriesPerUser = calculateQueriesPerUser(data)
+
 
         numberOfQueries = sum(countingQueries.values())
 
@@ -111,6 +114,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
             countingMeshList.append([dataName, countingMesh])
             countingDiseaseList.append([dataName, countingDisease])
             countingMeshDepthList.append([dataName, countingMeshDepth])
+        countingQueriesPerUserList.append( [dataName, countingQueriesPerUser] )
 
         #Data for tables
         numberOfMeshTerms = sum(countingMesh.values())
@@ -142,27 +146,25 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         totalCicleSequence = sum(vectorOfCicleSequence)
         totalCicleSequence = 1/100 if totalCicleSequence == 0 else totalCicleSequence
         cicleSequenceRow.append( [dataName, totalCicleSequence, 100.0 * totalCicleSequence/numberOfSessions, 100 * vectorOfCicleSequence[0]/totalCicleSequence, 100 * vectorOfCicleSequence[1]/totalCicleSequence, 100 * vectorOfCicleSequence[2]/totalCicleSequence, 100 * vectorOfCicleSequence[3]/totalCicleSequence, 100 * vectorOfCicleSequence[4]/totalCicleSequence, 100 * vectorOfCicleSequence[5]/totalCicleSequence] )
+    
+        totalMeshDepth = sum(countingMeshDepth.values())
+        totalMeshDepth = 1/100 if totalMeshDepth == 0 else totalMeshDepth
+        meshDepthRow.append( [dataName, 100/totalMeshDepth * countingMeshDepth[1], 100/totalMeshDepth * countingMeshDepth[2], 100/totalMeshDepth * countingMeshDepth[3], 100/totalMeshDepth * countingMeshDepth[4], 100/totalMeshDepth * countingMeshDepth[5], 100/totalMeshDepth * countingMeshDepth[6], 100/totalMeshDepth * countingMeshDepth[7],100/totalMeshDepth * countingMeshDepth[8], 100/totalMeshDepth * countingMeshDepth[9], 100/totalMeshDepth * countingMeshDepth[10], 100/totalMeshDepth * countingMeshDepth[11], 100/totalMeshDepth * countingMeshDepth[12]  ])
+    
 
-    myPlotter = plotter()
-    
-    if printQueriesPerSession:
-        plotQueriesPerSession(myPlotter, countingQueriesPerSessionList, printValuesToFile)
-    if printPlotFrequencyOfTerms:
-        plotFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile)
-        plotLogLogFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile)
-    if printPlotFrequencyOfQueries:
-        plotFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile)
-        plotLogLogFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile)
-    if printTimePerSession:
-        plotTimePerSession(myPlotter, countingTimePerSessionList, printValuesToFile)
-    if printPlotAcronymFrequency:
-        plotAcronymFrequency(myPlotter, countingAcronymsList, printValuesToFile)
-    if printPlotSizeOfWords:
-        plotSizeOfWords(myPlotter, dataList, printValuesToFile)
-    if printPlotSizeOfQueries:
-        plotSizeOfQueries(myPlotter, dataList, printValuesToFile)
-    
+    # Plot graphics
+    myPlotter = plotter() 
+    plotQueriesPerSession(myPlotter, countingQueriesPerSessionList, printValuesToFile)
+    plotFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile)
+    plotLogLogFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile)
+    plotFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile)
+    plotLogLogFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile)
+    plotTimePerSession(myPlotter, countingTimePerSessionList, printValuesToFile)
+    plotAcronymFrequency(myPlotter, countingAcronymsList, printValuesToFile)
+    plotSizeOfWords(myPlotter, dataList, printValuesToFile)
+    plotSizeOfQueries(myPlotter, dataList, printValuesToFile)
     plotMeshDepth(myPlotter, countingMeshDepthList, printValuesToFile)
+    plotUsersByNumberOfQueries(myPlotter, countingQueriesPerUserList, printValuesToFile)
 
     #Print latex tables:
     latexWriter = latexPrinter() 
@@ -182,6 +184,8 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
         tableGeneralModifiedHeader.append(l)
     for l in cicleSequenceRow:
         tableCicleSequenceHeader.append(l)
+    for l in meshDepthRow:
+        tableMeshDepthHeader.append(l)
     
     latexWriter.addTable(tableGeneralHeader, caption="General Numbers", transpose=True)
     latexWriter.addTable(tableModifiedSessionHeader, caption="Modifications in a session", transpose=True)
@@ -189,6 +193,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printPlotS
     latexWriter.addTable(tableGeneralMeshHeader, caption="General Mesh Statistics", transpose=True)
     latexWriter.addTable(tableMeshHeader, caption="Mesh Table", transpose=True)
     latexWriter.addTable(tableDiseasesHeader, caption="Diseases Table", transpose=True)
+    latexWriter.addTable(tableMeshDepthHeader, caption="Mesh Depth", transpose=True)
     latexWriter.addTable(tableSemanticFocusHeader, caption="Semantic Focus", transpose=True)
     latexWriter.addTable(tableCicleSequenceHeader, caption="Cicle Sequence", transpose=True)
 
@@ -224,10 +229,10 @@ def calculateMesh(data):
 
     hasMeshValues =  sum( 1 for member in data if member.mesh )
     # Isolate the diseases
-    meshDiseases = ( values for values in meshValues if values.startswith('C') )
+    meshDiseases = (values.split(".")[0] for values in meshValues if values.startswith('C'))
 
     # Using only the first letter in the mesh values ( C19.523.232 --> C, D2.312 -> D)
-    meshValues = ( values[0] for values in meshValues )
+    meshValues = (values[0] for values in meshValues)
     countingDisease = Counter(meshDiseases)
     countingMesh = Counter(meshValues)
     
@@ -348,7 +353,6 @@ def removeOutliers(sessions):
         del sessions[user]
     
     return usersToRemove
-
     
 def calculateQueriesPerSession(data):
     '''
@@ -678,6 +682,22 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
     
     return npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord
 
+
+def calculateQueriesPerUser(data):
+    
+    #from datetime import datetime
+    from itertools import groupby
+    #print "START!"
+    #start = datetime.now()
+
+    userIds = sorted( [member.userId for member in data] )
+    countingQueriesPerUser = Counter( [len(list(g)) for k, g in groupby(userIds)] )
+    
+    #end = datetime.now()
+    #print "Total Seconds to calculate queries per user: ", (end-start).total_seconds()
+
+    print countingQueriesPerUser
+    return countingQueriesPerUser
 
 def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay):
     writer.write("-" * 80 + "\n")

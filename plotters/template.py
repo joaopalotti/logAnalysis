@@ -9,19 +9,20 @@ import re
 
 def normalize(values, total):
     vs = []
-    #print "TOTAL = ", total
-    #print "INPUT = ", values
+    print "TOTAL = ", total
+    print "INPUT = ", values
     for v in values:
         vs.append( v / total )
-    #print "OUTPUT = ", vs
+    print "OUTPUT = ", vs
     return vs
 
-def plotGraph(saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c','m'], PATH_TO_DATA="/home/palotti/Dropbox/tuwien/PhD/logs/logAnalysis/plots/", globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*", Ylabel='Percentage of Occurences', Xlabel='Mesh Depth', mapType=int, N=None):
+def plotGraph(saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c','m'], PATH_TO_DATA="/home/palotti/Dropbox/tuwien/PhD/logs/logAnalysis/plots/", globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*", Ylabel='Percentage of Occurences', Xlabel='Mesh Depth', mapType=int, N=None, absolute=False):
 
     files = glob.glob(PATH_TO_DATA + globString)
 
     width = 0.20    # the width of the bars
     maxX = -1
+    maxY = -1
     
     gettingAllData = True if N is None else False
     allYs = {}
@@ -31,7 +32,6 @@ def plotGraph(saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c'
         if ignoreString and ignoreString in file:
             print "Ignoring file ", file
             continue
-
 
         ys = []
         print file
@@ -47,6 +47,7 @@ def plotGraph(saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c'
                 x, y = map(mapType, line.strip().split(","))
 
                 maxX = x if x > maxX else maxX
+                maxY = y if y > maxY else maxY
                 
                 sumY += y
                 if N is not None and x >= N:
@@ -58,7 +59,8 @@ def plotGraph(saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c'
             if yacc > 0:
                 ys.append(yacc)
         
-        ys = normalize(ys, sumY)
+        if not absolute:
+            ys = normalize(ys, sumY)
         allYs[dataName] = ys
         #print xs, ys
 
@@ -94,7 +96,10 @@ def plotGraph(saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c'
 
 
     ax.set_xlim(0.5,N + 0.5)
-    ax.set_ylim(0,1)
+    if not absolute:
+        ax.set_ylim(0,1)
+    else:
+        ax.set_ylim(0,maxY+0.5)
  
     if saveName is not None:
         plt.savefig(saveName, papertype='a4',orientation='portrait')
