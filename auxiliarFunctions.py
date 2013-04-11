@@ -4,6 +4,10 @@ from nltk.tokenize.punkt import PunktWordTokenizer
 
 PATH_TO_AUX_FILES = "auxFiles/"
 
+NLWords = ["would", "wouldn't", "wouldnt", "could", "couldn't", "couldnt", "should", "shouldn't", "shouldnt", "how", "when", "where", "which", "who", "whom", "can", "cannot", "why", "what", "we", "they", "i", "do", "does", "must", "ought"]
+
+
+
 def tokenize(keywordList):
     # split query into words and eliminate blank spaces
     

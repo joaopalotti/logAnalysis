@@ -1,5 +1,5 @@
 
-from readCSV import readTripDataSet, readAolDataSet, readHONDataSet, readGoldMiner, readMyFormat
+from readCSV import readTripDataSet, readAolDataSet, readHONDataSet, readGoldMiner, readMyFormat, readKhresmoi
 from statistics import calculateMetrics
 import gzip, sys
 
@@ -14,6 +14,8 @@ def convertFile(filename, filetype, outputname=None, gzipIt=True):
         tmp = readHONDataSet(filename)
     elif filetype is "goldminer":
         tmp = readGoldMiner(filename)
+    elif filetype is "khr":
+        tmp = readKhresmoi(filename)
     
     if gzipIt:
         print "Creating file ", outputname + ".gz"
@@ -32,7 +34,8 @@ if __name__ == "__main__":
 
     pathToFile = sys.argv[1]
     print "Using file: " + pathToFile
+    convertFile( pathToFile, "goldminer", "goldminer.dataset", gzipIt=False)
     #convertFile( pathToFile, "goldminer", "goldMiner.dataset", gzipIt=True)
     #convertFile( pathToFile, "hon", "hon.dataset", gzipIt=False)
-    convertFile( pathToFile, "trip", "trip.dataset", gzipIt=False)
+    #convertFile( pathToFile, "trip", "trip.dataset", gzipIt=False)
 

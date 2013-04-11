@@ -33,6 +33,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
     countingDiseaseList = []
     countingMeshDepthList = []
     countingQueriesPerUserList = []
+    countingQueryRankingList = []
     
     tableGeneralHeader = [["Dtst", "#Days", "#Users", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Users #NL", "Users %NL", "QueriesNL", "%QueriesNL", "%UsersReAccess", "%SssnsReAccess"]]
 
@@ -83,7 +84,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
         countingNL = calculateNLuse(data)
         countingQueriesPerUser = calculateQueriesPerUser(data)
-
+        countingQueryRanking = calculateQueryRanking(data)
 
         numberOfQueries = sum(countingQueries.values())
 
@@ -115,6 +116,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
             countingDiseaseList.append([dataName, countingDisease])
             countingMeshDepthList.append([dataName, countingMeshDepth])
         countingQueriesPerUserList.append( [dataName, countingQueriesPerUser] )
+        countingQueryRankingList.append( [dataName, countingQueryRanking] )
 
         #Data for tables
         numberOfMeshTerms = sum(countingMesh.values())
@@ -165,6 +167,9 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
     plotSizeOfQueries(myPlotter, dataList, printValuesToFile)
     plotMeshDepth(myPlotter, countingMeshDepthList, printValuesToFile)
     plotUsersByNumberOfQueries(myPlotter, countingQueriesPerUserList, printValuesToFile)
+    
+    plotQueryRanking(myPlotter, countingQueryRankingList, printValuesToFile)
+
 
     #Print latex tables:
     latexWriter = latexPrinter() 
@@ -200,8 +205,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
 def hasNLword(words):
     #TODO: find a better list:
     # possibility: use Noun + Verb Phrase or other structures like that
-    interestingWords = ["would", "wouldn't", "wouldnt", "could", "couldn't", "couldnt", "should", "shouldn't", "shouldnt", "how", "when", "where", "which", "who", "whom", "can", "cannot", "why", "what", "we", "they", "i", "do", "does", "must", "ought"]
-    return len( [ w for w in words if w.lower() in interestingWords ] ) > 0
+    return len( [ w for w in words if w.lower() in NLWords ] ) > 0
 
 def calculateNLuse(data):
 
@@ -354,6 +358,7 @@ def removeOutliers(sessions):
     
     return usersToRemove
     
+
 def calculateQueriesPerSession(data):
     '''
         I am considering all sessions here. An alternative option would be to consider only the sessions with more that X queries. (e.g. X > 3)
@@ -438,6 +443,11 @@ def calculateQueriesPerSession(data):
             vectorOfModifiedSessions, countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, countingReAccess, idMaxQueriesInSession,\
             outliersToRemove, vectorOfCicleSequence, countingFullSemanticTypes
 
+
+def calculateQueryRanking(data):
+    rankings = [member.rank for member in data if member.rank]
+    #print rankings
+    return Counter(rankings)
 
 def calculateReAccessInDifferentSessions(sessions):
     countingReAccess = defaultdict(int) # { usedId: numberOfReAcess } 
@@ -691,12 +701,12 @@ def calculateQueriesPerUser(data):
     #start = datetime.now()
 
     userIds = sorted( [member.userId for member in data] )
-    countingQueriesPerUser = Counter( [len(list(g)) for k, g in groupby(userIds)] )
+    countingQueriesPerUser = Counter([len(list(g)) for k, g in groupby(userIds)])
     
     #end = datetime.now()
     #print "Total Seconds to calculate queries per user: ", (end-start).total_seconds()
 
-    print countingQueriesPerUser
+    #print countingQueriesPerUser
     return countingQueriesPerUser
 
 def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay):

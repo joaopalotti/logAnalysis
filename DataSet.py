@@ -10,20 +10,24 @@ class DataSet(object):
         withScs = re.compile("(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})")
         withScsAndQuote = re.compile("\"(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})\"")
 
-        if withMs.match(dttime):
-            self.datetime = datetime.strptime(dttime, '%Y-%m-%d %H:%M:%S.%f')
-        elif withMsAndQuote.match(dttime):
-            self.datetime = datetime.strptime(dttime, '"%Y-%m-%d %H:%M:%S.%f"')
-        elif withScs.match(dttime):
-            self.datetime = datetime.strptime(dttime, '%Y-%m-%d %H:%M:%S')
-        elif withScsAndQuote.match(dttime):
-            self.datetime = datetime.strptime(dttime, '"%Y-%m-%d %H:%M:%S"')
-        elif usingTimestamp:
-            self.datetime = datetime.fromtimestamp(float(dttime))
+        if dttime:
+            if withMs.match(dttime):
+                self.datetime = datetime.strptime(dttime, '%Y-%m-%d %H:%M:%S.%f')
+            elif withMsAndQuote.match(dttime):
+                self.datetime = datetime.strptime(dttime, '"%Y-%m-%d %H:%M:%S.%f"')
+            elif withScs.match(dttime):
+                self.datetime = datetime.strptime(dttime, '%Y-%m-%d %H:%M:%S')
+            elif withScsAndQuote.match(dttime):
+                self.datetime = datetime.strptime(dttime, '"%Y-%m-%d %H:%M:%S"')
+            elif usingTimestamp:
+                self.datetime = datetime.fromtimestamp(float(dttime))
+            else:
+                print ("ERROR: Invalid date format found! : ", dttime)
+                self.datetime = datetime.fromtimestamp(float(0))
+                #assert False
         else:
-            print "ERROR: Invalid date format found! : ", dttime
-            self.datetime = None
-            assert False
+            self.datetime = datetime.fromtimestamp(float(0))
+            #assert False
 
         #userId in the tripdatabase and annonid in AOL
         self.userId = userId
@@ -57,5 +61,5 @@ class DataSet(object):
 
     def normalPrint(self):
         #print "\t".join([str(self.datetime), str(self.userId), self.keywords, self.previouskeywords, self.mesh, self.semanticTypes]) 
-        print self.datetime, "\t|", self.userId, "|\t|", self.keywords, "|\t|", self.previouskeywords, "|\t|", self.mesh, "|\t|", self.semanticTypes
+        print (self.datetime, "|\t|", self.userId, "|\t|", self.keywords, "|\t|", self.previouskeywords, "|\t|", self.mesh, "|\t|", self.semanticTypes)
         #print self.mesh, "|\t|", self.semanticTypes

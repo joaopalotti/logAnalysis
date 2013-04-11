@@ -77,6 +77,16 @@ def plotGraph(saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c'
     for name, data in allYs.iteritems():
         c = cs.next()
         
+        if name=="khr1":
+            name = "Task1"
+        if name=="khr2":
+            name = "Task2"
+        if name=="khr3":
+            name = "Task3"
+        if name=="khr4":
+            name = "Task4"
+
+
         rects[name] = ax.bar(xs + sumWidth, data, width, color=c, label=name)
         ax.legend( [rects[name]] , [name], loc=1 )
         
@@ -95,7 +105,7 @@ def plotGraph(saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c'
     print xs+width
 
 
-    ax.set_xlim(0.5,N + 0.5)
+    ax.set_xlim(0.75, N + 1.0)
     if not absolute:
         ax.set_ylim(0,1)
     else:

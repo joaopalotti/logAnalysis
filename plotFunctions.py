@@ -1,3 +1,12 @@
+def plotQueryRanking(myPlotter, countingQueryRankingList, printValuesToFile):
+    for countingQueryRankingPair in countingQueryRankingList[:-1]:
+        dataName, countingQueryRanking = countingQueryRankingPair[0], countingQueryRankingPair[1]
+        myPlotter.plotCounter(countingQueryRanking, xlabelName="Query Ranking", ylabelName="Freq", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="queryRanking")
+    
+    countingQueryRankingPair = countingQueryRankingList[-1]
+    dataName, countingQueryRanking = countingQueryRankingPair[0], countingQueryRankingPair[1]
+    myPlotter.plotCounter(countingQueryRanking, "Query Ranking", "Freq", label=dataName, saveName="queryRanking", showIt=False, lastOne=True, printValuesToFile=printValuesToFile)
+
 
 def plotCountingTimePerSessionListAcc(myPlotter, countingTimePerSessionList, printValuesToFile):
     

@@ -520,6 +520,10 @@ public class myApi2 {
                         System.out.println("BAD STRING FOUND. Skipping it ---> " + inString);
                         continue;
                     }
+                    if( inString.matches(" *")){
+                        System.out.println("BAD STRING FOUND. Skipping it ---> " + inString);
+                        continue;
+                    }
                             
                     List<String> processed = frontEnd.process( inString, output, options);
                     if (processed == null){
