@@ -117,6 +117,9 @@ public class myApi2 {
         }
         if(terms == null || terms.trim().length() == 0)
             return null;
+        
+        Set<String> mesh = new HashSet<String>();
+        Set<String> semantics = new HashSet<String>();
 
         List<Result> resultList = api.processCitationsFromString(terms);
         for (Result result: resultList) {
@@ -166,10 +169,6 @@ public class myApi2 {
                        out.println(" Position: " + utterance.getPosition());
                        */
                     
-                    //List<String> mesh = new ArrayList<String>();
-                    Set<String> mesh = new HashSet<String>();
-                    //List<String> semantics = new ArrayList<String>();
-                    Set<String> semantics = new HashSet<String>();
                     
                     for (PCM pcm: utterance.getPCMList()) {
                         /*
@@ -229,57 +228,39 @@ public class myApi2 {
                                 //out.println("  Concept Id: " + mapEv.getConceptId());
                             }
                         }
-                        
                     }
-                    String output = "";
-                    if( mesh.size() >= 1){
-                        Iterator<String> iterator = mesh.iterator();
-                        String first = iterator.next();
-                        output += ( first ) ;
-
-                        while(iterator.hasNext()) {
-                            String others = iterator.next();
-                            output += ( ";" + others ) ;
-                        }
-
-                        /* // Using hashlist
-                        output += ( mesh.get(0) ) ;
-                        for (int j = 1; j < mesh.size(); j++) {
-                            output += ( ";" + mesh.get(j)) ;
-                        }
-                        */
-                    }
-                    //if(output.length() > 0){
-                    toReturn.add(output);
-                    //}
-                    output = "";
-                    
-                    if( semantics.size() >= 1){
-                        Iterator<String> iterator = semantics.iterator();
-                        String first = iterator.next();
-                        output += ( first ) ;
-
-                        while(iterator.hasNext()) {
-                            String others = iterator.next();
-                            output += ( ";" + others ) ;
-                        }
-                        
-                        /* //Using HashList
-                        output += ( semantics.get(0) ) ;
-                        for (int j = 1; j < semantics.size(); j++) {
-                            output += ( ";" + semantics.get(j)) ;
-                        }
-                        */
-    
-                    }
-                    //if(output.length() > 0){
-                        toReturn.add(output);
-                    //}
-                }
+                 }
             } else {
                 out.println("NULL result instance! ");
             }
         }
+
+        String output = "";
+        if( mesh.size() >= 1){
+            Iterator<String> iterator = mesh.iterator();
+            String first = iterator.next();
+            output += ( first ) ;
+
+            while(iterator.hasNext()) {
+                String others = iterator.next();
+                output += ( ";" + others ) ;
+            }
+        }
+        toReturn.add(output);
+        output = "";
+
+        if( semantics.size() >= 1){
+            Iterator<String> iterator = semantics.iterator();
+            String first = iterator.next();
+            output += ( first ) ;
+
+            while(iterator.hasNext()) {
+                String others = iterator.next();
+                output += ( ";" + others ) ;
+            }
+        }
+        toReturn.add(output);
+
         this.api.resetOptions();
         return toReturn;
     }
@@ -503,6 +484,7 @@ public class myApi2 {
                             continue;
                         }
                         if(!recovered){
+                            lineNumber++;
                             continue;
                         }
                     }
@@ -514,19 +496,23 @@ public class myApi2 {
 
                     if( inString.matches(".* 's$") ){
                         System.out.println("BAD STRING FOUND. Skipping it ---> " + inString);
+                        lineNumber++;
                         continue;
                     }
                     if( inString.matches("(^|.* )[pP][mM][iI][dD]:.*")){
                         System.out.println("BAD STRING FOUND. Skipping it ---> " + inString);
+                        lineNumber++;
                         continue;
                     }
                     if( inString.matches(" *")){
                         System.out.println("BAD STRING FOUND. Skipping it ---> " + inString);
+                        lineNumber++;
                         continue;
                     }
                             
                     List<String> processed = frontEnd.process( inString, output, options);
                     if (processed == null){
+                        lineNumber++;
                         continue;
                     }
                     

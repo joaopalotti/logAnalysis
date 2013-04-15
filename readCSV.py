@@ -114,9 +114,9 @@ def readMyFormat(filename):
     for row in reader:
         #print row, len(row)
         
-        #if len(row) != 6:
-        #    print row
-        #    continue
+        if len(row) != 6:
+            print "(len(row) !=6) ERROR in this line: ", row
+            continue
         
         #No keywords in this line, skip it
         if len(row[2]) == 0 or row[2] == None:

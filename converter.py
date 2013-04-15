@@ -34,7 +34,8 @@ if __name__ == "__main__":
 
     pathToFile = sys.argv[1]
     print "Using file: " + pathToFile
-    convertFile( pathToFile, "goldminer", "goldminer.dataset", gzipIt=False)
+    convertFile( pathToFile, "aol", "aolNotHealth.dataset", gzipIt=False)
+    #convertFile( pathToFile, "goldminer", "goldminer.dataset", gzipIt=False)
     #convertFile( pathToFile, "goldminer", "goldMiner.dataset", gzipIt=True)
     #convertFile( pathToFile, "hon", "hon.dataset", gzipIt=False)
     #convertFile( pathToFile, "trip", "trip.dataset", gzipIt=False)
