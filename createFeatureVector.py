@@ -4,6 +4,7 @@ import sys
 #My classes
 from readCSV import readMyFormat
 from auxiliarFunctions import NLWords, preProcessData
+from classifiers import *
 
 removeStopWords=False
 
@@ -149,13 +150,29 @@ def mergeFVs(FVa, FVb, *otherFVs):
 
 if __name__ == "__main__":
 
-    goldMinerUserFV = createFV("dataSetsOfficials/goldminer/olds/gold100", 1)
-    aolHealthFV = createFV("dataSetsOfficials/aolHealth/olds/aol100", 1)
-    honFV = createFV("dataSetsOfficials/hon/olds/hon100", 0)
-    tripFV = createFV("dataSetsOfficials/trip/olds/trip100", 1)
+    ####
+    ### Load Datasets
+    ##
+    #
+    
+    honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.dataset.gz", 0)
+    aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.dataset.gz", 0)
+    goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.dataset.gz", 1)
+    tripFV = createFV("dataSetsOfficials/trip/trip.v4.dataset.gz", 1)
+
+    #honFV = createFV("dataSetsOfficials/hon/olds/hon300", 0)                    #   16 users
+    #aolHealthFV = createFV("dataSetsOfficials/aolHealth/olds/aol100", 0)        # + 22 users  = 38 laymen
+    
+    #goldMinerFV = createFV("dataSetsOfficials/goldminer/olds/gold100", 1)   #   15 users
+    #tripFV = createFV("dataSetsOfficials/trip/olds/trip200", 1)                 # + 19 users  = 34 Specialist
+    
+    ####
+    ### Merge Feature sets and transforme them into inputs
+    ##
+    #
     
     regularUserFV = mergeFVs(honFV, aolHealthFV)
-    medicalUserFV = mergeFVs(tripFV, goldMinerUserFV)
+    medicalUserFV = mergeFVs(tripFV, goldMinerFV)
 
     ld1, ll1 = transformeInDict(regularUserFV)
     ld2, ll2 = transformeInDict(medicalUserFV)
@@ -165,12 +182,20 @@ if __name__ == "__main__":
 
     from sklearn.feature_extraction import DictVectorizer
     vec = DictVectorizer()
-    X = vec.fit_transform(listOfDicts)
+    X = vec.fit_transform(listOfDicts).toarray()
     
+    #TODO: normalize the data
+    # http://scikit-learn.org/stable/modules/preprocessing.html
+
     import numpy as np
     y = np.array( listOfLabels )
     
     n_samples, n_features = X.shape
+
+    ####
+    ### Shuffer samples  (TODO: Cross-validation)
+    ##
+    #
 
     # Shuffle samples
     import random
@@ -178,44 +203,47 @@ if __name__ == "__main__":
     random.seed(0)
     random.shuffle(p)
     X, y = X[p], y[p]
+    nCV = 10
 
-    from sklearn import svm
-    # Run classifier
-    classifier = svm.SVC(kernel='linear', probability=True)
-    half = int(n_samples / 2)
-    probas_ = classifier.fit(X[:half], y[:half]).predict_proba(X[half:])
+    ####
+    ### Run classifiers
+    ##
+    #
 
-    from sklearn.metrics import precision_recall_curve
-    from sklearn.metrics import auc
-    # Compute Precision-Recall and plot curve
-    precision, recall, thresholds = precision_recall_curve(y[half:], probas_[:, 1])
-    area = auc(recall, precision)
-    print "Area Under Curve: %0.2f" % area
-    #print "Precision %0.2f - Recall %0.2f" % (precision, recall)
+    parametersSVM = []
+    parametersKnn = []
+    parametersDT = []
 
-    import pylab as pl
-    pl.clf()
-    pl.plot(recall, precision, label='Precision-Recall curve')
-    pl.xlabel('Recall')
-    pl.ylabel('Precision')
-    pl.ylim([0.0, 1.05])
-    pl.xlim([0.0, 1.0])
-    pl.title('Precision-Recall example: AUC=%0.2f' % area)
-    pl.legend(loc="lower left")
+    y_svm = runSVM(X, y, parametersSVM, nCV)
+    y_nb  = runNB(X, y, nCV)
+    y_knn = runKNN(X, y, parametersKnn, nCV)
+    y_dt = runDecisionTree(X, y, parametersDT, nCV)
+
+    ####
+    ### Check Results
+    ##
+    #
+    
+    print 20 * '=', " SVM Results ", 20 * '='
+    makeReport(X, y, y_svm)
+    
+    print 20 * '=', " NB  Results ", 20 * '='
+    makeReport(X, y, y_nb)
+    
+    print 20 * '=', " KNN Results ", 20 * '='
+    makeReport(X, y, y_knn)
+    
+    print 20 * '=', " DT  Results ", 20 * '='
+    makeReport(X, y, y_dt)
+
+    #import pylab as pl
+    #pl.clf()
+    #pl.plot(recall, precision, label='Precision-Recall curve')
+    #pl.xlabel('Recall')
+    #pl.ylabel('Precision')
+    #pl.ylim([0.0, 1.05])
+    #pl.xlim([0.0, 1.0])
+    #pl.title('Precision-Recall example: AUC=%0.2f' % area)
+    #pl.legend(loc="lower left")
     #pl.show()
-
-    # using a naive bayes classifier 
-    # http://scikit-learn.org/stable/modules/naive_bayes.html#naive-bayes
-    from sklearn.naive_bayes import GaussianNB
-    gnb = GaussianNB()
-    y_pred = classifier.fit(X[:half], y[:half]).predict(X[half:])
-   
-    # Classification report
-    # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html#sklearn.metrics.classification_report
-    from sklearn.metrics import classification_report
-    #y_true = [0, 1, 2, 2, 0]
-    #y_pred = [0, 0, 2, 2, 0]
-    target_names = ['Layman', 'Specialist']
-    print(classification_report( y[half:], y_pred, target_names=target_names))
-
 
