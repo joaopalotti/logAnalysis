@@ -17,7 +17,7 @@ if __name__ == "__main__":
     ### Load Datasets
     ##
     #
-    print "Loading the datasets"
+    print "Loading the datasets..."
     with open('testregularUser.pk', 'rb') as input:
         regularUserFV = pickle.load(input)
     
@@ -25,7 +25,7 @@ if __name__ == "__main__":
         medicalUserFV = pickle.load(input)
     print "Loaded"
 
-    print "Transforming datasets into Dictionaries"
+    print "Transforming datasets into Dictionaries..."
     ld1, ll1 = transformeInDict(regularUserFV)
     ld2, ll2 = transformeInDict(medicalUserFV)
     print "Transformed"
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     print "Using %d regular users" % ( len(ld1) )
     print "Using %d medical users" % ( len(ld2) )
 
-    print "Vectorizing dictionaries"
+    print "Vectorizing dictionaries..."
     from sklearn.feature_extraction import DictVectorizer
     vec = DictVectorizer()
     X_noProcess = vec.fit_transform(listOfDicts).toarray()
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     ##
     #
 
-    print "Shuffling data"
+    print "Shuffling the data..."
     # Shuffle samples
     import random
     p = range(n_samples) 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     parametersKnn = []
     parametersDT = []
 
-    print "Running classifiers"
+    print "Running classifiers..."
     y_nb  = runNB(X, y, nCV)
     y_knn = runKNN(X, y, parametersKnn, nCV)
     y_dt = runDecisionTree(X, y, parametersDT, nCV)

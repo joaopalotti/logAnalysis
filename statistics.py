@@ -268,7 +268,7 @@ def calculateMesh(data):
     return countingMesh, countingDisease, hasMeshValues, countingMeshDepth, usersUsingMesh, mapUserMeanMeshDepth
 
 def calculateUsers(data):
-    return len(set( [ member.userId for member in data] ))
+    return len(set( (member.userId for member in data) ))
 
 def calculateDates(data):
 
@@ -310,7 +310,7 @@ def calculateAcronyms(data):
                 acronymsSet.add( (line.split(",", 1)[0].strip()).lower() )
    
     # Remove very common words from acronyms:
-    commonWordsSet = set(["and", "on", "map", "is", "car", "at", "san", "art", "from", "air"])
+    commonWordsSet = set(["and", "on", "map", "is", "car", "at", "san", "art", "from", "air", "la", "des", "en", "le", "les", "y", "e", "or", "vs", "help", "charge", "has", "l", "los", "non", "do", "las", "dr", "as", "be", "dos", "men"])
     acronymsSet -= commonWordsSet
 
     # Get the number of queries that have acronyms

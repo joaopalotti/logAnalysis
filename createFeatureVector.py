@@ -144,8 +144,6 @@ def calculateMeanTimePerSession(data):
 
         
         mapUserMeanTimePerSession[user] = totalSeconds / numberOfSessions
-
-
     return mapUserMeanTimePerSession
 
 def createDictOfUsers(data, label):
