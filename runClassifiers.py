@@ -33,6 +33,9 @@ if __name__ == "__main__":
     listOfDicts = ld1 + ld2
     listOfLabels = ll1 + ll2
 
+    print "Using %d regular users" % ( len(ld1) )
+    print "Using %d medical users" % ( len(ld2) )
+
     print "Vectorizing dictionaries"
     from sklearn.feature_extraction import DictVectorizer
     vec = DictVectorizer()
@@ -77,10 +80,10 @@ if __name__ == "__main__":
     parametersDT = []
 
     print "Running classifiers"
-    y_svm = runSVM(X, y, parametersSVM, nCV)
     y_nb  = runNB(X, y, nCV)
     y_knn = runKNN(X, y, parametersKnn, nCV)
     y_dt = runDecisionTree(X, y, parametersDT, nCV)
+    y_svm = runSVM(X, y, parametersSVM, nCV)
     print "Done"
 
     ####

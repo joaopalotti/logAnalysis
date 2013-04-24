@@ -28,13 +28,16 @@ if __name__ == "__main__":
     #khr = readKhresmoi("../../logs/krslogs/clickthru_task4.csv")
     #calculateMetrics([ [khr, "khr4"]] ) 
 
-    goldMiner = readMyFormat(PATH_TO_DATASETS + "goldminer/goldMiner.v4.dataset.gz")
-    hon = readMyFormat(PATH_TO_DATASETS + "hon/honEnglish.v4.dataset.gz")
-    trip = readMyFormat(PATH_TO_DATASETS + "trip/trip_mod.v4.dataset.gz")
-    aolHealth = readMyFormat(PATH_TO_DATASETS + "aolHealth/aolHealth.v4.dataset.gz")
     
-    calculateMetrics([ [aolHealth, "aolHealth"], [hon, "hon"], [trip, "trip"], [goldMiner, "goldminer"] ] ) 
-    #calculateMetrics([ [aolHealth, "hon"] ] ) 
+    #goldMiner = readMyFormat(PATH_TO_DATASETS + "goldminer/goldMiner.v4.dataset.gz")
+    #hon = readMyFormat(PATH_TO_DATASETS + "hon/honEnglish.v4.dataset.gz")
+    #trip = readMyFormat(PATH_TO_DATASETS + "trip/trip_mod.v4.dataset.gz")
+    #aolHealth = readMyFormat(PATH_TO_DATASETS + "aolHealth/aolHealth.v4.dataset.gz")
+    #calculateMetrics([ [aolHealth, "aolHealth"], [hon, "hon"], [trip, "trip"], [goldMiner, "goldminer"] ] ) 
+    
+    
+    hon = readMyFormat("dataSetsOfficials/hon/olds/hon3")
+    calculateMetrics([ [hon, "hon"] ] ) 
     
     #hon = readMyFormat(PATH_TO_DATASETS + "honEnglishResult.v3.dataset.gz")
     #hon = readMyFormat(PATH_TO_DATASETS + "honEnglish.v4.dataset")

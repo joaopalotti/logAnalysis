@@ -35,9 +35,9 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
     countingQueriesPerUserList = []
     countingQueryRankingList = []
     
-    tableGeneralHeader = [["Dtst", "#Days", "#Users", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Users #NL", "Users %NL", "QueriesNL", "%QueriesNL", "%UsersReAccess", "%SssnsReAccess"]]
+    tableGeneralHeader = [["Dtst", "#Days", "#Users", "#Qrs", "mnWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion","mTimePrSsion", "Users #NL", "Users %NL", "QueriesNL", "%QueriesNL", "%UsersReAccess", "%SssnsReAccess", "QueriesAcronym", "%QAcronym", "UsersAcronym", "%UsersAcronym"]]
 
-    tableGeneralMeshHeader = [["Dtst", "QrsWithMesh", "% QrsWithMesh", "MeshIds", "MeshIds/#Qrs", "DiseIds", "DiseIds/#Qrs"]]
+    tableGeneralMeshHeader = [["Dtst", "QrsWithMesh", "% QrsWithMesh", "MeshIds", "MeshIds/#Qrs", "DiseIds", "DiseIds/#Qrs","#UsersUsingMesh","#UsersUsingMesh/#Users", "MeanUserMeshDepth"]]
     tableMeshHeader = [ ["Dtst(%)","A (Anatomy)","B (Organisms)","C (Diseases)","D (Chemicals/Drugs)","E (Analytical, Diagnostic)","F(Psychiatry/Psychology)","G(Phenomena/Processes)","H(Disciplines/Occupations)","I(Anthropology/Education)","J(Technology/Industry)","K(Humanities)","L(Information Science)","M(Named Groups)","N(Health Care)","V(Publication Chars)","Z(Geographicals)"] ]
     tableDiseasesHeader = [ ["Dtst(%)","C01(Bacterial)","C02(Viral)","C03(Parasitic)","C04(Neoplasms)","C05(Musculoskeletal)","C06(Digestive)","C07(Stomatognathic)","C08(Respiratory)","C09(Otorhinolaryngologic)","C10(Nervous)","C11(Eye)","C12(Male Urogenital)","C13(Female Urogenital)","C14(Cardiovascular)","C15(Hemic and Lymphatic)","C16(Congenital)","C17(Skin)","C18(Nutritional)","C19(Endocrine)","C20(Immune)","C21(Environmental)","C22(Animal)","C23(Pathological Conditions)","C24(Occupational)","C25(Substance-Related)","C26(Wounds and Injuries)"] ]
 
@@ -77,7 +77,8 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
             newData = [member for member in data if member.userId not in outliersToRemove]
             data = newData
 
-        percentageAcronym, countingAcronyms = calculateAcronyms(data)
+        hasAcronym, countingAcronyms, usersUsingAcronyms = calculateAcronyms(data)
+
         numberOfUsers = calculateUsers(data)
         npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord = calculateTerms(data)
                
@@ -86,18 +87,21 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
         countingQueriesPerUser = calculateQueriesPerUser(data)
         countingQueryRanking = calculateQueryRanking(data)
 
+        usersMetrics = calculateMetricsForUsers(data)
+
         numberOfQueries = sum(countingQueries.values())
+        percentageAcronymInQueries = 100.0 * len(hasAcronym) / numberOfQueries
 
         hasMeshValues = 0
         if usingMesh:
-            countingMesh, countingDisease, hasMeshValues, countingMeshDepth = calculateMesh(data)
+            countingMesh, countingDisease, hasMeshValues, countingMeshDepth, usersUsingMesh, mapUserMeanMeshDepth = calculateMesh(data)
 
         # Print statistics
         with open(dataName + ".result", "w") as f:
             print "Writing file ", dataName + ".result..."
             f.write("Metrics calculated:\n")
             printGeneralMetrics(f, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay)
-            printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTermsNoStopWord, numberOfQueries)
+            printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronymInQueries, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTermsNoStopWord, numberOfQueries)
             printMetricsForQueries(f, greatestQuery, countingQueries, countingQueriesPerDay, meanQueriesPerDay)
             printMetricsForSessions(f, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime,\
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
@@ -122,9 +126,9 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
         numberOfMeshTerms = sum(countingMesh.values())
         numberOfMeshDiseases = sum(countingDisease.values())
 
-        generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfUsers, numberOfQueries, npTerms.mean, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession.mean, npTime.mean, len(countingNL), 100*len(countingNL)/numberOfUsers, sum(countingNL.values()), 100 * sum(countingNL.values())/numberOfQueries, 100*len(countingReAccess)/numberOfUsers, 100*sum(countingReAccess.values())/numberOfSessions] )
+        generalTableRow.append( [ dataName, (lastDay - firstDay).days, numberOfUsers, numberOfQueries, npTerms.mean, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession.mean, npTime.mean, len(countingNL), 100*len(countingNL)/numberOfUsers, sum(countingNL.values()), 100 * sum(countingNL.values())/numberOfQueries, 100*len(countingReAccess)/numberOfUsers, 100*sum(countingReAccess.values())/numberOfSessions, len(hasAcronym), percentageAcronymInQueries, len(usersUsingAcronyms), 100.0 * len(usersUsingAcronyms) / numberOfUsers] )
         generalModifiedRow.append( [dataName, numberOfExpansions, 100.0 * numberOfExpansions/ numberOfQueries , numberOfShrinkage, 100 * numberOfShrinkage/ numberOfQueries, numberOfReformulations, 100 * numberOfReformulations/numberOfQueries, numberOfRepetitions, 100 * numberOfRepetitions/numberOfQueries] )
-        generalMeshRow.append( [dataName,  hasMeshValues, 100.0 * hasMeshValues/numberOfQueries, numberOfMeshTerms, numberOfMeshTerms/numberOfQueries, numberOfMeshDiseases, numberOfMeshDiseases/numberOfQueries ] ) 
+        generalMeshRow.append( [dataName,  hasMeshValues, 100.0 * hasMeshValues/numberOfQueries, numberOfMeshTerms, numberOfMeshTerms/numberOfQueries, numberOfMeshDiseases, numberOfMeshDiseases/numberOfQueries, len(usersUsingMesh), 100.0*len(usersUsingMesh)/numberOfUsers, sum(mapUserMeanMeshDepth.values())/len(mapUserMeanMeshDepth.items()) ] ) 
 
         #To avoid division by zero
         numberOfMeshTerms = numberOfMeshTerms if numberOfMeshTerms != 0 else 1
@@ -202,6 +206,13 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
     latexWriter.addTable(tableSemanticFocusHeader, caption="Semantic Focus", transpose=True)
     latexWriter.addTable(tableCicleSequenceHeader, caption="Cicle Sequence", transpose=True)
 
+
+def calculateMetricsForUsers(data):
+    pass
+    #userIds = set( (member.userId) for member in data )
+    #print userIds
+
+
 def hasNLword(words):
     #TODO: find a better list:
     # possibility: use Noun + Verb Phrase or other structures like that
@@ -239,9 +250,22 @@ def calculateMesh(data):
     meshValues = (values[0] for values in meshValues)
     countingDisease = Counter(meshDiseases)
     countingMesh = Counter(meshValues)
-    
-    #print countingDisease, countingMesh
-    return countingMesh, countingDisease, hasMeshValues, countingMeshDepth
+   
+    #calculating statistics for each user
+    userIds = sorted( (member.userId, member.mesh) for member in data )
+    usersUsingMesh = set()
+    tempMap = defaultdict(list)
+
+    for (userId, mesh) in userIds:
+        if mesh is not None:
+            tempMap[userId] += mesh 
+            usersUsingMesh.add(userId)
+
+    mapUserMeanMeshDepth = dict()
+    for (userId, mesh) in tempMap.iteritems():
+        mapUserMeanMeshDepth[userId] = sum( [ len(m.split(".")) for m in mesh ] ) / len(mesh)
+
+    return countingMesh, countingDisease, hasMeshValues, countingMeshDepth, usersUsingMesh, mapUserMeanMeshDepth
 
 def calculateUsers(data):
     return len(set( [ member.userId for member in data] ))
@@ -284,16 +308,21 @@ def calculateAcronyms(data):
         with open(PATH_TO_AUX_FILES + filename,"r") as f:
             for line in f.readlines():
                 acronymsSet.add( (line.split(",", 1)[0].strip()).lower() )
-    
+   
+    # Remove very common words from acronyms:
+    commonWordsSet = set(["and", "on", "map", "is", "car", "at", "san", "art", "from", "air"])
+    acronymsSet -= commonWordsSet
+
+    # Get the number of queries that have acronyms
     hasAcronym = [ member.keywords for member in data for word in member.keywords if word in acronymsSet]
+    # Get the most common ccronyms
     acronymList = [ word for member in data for word in member.keywords if word in acronymsSet]
-    percentageAcronym = len(hasAcronym) / len(data)
     countingAcronyms = Counter(acronymList)
 
-    #print percentageAcronym
-    #print acronymList
-    #print hasAcronym
-    return percentageAcronym, countingAcronyms
+    #Get the set of users using acronyms
+    usersUsingAcronyms = set([member.userId for member in data for word in member.keywords if word in acronymsSet])
+
+    return hasAcronym, countingAcronyms, usersUsingAcronyms
 
 def calculateExpansionShrinkageReformulations(sessions, ignoreRepetition=True):
     
@@ -721,7 +750,7 @@ def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions
     writer.write('{0:45} ==> {1:30}\n'.format("How may days? ", str((lastDay - firstDay).days)))
     writer.write("-" * 45 + "\n")
  
-def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronym, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTermsNoStopWord, numberOfQueries):
+def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronymInQueries, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTermsNoStopWord, numberOfQueries):
     
     writer.write("For TERMS:\n")
     writer.write("-" * 45 + "\n")
@@ -737,7 +766,7 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simp
     writer.write('{0:45} ==> {1:.3f}\n'.format('Median number of Terms in a query', (npTerms.median)))
     writer.write('{0:45} ==> {1:.3f}\n'.format('Std Deviation of Terms in a query', (npTerms.std)))
     
-    writer.write('{0:45} ==> {1:.3f}\n'.format('Percentage of Acronyms used', (percentageAcronym)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format('Percentage of Acronyms in queries', (percentageAcronymInQueries)))
     
     writer.write("-" * 45 + "\n")
     writer.write("10 Most Common Terms:\n")
@@ -748,13 +777,13 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simp
     writer.write("-" * 45 + "\n")
      
     writer.write("10 Most Common Terms: (not stop words)\n")
-    for pair in tenMostCommonTermsNoStopWord.iteritems():
-        writer.write('{0:45} ==> {1:30}\n'.format(pair[0], str(pair[1])))
+    for (word, freq) in tenMostCommonTermsNoStopWord:
+        writer.write('{0:45} ==> {1:30}\n'.format(word, freq))
     writer.write("-" * 45 + "\n")
 
-    writer.write("10 Most Common Acronyms:\n")
+    writer.write("50 Most Common Acronyms:\n")
     writer.write("-" * 45 + "\n")
-    for pair in countingAcronyms.most_common(10): 
+    for pair in countingAcronyms.most_common(50): 
         writer.write('{0:45} ==> {1:30}\n'.format(pair[0], str(pair[1])))
     writer.write( "-" * 45 + "\n")
 
@@ -908,7 +937,7 @@ def printSemantic(writer, vectorOfActionSequence, vectorOfCicleSequence, countin
     
     #["Dtst", "Nothing", "Symptom", "Cause", "Remedy", "SymptomCause", "SymptomRemedy", "CauseRemedy", "SymptomCauseRemedy"]
     #semanticFocusRow.append( [ dataName, vectorOfActionSequence[0], vectorOfActionSequence[1], vectorOfActionSequence[2], vectorOfActionSequence[4], vectorOfActionSequence[3], vectorOfActionSequence[5], vectorOfActionSequence[6], vectorOfActionSequence[7] ] )
-    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("Nothig", vectorOfActionSequence[0], 100 * vectorOfActionSequence[0]/totalActions))
+    writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("Nothing", vectorOfActionSequence[0], 100 * vectorOfActionSequence[0]/totalActions))
     writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("Symptom",vectorOfActionSequence[1], 100 * vectorOfActionSequence[1]/totalActions))
     writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("Cause", vectorOfActionSequence[2], 100 * vectorOfActionSequence[2]/totalActions))
     writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("Remedy", vectorOfActionSequence[4], 100 * vectorOfActionSequence[4]/totalActions))

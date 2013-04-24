@@ -40,6 +40,7 @@ def filterStopWords(data):
     return data
 
 def simpleFilterStopWords(countingTokens):
+    from operator import itemgetter
     tenMostCommonTerms = {}
 
     stopWords = set()
@@ -53,9 +54,11 @@ def simpleFilterStopWords(countingTokens):
             tenMostCommonTerms[pair[0]] = pair[1]
         
         if len(tenMostCommonTerms) == 10:
-            return tenMostCommonTerms
-        
-    return tenMostCommonTerms
+            return sorted( tenMostCommonTerms.iteritems(), key=itemgetter(1) ) #sorting by value
+
+    if len(tenMostCommonTerms) == 0:
+        return {}
+    return sorted( tenMostCommonTerms.iteritems(), key=itemgetter(1) ) #sorting by value
 
 def compareSets(set1, set2):
     #print "Comparing ", set1, " and ", set2

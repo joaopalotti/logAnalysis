@@ -22,11 +22,8 @@ class userClass:
     
     def toDict(self):
         #return {'numberOfQueries':self.numberOfQueries, 'numberOfSessions':self.numberOfSessions, 'usingNL':self.usingNL}
-        
-        print 'numberOfQueries', self.numberOfQueries, 'numberOfSessions',self.numberOfSessions, 'usingNL',self.usingNL, 'meanMeshDepth',self.meanMeshDepth, 'meanWordsPerQuery', self.meanWordsPerQuery, 'meanTimePerSession', self.meanTimePerSession
-
+        #print 'numberOfQueries', self.numberOfQueries, 'numberOfSessions',self.numberOfSessions, 'usingNL',self.usingNL, 'meanMeshDepth',self.meanMeshDepth, 'meanWordsPerQuery', self.meanWordsPerQuery, 'meanTimePerSession', self.meanTimePerSession
         return {'numberOfQueries':self.numberOfQueries, 'numberOfSessions':self.numberOfSessions, 'usingNL':self.usingNL, 'meanMeshDepth':self.meanMeshDepth, 'meanWordsPerQuery': self.meanWordsPerQuery, 'meanTimePerSession': self.meanTimePerSession}
-        
 
 '''
     Boolean feature.
@@ -62,7 +59,6 @@ def calculateMeanMeshDepthPerUser(data):
     for (userId, mesh) in tempMap.iteritems():
         #print sum([len(m.split(".")) for m in mesh ])
         #print len(mesh)
-        #TODO: check
         mapUserMeanMeshDepth[userId] = sum( [ len(m.split(".")) for m in mesh ] ) / len(mesh)
 
     return mapUserMeanMeshDepth
@@ -166,18 +162,25 @@ def createDictOfUsers(data, label):
     for user in users:
         if user not in countingNumberOfQueriesPerUser or \
            user not in countingNumberOfSessionsPerUser or \
-           user not in countingMeanMeshDepthPerUser or\
            user not in countingNLPerUser or\
            user not in countingWordsPerQuery or\
            user not in countingMeanTimePerSession:
+           #user not in countingMeanMeshDepthPerUser 
             
             print "User is not present. It should be...User ID = ", user
+            print "Number of queries -> ", user in countingNumberOfQueriesPerUser
+            print "Number of sessions -> ", user in countingNumberOfSessionsPerUser
+            print "Mesh -> ", user in countingMeanMeshDepthPerUser
+            print "NL -> ", user in countingNLPerUser
+            print "WordsPerQuery-> ", user in countingWordsPerQuery
+            print "TimePerSession -> ", user in countingMeanTimePerSession
+
             #sys.exit(0)
             continue
 
         nq = countingNumberOfQueriesPerUser[user]
         ns = countingNumberOfSessionsPerUser[user]
-        mmd = countingMeanMeshDepthPerUser[user]
+        mmd = 0.0 if user not in countingMeanMeshDepthPerUser else countingMeanMeshDepthPerUser[user]
         unl = countingNLPerUser[user]
         mwpq = countingWordsPerQuery[user]
         mtps = countingMeanTimePerSession[user]
@@ -231,7 +234,7 @@ if __name__ == "__main__":
     #honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.dataset.gz", 0)
     #aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.dataset.gz", 0)
     #goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.dataset.gz", 1)
-    #tripFV = createFV("dataSetsOfficials/trip/trip.v4.dataset.gz", 1)
+    #tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.dataset.gz", 1)
 
     honFV = createFV("dataSetsOfficials/hon/olds/hon300", 0)                    #   16 users
     aolHealthFV = createFV("dataSetsOfficials/aolHealth/olds/aol100", 0)        # + 22 users  = 38 laymen
