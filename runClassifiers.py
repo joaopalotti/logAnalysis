@@ -17,24 +17,35 @@ if __name__ == "__main__":
     ### Load Datasets
     ##
     #
-    with open('regularUser.pk', 'rb') as input:
+    print "Loading the datasets"
+    with open('testregularUser.pk', 'rb') as input:
         regularUserFV = pickle.load(input)
     
-    with open('medicalUser.pk', 'rb') as input:
+    with open('testmedicalUser.pk', 'rb') as input:
         medicalUserFV = pickle.load(input)
+    print "Loaded"
 
+    print "Transforming datasets into Dictionaries"
     ld1, ll1 = transformeInDict(regularUserFV)
     ld2, ll2 = transformeInDict(medicalUserFV)
+    print "Transformed"
     
     listOfDicts = ld1 + ld2
     listOfLabels = ll1 + ll2
 
+    print "Vectorizing dictionaries"
     from sklearn.feature_extraction import DictVectorizer
     vec = DictVectorizer()
-    X = vec.fit_transform(listOfDicts).toarray()
+    X_noProcess = vec.fit_transform(listOfDicts).toarray()
+    print "Vectorized"
     
     #TODO: normalize the data
     # http://scikit-learn.org/stable/modules/preprocessing.html
+    from sklearn import preprocessing
+    #X = preprocessing.scale(X_noProcess)
+    #X = preprocessing.MinMaxScaler().fit_transform(X_noProcess)
+    #X = preprocessing.normalize(X_noProcess, norm='l2')
+    X = X_noProcess
 
     import numpy as np
     y = np.array( listOfLabels )
@@ -46,6 +57,7 @@ if __name__ == "__main__":
     ##
     #
 
+    print "Shuffling data"
     # Shuffle samples
     import random
     p = range(n_samples) 
@@ -53,6 +65,7 @@ if __name__ == "__main__":
     random.shuffle(p)
     X, y = X[p], y[p]
     nCV = 10
+    print "Shuffled"
 
     ####
     ### Run classifiers
@@ -63,27 +76,29 @@ if __name__ == "__main__":
     parametersKnn = []
     parametersDT = []
 
+    print "Running classifiers"
     y_svm = runSVM(X, y, parametersSVM, nCV)
     y_nb  = runNB(X, y, nCV)
     y_knn = runKNN(X, y, parametersKnn, nCV)
     y_dt = runDecisionTree(X, y, parametersDT, nCV)
+    print "Done"
 
     ####
     ### Check Results
     ##
     #
     
-    print 20 * '=', " SVM Results ", 20 * '='
-    makeReport(X, y, y_svm)
+    #print 20 * '=', " SVM Results ", 20 * '='
+    #makeReport(X, y, y_svm)
     
-    print 20 * '=', " NB  Results ", 20 * '='
-    makeReport(X, y, y_nb)
+    #print 20 * '=', " NB  Results ", 20 * '='
+    #makeReport(X, y, y_nb)
     
-    print 20 * '=', " KNN Results ", 20 * '='
-    makeReport(X, y, y_knn)
+    #print 20 * '=', " KNN Results ", 20 * '='
+    #makeReport(X, y, y_knn)
     
-    print 20 * '=', " DT  Results ", 20 * '='
-    makeReport(X, y, y_dt)
+    #print 20 * '=', " DT  Results ", 20 * '='
+    #makeReport(X, y, y_dt)
 
     #import pylab as pl
     #pl.clf()

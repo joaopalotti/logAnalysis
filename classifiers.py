@@ -14,6 +14,9 @@ def makeReport(X, y, y_pred):
     print(classification_report( y[half:], y_pred, target_names=target_names))
 
 def runNB(X, y, nCV):
+    
+    print "Running NB"
+
     # http://scikit-learn.org/stable/modules/naive_bayes.html#naive-bayes
     n_samples, n_features = X.shape
     half  = int(n_samples/2)
@@ -25,10 +28,13 @@ def runNB(X, y, nCV):
     print "Accuracy NB: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
     
     y_pred = clf.fit(X[:half], y[:half]).predict(X[half:])
+    
+    print "Done"
     return y_pred
  
 def runSVM(X, y, parameters, nCV):
     
+    print "Running SVM"
     n_samples, n_features = X.shape
     half = int(n_samples / 2)
     
@@ -40,11 +46,13 @@ def runSVM(X, y, parameters, nCV):
     scores = cross_validation.cross_val_score(clf, X, y, cv=nCV)   
     print "Accuracy SVM: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
     
+    print "Done"
     return y_pred
 
 def runKNN(X, y, paramters, nCV):
     #http://scikit-learn.org/dev/modules/generated/sklearn.neighbors.KNeighborsClassifier.html
 
+    print "Running KNN"
     n_samples, n_features = X.shape
     half = int(n_samples / 2)
 
@@ -55,11 +63,13 @@ def runKNN(X, y, paramters, nCV):
     scores = cross_validation.cross_val_score(clf, X, y, cv=nCV)   
     print "Accuracy KNN: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
     
+    print "Done"
     return y_pred
 
 def runDecisionTree(X, y, paramters, nCV):
     #http://scikit-learn.org/dev/modules/generated/sklearn.neighbors.KNeighborsClassifier.html
 
+    print "Running Decision Tree"
     n_samples, n_features = X.shape
     half = int(n_samples / 2)
 
@@ -70,5 +80,6 @@ def runDecisionTree(X, y, paramters, nCV):
     scores = cross_validation.cross_val_score(clf, X, y, cv=nCV)   
     print "Accuracy DT: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
     
+    print "Done"
     return y_pred
 

@@ -1,6 +1,8 @@
+from __future__ import division
 from itertools import groupby
 from collections import Counter, defaultdict 
 import sys
+
 #My classes
 from readCSV import readMyFormat
 from auxiliarFunctions import NLWords, preProcessData
@@ -8,17 +10,23 @@ from auxiliarFunctions import NLWords, preProcessData
 removeStopWords=False
 
 class userClass:
-    def __init__(self, id, label, nq, ns, mmd, unl):
+    def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps):
         self.id = id
         self.label = label
         self.numberOfQueries = nq
         self.numberOfSessions = ns
         self.meanMeshDepth = mmd
         self.usingNL = unl
+        self.meanWordsPerQuery = mwpq
+        self.meanTimePerSession = mtps
     
     def toDict(self):
         #return {'numberOfQueries':self.numberOfQueries, 'numberOfSessions':self.numberOfSessions, 'usingNL':self.usingNL}
-        return {'numberOfQueries':self.numberOfQueries, 'numberOfSessions':self.numberOfSessions, 'usingNL':self.usingNL, 'meanMeshDepth':self.meanMeshDepth}
+        
+        print 'numberOfQueries', self.numberOfQueries, 'numberOfSessions',self.numberOfSessions, 'usingNL',self.usingNL, 'meanMeshDepth',self.meanMeshDepth, 'meanWordsPerQuery', self.meanWordsPerQuery, 'meanTimePerSession', self.meanTimePerSession
+
+        return {'numberOfQueries':self.numberOfQueries, 'numberOfSessions':self.numberOfSessions, 'usingNL':self.usingNL, 'meanMeshDepth':self.meanMeshDepth, 'meanWordsPerQuery': self.meanWordsPerQuery, 'meanTimePerSession': self.meanTimePerSession}
+        
 
 '''
     Boolean feature.
@@ -54,6 +62,7 @@ def calculateMeanMeshDepthPerUser(data):
     for (userId, mesh) in tempMap.iteritems():
         #print sum([len(m.split(".")) for m in mesh ])
         #print len(mesh)
+        #TODO: check
         mapUserMeanMeshDepth[userId] = sum( [ len(m.split(".")) for m in mesh ] ) / len(mesh)
 
     return mapUserMeanMeshDepth
@@ -67,6 +76,22 @@ def calculateNumberOfQueriesPerUser(data):
     
     return mapUserQueries
 
+def calculateMeanWordsPerQuery(data):
+    mapUserMeanWords = dict()
+    userWords = [ (member.userId, len(member.keywords)) for member in data ]
+    #print userWords
+    
+    tempMap = defaultdict(list)
+    for (userId, lenght) in userWords:
+        tempMap[userId].append(lenght)
+
+    for (userId, listOfLenghts) in tempMap.iteritems():
+        meanSize = sum(listOfLenghts)/len(listOfLenghts)
+        #print userId, " ---> ",meanSize
+        mapUserMeanWords[userId] = meanSize
+
+    return mapUserMeanWords
+
 def calculateNumberOfSessionsPerUser(data):
     userIds = sorted( ( member.userId for member in data if member.previouskeywords is None ) )
     usersNumberOfSessions = [ (k , len(list(g))) for k, g in groupby(userIds) ]
@@ -76,6 +101,57 @@ def calculateNumberOfSessionsPerUser(data):
     
     return mapUserSession
 
+def calculateMeanTimePerSession(data):
+    mapUserMeanTimePerSession = dict()
+    
+    userDateBool = [ ( member.userId, member.datetime , member.previouskeywords is None) for member in data ] # (user, date, newSession? )
+
+    tempMap = defaultdict(list)
+
+    for (user, date, newSession) in userDateBool:
+        tempMap[user].append( (date, newSession) )
+        #print user, date, newSession
+
+    for (user, dateNewSession) in tempMap.iteritems():
+        
+        totalSeconds = 0
+        numberOfSessions = 0
+
+        startDate = dateNewSession[0][0]
+        endDate = startDate
+        #print "User ---> ", user, " Start --> ", startDate
+        
+        for date, newSession in dateNewSession[1:]:
+            #Seeks the next session
+            if not newSession:
+                endDate = date
+                continue
+            
+            # It is a new session:
+            else:
+                seconds = (endDate - startDate).total_seconds()
+                #print "SECONDS --> ", seconds 
+               
+                # Reset the date limits
+                startDate = date
+                endDate = date
+                
+                totalSeconds += seconds
+                numberOfSessions += 1
+        
+        #the last session
+        seconds = (endDate - startDate).total_seconds()
+        #print "SECONDS --> ", seconds 
+        
+        totalSeconds += seconds
+        numberOfSessions += 1
+
+        
+        mapUserMeanTimePerSession[user] = totalSeconds / numberOfSessions
+
+
+    return mapUserMeanTimePerSession
+
 def createDictOfUsers(data, label):
     userDict = dict()
 
@@ -84,29 +160,35 @@ def createDictOfUsers(data, label):
     countingNumberOfSessionsPerUser = calculateNumberOfSessionsPerUser(data)
     countingMeanMeshDepthPerUser = calculateMeanMeshDepthPerUser(data)
     countingNLPerUser = calculateNLPerUser(data)
-    #print countingNLPerUser
+    countingWordsPerQuery = calculateMeanWordsPerQuery(data)
+    countingMeanTimePerSession = calculateMeanTimePerSession(data)
 
     for user in users:
         if user not in countingNumberOfQueriesPerUser or \
            user not in countingNumberOfSessionsPerUser or \
            user not in countingMeanMeshDepthPerUser or\
-           user not in countingNLPerUser:
-
-            print "User is not present. It should be..."
+           user not in countingNLPerUser or\
+           user not in countingWordsPerQuery or\
+           user not in countingMeanTimePerSession:
+            
+            print "User is not present. It should be...User ID = ", user
             #sys.exit(0)
             continue
+
         nq = countingNumberOfQueriesPerUser[user]
         ns = countingNumberOfSessionsPerUser[user]
         mmd = countingMeanMeshDepthPerUser[user]
         unl = countingNLPerUser[user]
+        mwpq = countingWordsPerQuery[user]
+        mtps = countingMeanTimePerSession[user]
 
-        userDict[user] = userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl)
+        userDict[user] = userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps)
 
     return userDict
 
 def createFV(filename, label):
     data = readMyFormat(filename) 
-    data = preProcessData(data, removeStopWords)
+    data = preProcessData(data, removeStopWords)    # Sort the data by user and date
     data = removeUsersWithLessThanXQueries(data, 2)
     
     userDict = createDictOfUsers(data, label)
@@ -156,7 +238,7 @@ if __name__ == "__main__":
     
     goldMinerFV = createFV("dataSetsOfficials/goldminer/olds/gold100", 1)   #   15 users
     tripFV = createFV("dataSetsOfficials/trip/olds/trip200", 1)                 # + 19 users  = 34 Specialist
-    
+
     ####
     ### Merge Feature sets and transforme them into inputs
     ##
