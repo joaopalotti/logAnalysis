@@ -3,6 +3,9 @@ import pickle
 from classifiers import *
 from createFeatureVector import userClass
 
+medicalUserDataSet = "medicalUser.pk"
+regularUserDataSet = "regularUser.pk"
+
 def transformeInDict(userDict):
     listOfDicts = list()
     listOfLabels = list()
@@ -18,10 +21,10 @@ if __name__ == "__main__":
     ##
     #
     print "Loading the datasets..."
-    with open('testregularUser.pk', 'rb') as input:
+    with open(regularUserDataSet, 'rb') as input:
         regularUserFV = pickle.load(input)
     
-    with open('testmedicalUser.pk', 'rb') as input:
+    with open(medicalUserDataSet, 'rb') as input:
         medicalUserFV = pickle.load(input)
     print "Loaded"
 
@@ -35,6 +38,8 @@ if __name__ == "__main__":
 
     print "Using %d regular users" % ( len(ld1) )
     print "Using %d medical users" % ( len(ld2) )
+    avgAcc = 100 * max( [len(ld1), len(ld2)] ) / (len(ld1) + len(ld2))
+    print "Avg. accuracy of the greatest dataset => %f" % (avgAcc)
 
     print "Vectorizing dictionaries..."
     from sklearn.feature_extraction import DictVectorizer
@@ -45,10 +50,10 @@ if __name__ == "__main__":
     #TODO: normalize the data
     # http://scikit-learn.org/stable/modules/preprocessing.html
     from sklearn import preprocessing
-    #X = preprocessing.scale(X_noProcess)
+    X = preprocessing.scale(X_noProcess)
     #X = preprocessing.MinMaxScaler().fit_transform(X_noProcess)
     #X = preprocessing.normalize(X_noProcess, norm='l2')
-    X = X_noProcess
+    #X = X_noProcess
 
     import numpy as np
     y = np.array( listOfLabels )
@@ -80,6 +85,8 @@ if __name__ == "__main__":
     parametersDT = []
 
     print "Running classifiers..."
+    #TODO: run a logistic regression to evaluate the features and decide which ones are the best ones
+
     y_nb  = runNB(X, y, nCV)
     y_knn = runKNN(X, y, parametersKnn, nCV)
     y_dt = runDecisionTree(X, y, parametersDT, nCV)
@@ -94,14 +101,14 @@ if __name__ == "__main__":
     #print 20 * '=', " SVM Results ", 20 * '='
     #makeReport(X, y, y_svm)
     
-    #print 20 * '=', " NB  Results ", 20 * '='
-    #makeReport(X, y, y_nb)
+    print 20 * '=', " NB  Results ", 20 * '='
+    makeReport(X, y, y_nb)
     
-    #print 20 * '=', " KNN Results ", 20 * '='
-    #makeReport(X, y, y_knn)
+    print 20 * '=', " KNN Results ", 20 * '='
+    makeReport(X, y, y_knn)
     
-    #print 20 * '=', " DT  Results ", 20 * '='
-    #makeReport(X, y, y_dt)
+    print 20 * '=', " DT  Results ", 20 * '='
+    makeReport(X, y, y_dt)
 
     #import pylab as pl
     #pl.clf()

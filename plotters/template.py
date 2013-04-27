@@ -16,11 +16,11 @@ def normalize(values, total):
     print "OUTPUT = ", vs
     return vs
 
-def plotGraph(saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c','m'], PATH_TO_DATA="/home/palotti/Dropbox/tuwien/PhD/logs/logAnalysis/plots/", globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*", Ylabel='Percentage of Occurences', Xlabel='Mesh Depth', mapType=int, N=None, absolute=False):
+def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c','m'], PATH_TO_DATA="/home/palotti/Dropbox/tuwien/PhD/logs/logAnalysis/plots/", globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*", Ylabel='Percentage of Occurences', Xlabel='Mesh Depth', mapType=int, N=None, absolute=False):
 
     files = glob.glob(PATH_TO_DATA + globString)
 
-    width = 0.20    # the width of the bars
+    width = barwidth    # the width of the bars
     maxX = -1
     maxY = -1
     

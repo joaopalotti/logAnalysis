@@ -23,7 +23,9 @@ class userClass:
     def toDict(self):
         #return {'numberOfQueries':self.numberOfQueries, 'numberOfSessions':self.numberOfSessions, 'usingNL':self.usingNL}
         #print 'numberOfQueries', self.numberOfQueries, 'numberOfSessions',self.numberOfSessions, 'usingNL',self.usingNL, 'meanMeshDepth',self.meanMeshDepth, 'meanWordsPerQuery', self.meanWordsPerQuery, 'meanTimePerSession', self.meanTimePerSession
-        return {'numberOfQueries':self.numberOfQueries, 'numberOfSessions':self.numberOfSessions, 'usingNL':self.usingNL, 'meanMeshDepth':self.meanMeshDepth, 'meanWordsPerQuery': self.meanWordsPerQuery, 'meanTimePerSession': self.meanTimePerSession}
+        return {'numberOfQueries':self.numberOfQueries, 'numberOfSessions':self.numberOfSessions, 'usingNL':self.usingNL, 'meanMeshDepth':self.meanMeshDepth, 'meanWordsPerQuery': self.meanWordsPerQuery, 'meanTimePerSession': self.meanTimePerSession, 'UsingMedicalAbbreviation'}
+        #TODO: should I consider different kinds of abbreviations?
+        #TODO: take a look at the mesh and decide if it is possible to separete levels or groups from their data (same for UMLS)
 
 '''
     Boolean feature.
@@ -233,12 +235,19 @@ if __name__ == "__main__":
     #aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.dataset.gz", 0)
     #goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.dataset.gz", 1)
     #tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.dataset.gz", 1)
-
-    honFV = createFV("dataSetsOfficials/hon/olds/hon300", 0)                    #   16 users
-    aolHealthFV = createFV("dataSetsOfficials/aolHealth/olds/aol100", 0)        # + 22 users  = 38 laymen
     
-    goldMinerFV = createFV("dataSetsOfficials/goldminer/olds/gold100", 1)   #   15 users
-    tripFV = createFV("dataSetsOfficials/trip/olds/trip200", 1)                 # + 19 users  = 34 Specialist
+    # 10% of the dataset only
+    honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.10.gz", 0)
+    aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.10.gz", 0)
+    goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.10.gz", 1)
+    tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.10.gz", 1)
+
+
+    #honFV = createFV("dataSetsOfficials/hon/olds/hon300", 0)                    #   16 users
+    #aolHealthFV = createFV("dataSetsOfficials/aolHealth/olds/aol100", 0)        # + 22 users  = 38 laymen
+    
+    #goldMinerFV = createFV("dataSetsOfficials/goldminer/olds/gold100", 1)   #   15 users
+    #tripFV = createFV("dataSetsOfficials/trip/olds/trip200", 1)                 # + 19 users  = 34 Specialist
 
     ####
     ### Merge Feature sets and transforme them into inputs

@@ -310,7 +310,7 @@ def calculateAcronyms(data):
                 acronymsSet.add( (line.split(",", 1)[0].strip()).lower() )
    
     # Remove very common words from acronyms:
-    commonWordsSet = set(["and", "on", "map", "is", "car", "at", "san", "art", "from", "air", "la", "des", "en", "le", "les", "y", "e", "or", "vs", "help", "charge", "has", "l", "los", "non", "do", "las", "dr", "as", "be", "dos", "men"])
+    commonWordsSet = set(["and", "on", "map", "is", "car", "at", "san", "art", "from", "air", "la", "des", "en", "le", "les", "y", "e", "or", "vs", "help", "charge", "has", "l", "los", "non", "do", "las", "dr", "as", "be", "dos", "men", "con", "no", "who", "ppt", "us", "bad","all","msn","fish","pet","gas","camp","dvd","rv","ass","cat","god","sample","gift","sign","if","anna","was","don","cd","abc","t","s","ca","fl","va","inc","co"])
     acronymsSet -= commonWordsSet
 
     # Get the number of queries that have acronyms
