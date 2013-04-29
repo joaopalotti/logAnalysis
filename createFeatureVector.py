@@ -5,12 +5,14 @@ import sys
 
 #My classes
 from readCSV import readMyFormat
-from auxiliarFunctions import NLWords, preProcessData
+from auxiliarFunctions import NLWords, preProcessData, createAcronymSet, symptomTypes, causeTypes, remedyTypes, whereTypes, noMedicalTypes
 
 removeStopWords=False
+acronymsSet = createAcronymSet()
+minimalNumberOfQueries = 2
 
 class userClass:
-    def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps):
+    def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd):
         self.id = id
         self.label = label
         self.numberOfQueries = nq
@@ -19,11 +21,15 @@ class userClass:
         self.usingNL = unl
         self.meanWordsPerQuery = mwpq
         self.meanTimePerSession = mtps
+        self.usingAbbreviation = uab
+        self.usingSymptons = usy
+        self.usingCause = usc
+        self.usingRemedy = usrd
     
     def toDict(self):
         #return {'numberOfQueries':self.numberOfQueries, 'numberOfSessions':self.numberOfSessions, 'usingNL':self.usingNL}
         #print 'numberOfQueries', self.numberOfQueries, 'numberOfSessions',self.numberOfSessions, 'usingNL',self.usingNL, 'meanMeshDepth',self.meanMeshDepth, 'meanWordsPerQuery', self.meanWordsPerQuery, 'meanTimePerSession', self.meanTimePerSession
-        return {'numberOfQueries':self.numberOfQueries, 'numberOfSessions':self.numberOfSessions, 'usingNL':self.usingNL, 'meanMeshDepth':self.meanMeshDepth, 'meanWordsPerQuery': self.meanWordsPerQuery, 'meanTimePerSession': self.meanTimePerSession, 'UsingMedicalAbbreviation'}
+        return {'numberOfQueries':self.numberOfQueries, 'numberOfSessions':self.numberOfSessions, 'usingNL':self.usingNL, 'meanMeshDepth':self.meanMeshDepth, 'meanWordsPerQuery': self.meanWordsPerQuery, 'meanTimePerSession': self.meanTimePerSession, 'UsingMedicalAbbreviation':self.usingAbbreviation, 'usingSymptonSemanticType':self.usingSymptons, 'UsingCauseSemanticType':self.usingCause, 'UsingRemedySemanticType':self.usingRemedy}
         #TODO: should I consider different kinds of abbreviations?
         #TODO: take a look at the mesh and decide if it is possible to separete levels or groups from their data (same for UMLS)
 
@@ -99,6 +105,37 @@ def calculateNumberOfSessionsPerUser(data):
     
     return mapUserSession
 
+def hasSemanticType(words, semanticSet):
+    if words is None:
+        return False
+    return any( [ w for w in words if w.lower() in semanticSet] )
+
+def calculateUsingSemantic(data, semanticType):
+    mapUserSemantic = dict()
+
+    userIds = sorted( (member.userId, member.semanticTypes) for member in data )
+    for (userId, st) in userIds:
+        if userId not in mapUserSemantic:
+            mapUserSemantic[userId] = False
+        mapUserSemantic[userId] = ( mapUserSemantic[userId] or hasSemanticType(st, semanticType) )
+    return mapUserSemantic
+
+def calculateUsingAbbreviation(data):
+    mapUserAbb = dict()
+    
+    userIds = sorted( (member.userId, member.keywords) for member in data )
+    
+    for (userId, keywords) in userIds:
+        if userId not in mapUserAbb:
+            mapUserAbb[userId] = False
+        mapUserAbb[userId] = ( mapUserAbb[userId] or hasAbbreviation(keywords) )
+
+    #print "mapUserAbb ---> ", mapUserAbb
+    return mapUserAbb
+
+def hasAbbreviation(words):
+    return any( [ w for w in words if w.lower() in acronymsSet] )
+
 def calculateMeanTimePerSession(data):
     mapUserMeanTimePerSession = dict()
     
@@ -158,6 +195,10 @@ def createDictOfUsers(data, label):
     countingNLPerUser = calculateNLPerUser(data)
     countingWordsPerQuery = calculateMeanWordsPerQuery(data)
     countingMeanTimePerSession = calculateMeanTimePerSession(data)
+    countingUsingAbbreviation = calculateUsingAbbreviation(data)
+    countingUsingSymptons = calculateUsingSemantic(data, symptomTypes())
+    countingUsingCause = calculateUsingSemantic(data, causeTypes())
+    countingUsingRemedy = calculateUsingSemantic(data, remedyTypes())
 
     for user in users:
         if user not in countingNumberOfQueriesPerUser or \
@@ -184,15 +225,19 @@ def createDictOfUsers(data, label):
         unl = countingNLPerUser[user]
         mwpq = countingWordsPerQuery[user]
         mtps = countingMeanTimePerSession[user]
+        uab = countingUsingAbbreviation[user]
+        usy = countingUsingSymptons[user]
+        usc = countingUsingCause[user]
+        usrd = countingUsingRemedy[user]
 
-        userDict[user] = userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps)
+        userDict[user] = userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd)
 
     return userDict
 
 def createFV(filename, label):
     data = readMyFormat(filename) 
     data = preProcessData(data, removeStopWords)    # Sort the data by user and date
-    data = removeUsersWithLessThanXQueries(data, 2)
+    data = removeUsersWithLessThanXQueries(data, minimalNumberOfQueries)
     
     userDict = createDictOfUsers(data, label)
     

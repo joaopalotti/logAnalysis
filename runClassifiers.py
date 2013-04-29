@@ -1,4 +1,5 @@
-import pickle
+import pickle, sys
+import random
 #My classes
 from classifiers import *
 from createFeatureVector import userClass
@@ -6,15 +7,27 @@ from createFeatureVector import userClass
 medicalUserDataSet = "medicalUser.pk"
 regularUserDataSet = "regularUser.pk"
 
-def transformeInDict(userDict):
+def transformeInDict(userDict, n=-1):
     listOfDicts = list()
     listOfLabels = list()
-    for key, user  in userDict.iteritems():
-        listOfDicts.append( user.toDict() )
-        listOfLabels.append( user.label )
+    
+    p = range(len(userDict))
+    random.shuffle(p)
+    
+    for v, (key, user) in zip(range(len(p)), userDict.iteritems()):
+        if n >= 0 and p[v] >= n:
+            continue 
+        listOfDicts.append(user.toDict())
+        listOfLabels.append(user.label)
     return listOfDicts, listOfLabels
 
 if __name__ == "__main__":
+
+    preProcessing = sys.argv[1]
+    forceBalance = sys.argv[2]
+    print preProcessing
+    if forceBalance:
+        print "Forcing only %s examples for each dataset" % (forceBalance)
 
     ####
     ### Load Datasets
@@ -28,14 +41,18 @@ if __name__ == "__main__":
         medicalUserFV = pickle.load(input)
     print "Loaded"
 
+    n = -1
+    if int(forceBalance) > 0:
+        n = int(forceBalance)
+
     print "Transforming datasets into Dictionaries..."
-    ld1, ll1 = transformeInDict(regularUserFV)
-    ld2, ll2 = transformeInDict(medicalUserFV)
+    ld1, ll1 = transformeInDict(regularUserFV,n)
+    ld2, ll2 = transformeInDict(medicalUserFV,n)
     print "Transformed"
     
     listOfDicts = ld1 + ld2
     listOfLabels = ll1 + ll2
-
+   
     print "Using %d regular users" % ( len(ld1) )
     print "Using %d medical users" % ( len(ld2) )
     avgAcc = 100 * max( [len(ld1), len(ld2)] ) / (len(ld1) + len(ld2))
@@ -50,10 +67,14 @@ if __name__ == "__main__":
     #TODO: normalize the data
     # http://scikit-learn.org/stable/modules/preprocessing.html
     from sklearn import preprocessing
-    X = preprocessing.scale(X_noProcess)
-    #X = preprocessing.MinMaxScaler().fit_transform(X_noProcess)
-    #X = preprocessing.normalize(X_noProcess, norm='l2')
-    #X = X_noProcess
+    if preProcessing == "scale":
+        X = preprocessing.scale(X_noProcess)
+    elif preProcessing == "minmax":
+        X = preprocessing.MinMaxScaler().fit_transform(X_noProcess)
+    elif preProcessing == "normalize":
+        X = preprocessing.normalize(X_noProcess, norm='l2')
+    else:
+        X = X_noProcess
 
     import numpy as np
     y = np.array( listOfLabels )
@@ -67,12 +88,11 @@ if __name__ == "__main__":
 
     print "Shuffling the data..."
     # Shuffle samples
-    import random
     p = range(n_samples) 
     random.seed(0)
     random.shuffle(p)
     X, y = X[p], y[p]
-    nCV = 10
+    nCV = 5
     print "Shuffled"
 
     ####
@@ -90,7 +110,7 @@ if __name__ == "__main__":
     y_nb  = runNB(X, y, nCV)
     y_knn = runKNN(X, y, parametersKnn, nCV)
     y_dt = runDecisionTree(X, y, parametersDT, nCV)
-    y_svm = runSVM(X, y, parametersSVM, nCV)
+    #y_svm = runSVM(X, y, parametersSVM, nCV)
     print "Done"
 
     ####

@@ -15,6 +15,11 @@ SOME IMPORTANT NOTES:
     -> Considering that more than 100 queries in one unique session is way too much. So, the session is removed.
 """
 
+#
+#TODO:
+#   calculate number of users with some semantic focus
+#
+
 # GLOBAL VARIABLES:
 numberOfQueriesInASessionThreshold = 100
 removeOutliers=True
@@ -297,21 +302,8 @@ def calculateDates(data):
     return firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay 
 
 def calculateAcronyms(data):
-
-    acronymsSet = set()
-    #http://en.wikipedia.org/wiki/List_of_acronyms_for_diseases_and_disorders
-    #http://en.wikipedia.org/wiki/List_of_abbreviations_for_medical_organisations_and_personnel
-    #http://en.wikipedia.org/wiki/Acronyms_in_healthcare
-    #http://en.wikipedia.org/wiki/List_of_medical_abbreviations -- From A to Z
-
-    for filename in [ "diseasesAcronyms.txt", "healthCareAcronyms.txt", "organizationAcronyms.txt", "medicalAbbreviations.txt" ]:
-        with open(PATH_TO_AUX_FILES + filename,"r") as f:
-            for line in f.readlines():
-                acronymsSet.add( (line.split(",", 1)[0].strip()).lower() )
-   
-    # Remove very common words from acronyms:
-    commonWordsSet = set(["and", "on", "map", "is", "car", "at", "san", "art", "from", "air", "la", "des", "en", "le", "les", "y", "e", "or", "vs", "help", "charge", "has", "l", "los", "non", "do", "las", "dr", "as", "be", "dos", "men", "con", "no", "who", "ppt", "us", "bad","all","msn","fish","pet","gas","camp","dvd","rv","ass","cat","god","sample","gift","sign","if","anna","was","don","cd","abc","t","s","ca","fl","va","inc","co"])
-    acronymsSet -= commonWordsSet
+    
+    acronymsSet = createAcronymSet()
 
     # Get the number of queries that have acronyms
     hasAcronym = [ member.keywords for member in data for word in member.keywords if word in acronymsSet]
@@ -623,16 +615,16 @@ def calculateSemanticTypes(sessions):
                     for st in query[2]:
                         countingPureSemanticTypes[st] += 1
                         
-                        if st in ["sosy"]:
+                        if st in symptomTypes():
                             actionSequence.append("symptom")
                             countingSemantics["symptom"] += 1
-                        elif st in ["bact", "virs", "dsyn", "orgm"]:
+                        elif st in causeTypes():
                             actionSequence.append("cause")
                             countingSemantics["cause"] += 1
-                        elif st in ["drdd", "clnd", "amas", "antb","aapp","phsu","imft","vita"]:
+                        elif st in causeTypes():
                             actionSequence.append("remedy")
                             countingSemantics["remedy"] += 1
-                        elif st in ["bpoc", "bsoj","tisu","bdsy","blor"]:
+                        elif st in whereTypes():
                             actionSequence.append("where")
                             countingSemantics["where"] += 1
 

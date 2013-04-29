@@ -7,7 +7,28 @@ PATH_TO_AUX_FILES = "auxFiles/"
 NLWords = ["would", "wouldn't", "wouldnt", "could", "couldn't", "couldnt", "should", "shouldn't", "shouldnt", "how", "when", "where", "which", "who", "whom", "can", "cannot", "why", "what", "we", "they", "i", "do", "does", "must", "ought"]
 
 
+def createAcronymSet():
+    acronymsSet = set()
+    #http://en.wikipedia.org/wiki/List_of_acronyms_for_diseases_and_disorders
+    #http://en.wikipedia.org/wiki/List_of_abbreviations_for_medical_organisations_and_personnel
+    #http://en.wikipedia.org/wiki/Acronyms_in_healthcare
+    #http://en.wikipedia.org/wiki/List_of_medical_abbreviations -- From A to Z
 
+    for filename in [ "diseasesAcronyms.txt", "healthCareAcronyms.txt", "organizationAcronyms.txt", "medicalAbbreviations.txt" ]:
+        with open(PATH_TO_AUX_FILES + filename,"r") as f:
+            for line in f.readlines():
+                acronymsSet.add( (line.split(",", 1)[0].strip()).lower() )
+   
+    # Remove very common words from acronyms:
+    commonWordsSet = set(["and", "on", "map", "is", "car", "at", "san", "art", "from", "air", "la", "des", "en", "le", "les", "y", "e", "or", "vs", "help", "charge", "has", "l", "los", "non", "do", "las", "dr", "as", "be", "dos", "men", "con", "no", "who", "ppt", "us", "bad","all","msn","fish","pet","gas","camp","dvd","rv","ass","cat","god","sample","gift","sign","if","anna","was","don","cd","abc","t","s","ca","fl","va","inc","co","it","st","nc","top","ma","","",""])
+    americanStates = set(["us", "al", "ak", "az", "ar","ca","co","ct","de","fl","ga","hi","ha","cl","cf","id","il","in","ia","ks","ka","ky","la","me","md","ma","mi","ms","mc","mn","mo","mt","ne","nb","nv","nh","nj","ny","nm","nc","nd","oh","ok","or","pa","ri","sc","sd","tx","tn","ut","vt","va","wa","wv",",wn","wi","wy","as","gu","mp","pr","vi","um""fm","mh","pw","aa","ae","ap","cm","cz","nb","pi","tt"])
+
+    
+    acronymsSet -= commonWordsSet
+    acronymsSet -= americanStates
+    return acronymsSet
+
+    
 def tokenize(keywordList):
     # split query into words and eliminate blank spaces
     
@@ -85,4 +106,33 @@ def preProcessData(data, removeStopWords):
     data = sorted(data, key= lambda member: (member.userId, member.datetime))
 
     return data
+
+"""
+    Some important semantic types (list: http://metamap.nlm.nih.gov/SemanticTypeMappings_2011AA.txt)
+        -> Symptom   -> sosy (Sign or Symptom)
+        
+        -> Cause     -> bact (Bacterium), virs (Virus), dsyn (Disease or Syndrome), orgm (? Organism ?)
+        
+        -> Remedy    -> drdd (Drug Delivery Device), clnd (Clinical Drug), amas (Amino Acid Sequence ?), antb (Antibiotic), aapp(Amino Acid, Peptide, or Protein?), phsu (Pharmacologic Substance), imft (Immunologic Factor - vaccine, e.g.), vita (Vitamin)
+
+        -> where     -> bpoc (Body Part, Organ, or Organ Component), bsoj (Body Space or Junction), tisu (tissue), bdsy (Body System), blor (Body Location or Region)
+
+        ->>> Important and missing classification: inpo (Injury or Poisoning),  diap (Diagnostic Procedure), irda (Indicator, Reagent, or Diagnostic Aid), fndg (Finding), ftcn (Functional Concept), gngm (Gene or Genome), hcro (Health Care Related Organization), hlca (Health Care Activity), horm|Hormone, inch|Inorganic Chemical, lbpr|Laboratory Procedure, mobd|Mental or Behavioral Dysfunction
+"""
+
+def symptomTypes():
+    return ["sosy"]
+
+def causeTypes():
+    return ["bact", "virs", "dsyn", "orgm"]
+
+def remedyTypes():
+    return ["drdd", "clnd", "amas", "antb","aapp","phsu","imft","vita"]
+
+def whereTypes():
+    return ["bpoc", "bsoj","tisu","bdsy","blor"]
+
+def noMedicalTypes():
+    return ["mnob","geoa","inpr", "qlco", "qnco", "ftcn", "idcn", "popg", "spco", "cnce","orgt","food","fish"]
+    # mnob|Manufactured Object;  geoa|Geographic Area; inpr|Intellectual Product; qlco|Qualitative Concept; qnco|Quantitative Concept; ftcn|Functional Concept; idcn|Idea or Concept ; popg|Population Group; spco|Spatial Concept; cnce|Conceptual Entity; orgt|Organization
 
