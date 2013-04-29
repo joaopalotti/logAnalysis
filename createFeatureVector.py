@@ -9,7 +9,8 @@ from auxiliarFunctions import NLWords, preProcessData, createAcronymSet, symptom
 
 removeStopWords=False
 acronymsSet = createAcronymSet()
-minimalNumberOfQueries = 2
+minimalNumberOfQueries = 6
+maximalNumberOfQueries = 100
 
 class userClass:
     def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm):
@@ -238,7 +239,7 @@ def createDictOfUsers(data, label):
 def createFV(filename, label):
     data = readMyFormat(filename) 
     data = preProcessData(data, removeStopWords)    # Sort the data by user and date
-    data = removeUsersWithLessThanXQueries(data, minimalNumberOfQueries)
+    data = keepUsersInsideLimiteOfQueires(data, minimalNumberOfQueries, maximalNumberOfQueries)
     
     userDict = createDictOfUsers(data, label)
     
@@ -246,32 +247,50 @@ def createFV(filename, label):
     
     return userDict
 
-def removeUsersWithLessThanXQueries(data, X):
+def keepUsersInsideLimiteOfQueires(data, Xmin, Xmax):
     userIds = sorted( [member.userId for member in data ] ) 
-    usersToRemove = [ k for k, g in groupby(userIds) if len(list(g)) < X]
+    usersToRemove = [ k for k, g in groupby(userIds) if len(list(g)) < Xmin or len(list(g)) >= Xmax]
     newData = [member for member in data if member.userId not in usersToRemove]
     return newData
 
-def mergeFVs(FVa, FVb, *otherFVs):
+def mergeFVs(*fvs):
     counter = 0
     newDict = dict()
 
-    for user, fv in FVa.iteritems():
-        newDict[ user + "_" + str(counter) ] = fv
-    
-    counter += 1
-    for user, fv in FVb.iteritems():
-        newDict[ user + "_" + str(counter) ] = fv
-    
-    for ofv in otherFVs:
-        counter += 1
+    for ofv in fvs:
         for user, fv in ofv.iteritems():
             newDict[ user + "_" + str(counter) ] = fv
+        counter += 1
 
     return newDict
 
-if __name__ == "__main__":
 
+def healthNotHealthUsers():
+    
+    # 10% of the dataset only
+    honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.10.gz", 0)
+    aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.10.gz", 0)
+    goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.10.gz", 0)
+    tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.10.gz", 0)
+    
+    # 1% of the dataset only
+    notHealth = createFV("dataSetsOfficials/aolNotHealth/aolNotHealthPartial.v4.1.gz", 1)
+
+    ### Merge Feature sets and transforme them into inputs
+    healthUserFV = mergeFVs(honFV, aolHealthFV, goldMinerFV, tripFV)
+    notHealthUserFV = notHealth
+    
+    ####### Save and Load the Features
+    import pickle
+    with open('healthUser.pk', 'wb') as output:
+        pickle.dump(healthUserFV, output, pickle.HIGHEST_PROTOCOL)
+        print "CREATED FILE: healthUser.pk"
+    
+    with open('notHealthUser.pk', 'wb') as output:
+        pickle.dump(notHealthUserFV, output, pickle.HIGHEST_PROTOCOL)
+        print "CREATED FILE: notHealthUser.pk"
+
+def regularMedicalUsers():
     ####
     ### Load Datasets
     ##
@@ -287,13 +306,6 @@ if __name__ == "__main__":
     aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.10.gz", 0)
     goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.10.gz", 1)
     tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.10.gz", 1)
-
-
-    #honFV = createFV("dataSetsOfficials/hon/olds/hon300", 0)                    #   16 users
-    #aolHealthFV = createFV("dataSetsOfficials/aolHealth/olds/aol100", 0)        # + 22 users  = 38 laymen
-    
-    #goldMinerFV = createFV("dataSetsOfficials/goldminer/olds/gold100", 1)   #   15 users
-    #tripFV = createFV("dataSetsOfficials/trip/olds/trip200", 1)                 # + 19 users  = 34 Specialist
 
     ####
     ### Merge Feature sets and transforme them into inputs
@@ -312,3 +324,6 @@ if __name__ == "__main__":
         pickle.dump(medicalUserFV, output, pickle.HIGHEST_PROTOCOL)
         print "CREATED FILE: medicalUser.pk"
     
+if __name__ == "__main__":
+    #regularMedicalUsers()
+    healthNotHealthUsers()

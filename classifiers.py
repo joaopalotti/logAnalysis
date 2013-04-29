@@ -11,10 +11,12 @@ def makeReport(X, y, y_pred, baseline):
     
     from sklearn.metrics import classification_report, f1_score
     target_names = ['Layman', 'Specialist']
-    f1 = f1_score(y[half:], y_pred)
+    
+    f1 = f1_score(y[half:], y_pred, average=None)
     print(classification_report( y[half:], y_pred, target_names=target_names))
-    print "F1 Score --> %.2f" % (f1)
-    print "GAIN --> %0.2f%% " % (100.0 * (f1 - baseline) / baseline)
+    print "F1 Score --> ", (f1)
+    af1 = sum(f1)/len(f1)
+    print "GAIN --> %0.2f%% " % (100.0 * (af1 - baseline) / baseline)
 
 def runNB(X, y, nCV, baseline):
     

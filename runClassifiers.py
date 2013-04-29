@@ -6,6 +6,8 @@ from createFeatureVector import userClass
 
 medicalUserDataSet = "medicalUser.pk"
 regularUserDataSet = "regularUser.pk"
+healthUserDataSet = "healthUser.pk"
+notHealthUserDataSet = "notHealthUser.pk"
 
 def transformeInDict(userDict, n=-1):
     listOfDicts = list()
@@ -34,10 +36,12 @@ if __name__ == "__main__":
     ##
     #
     print "Loading the datasets..."
-    with open(regularUserDataSet, 'rb') as input:
+    #with open(regularUserDataSet, 'rb') as input:
+    with open(notHealthUserDataSet, 'rb') as input:
         regularUserFV = pickle.load(input)
     
-    with open(medicalUserDataSet, 'rb') as input:
+    #with open(medicalUserDataSet, 'rb') as input:
+    with open(healthUserDataSet, 'rb') as input:
         medicalUserFV = pickle.load(input)
     print "Loaded"
 
