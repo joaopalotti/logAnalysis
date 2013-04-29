@@ -55,13 +55,14 @@ if __name__ == "__main__":
    
     print "Using %d regular users" % ( len(ld1) )
     print "Using %d medical users" % ( len(ld2) )
-    avgAcc = 100 * max( [len(ld1), len(ld2)] ) / (len(ld1) + len(ld2))
-    print "Avg. accuracy of the greatest dataset => %f" % (avgAcc)
+    baseline = 1.0 * max( [len(ld1), len(ld2)] ) / (len(ld1) + len(ld2))
+    print "Avg. accuracy of the greatest dataset => %f" % (100.0 * baseline)
 
     print "Vectorizing dictionaries..."
     from sklearn.feature_extraction import DictVectorizer
     vec = DictVectorizer()
     X_noProcess = vec.fit_transform(listOfDicts).toarray()
+    print vec.get_feature_names()
     print "Vectorized"
     
     #TODO: normalize the data
@@ -73,7 +74,7 @@ if __name__ == "__main__":
         X = preprocessing.MinMaxScaler().fit_transform(X_noProcess)
     elif preProcessing == "normalize":
         X = preprocessing.normalize(X_noProcess, norm='l2')
-    else:
+    elif preProcessing == "nothing":
         X = X_noProcess
 
     import numpy as np
@@ -103,14 +104,16 @@ if __name__ == "__main__":
     parametersSVM = []
     parametersKnn = []
     parametersDT = []
+    parametersERT = []
 
     print "Running classifiers..."
     #TODO: run a logistic regression to evaluate the features and decide which ones are the best ones
 
-    y_nb  = runNB(X, y, nCV)
-    y_knn = runKNN(X, y, parametersKnn, nCV)
-    y_dt = runDecisionTree(X, y, parametersDT, nCV)
-    #y_svm = runSVM(X, y, parametersSVM, nCV)
+    y_ert = runExtraTreeClassifier(X, y, parametersERT, nCV, baseline)
+    y_nb  = runNB(X, y, nCV,baseline)
+    y_knn = runKNN(X, y, parametersKnn, nCV,baseline)
+    y_dt = runDecisionTree(X, y, parametersDT, nCV,baseline)
+    #y_svm = runSVM(X, y, parametersSVM, nCV,baseline)
     print "Done"
 
     ####
@@ -122,14 +125,17 @@ if __name__ == "__main__":
     #makeReport(X, y, y_svm)
     
     print 20 * '=', " NB  Results ", 20 * '='
-    makeReport(X, y, y_nb)
+    makeReport(X, y, y_nb,baseline)
     
     print 20 * '=', " KNN Results ", 20 * '='
-    makeReport(X, y, y_knn)
+    makeReport(X, y, y_knn,baseline)
     
     print 20 * '=', " DT  Results ", 20 * '='
-    makeReport(X, y, y_dt)
+    makeReport(X, y, y_dt,baseline)
 
+    print 20 * '=', " ERF  Results ", 20 * '='
+    makeReport(X, y, y_ert,baseline)
+    
     #import pylab as pl
     #pl.clf()
     #pl.plot(recall, precision, label='Precision-Recall curve')

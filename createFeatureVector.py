@@ -12,7 +12,7 @@ acronymsSet = createAcronymSet()
 minimalNumberOfQueries = 2
 
 class userClass:
-    def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd):
+    def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm):
         self.id = id
         self.label = label
         self.numberOfQueries = nq
@@ -25,11 +25,10 @@ class userClass:
         self.usingSymptons = usy
         self.usingCause = usc
         self.usingRemedy = usrd
+        self.usingNotMedical = usnm
     
     def toDict(self):
-        #return {'numberOfQueries':self.numberOfQueries, 'numberOfSessions':self.numberOfSessions, 'usingNL':self.usingNL}
-        #print 'numberOfQueries', self.numberOfQueries, 'numberOfSessions',self.numberOfSessions, 'usingNL',self.usingNL, 'meanMeshDepth',self.meanMeshDepth, 'meanWordsPerQuery', self.meanWordsPerQuery, 'meanTimePerSession', self.meanTimePerSession
-        return {'numberOfQueries':self.numberOfQueries, 'numberOfSessions':self.numberOfSessions, 'usingNL':self.usingNL, 'meanMeshDepth':self.meanMeshDepth, 'meanWordsPerQuery': self.meanWordsPerQuery, 'meanTimePerSession': self.meanTimePerSession, 'UsingMedicalAbbreviation':self.usingAbbreviation, 'usingSymptonSemanticType':self.usingSymptons, 'UsingCauseSemanticType':self.usingCause, 'UsingRemedySemanticType':self.usingRemedy}
+        return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical}
         #TODO: should I consider different kinds of abbreviations?
         #TODO: take a look at the mesh and decide if it is possible to separete levels or groups from their data (same for UMLS)
 
@@ -199,6 +198,7 @@ def createDictOfUsers(data, label):
     countingUsingSymptons = calculateUsingSemantic(data, symptomTypes())
     countingUsingCause = calculateUsingSemantic(data, causeTypes())
     countingUsingRemedy = calculateUsingSemantic(data, remedyTypes())
+    countingUsingNotMedical = calculateUsingSemantic(data, noMedicalTypes())
 
     for user in users:
         if user not in countingNumberOfQueriesPerUser or \
@@ -229,8 +229,9 @@ def createDictOfUsers(data, label):
         usy = countingUsingSymptons[user]
         usc = countingUsingCause[user]
         usrd = countingUsingRemedy[user]
+        usnm = countingUsingNotMedical[user]
 
-        userDict[user] = userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd)
+        userDict[user] = userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm)
 
     return userDict
 

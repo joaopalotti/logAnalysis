@@ -837,7 +837,7 @@ def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQuer
     writer.write("-" * 40 + "\n")
     writer.write("Session Length in Queries\n")
     writer.write("-" * 40 + "\n")
-    writer.write('{0:45} ==> {1:.3f} (id = {2:30})\n'.format("Maximum number of Queries in a session", (npNumQueriesInSession.max), idMaxQueriesInSession))
+    writer.write('{0:45} ==> {1:.3f} (id = {2:s})\n'.format("Maximum number of Queries in a session", (npNumQueriesInSession.max), idMaxQueriesInSession))
     writer.write('{0:45} ==> {1:.3f}\n'.format("Minimum number of Queries in a session", (npNumQueriesInSession.min)))
     writer.write('{0:45} ==> {1:.3f}\n'.format("Mean number of Queries in a session", (npNumQueriesInSession.mean)))
     writer.write('{0:45} ==> {1:.3f}\n'.format("Median number of Queries in a session", (npNumQueriesInSession.median)))
