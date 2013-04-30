@@ -4,8 +4,19 @@ import random
 from classifiers import *
 from createFeatureVector import userClass
 
+nJobs = 2
+nCV = 10
+
+parametersSVM = {"nJobs":nJobs, "CV":nCV, "cacheSize":1000, "kernel":"linear", "C":1.0}
+parametersKnn = {"nJobs":nJobs, "CV":nCV, "K":100}
+parametersDT = {"nJobs":nJobs, "CV":nCV}
+parametersERT = {"nJobs":nJobs, "CV":nCV, "n_estimators":10}
+parametersLogReg = {"nJobs":nJobs, "CV":nCV}
+parametersNB = {"nJobs":nJobs, "CV":nCV}
+
 medicalUserDataSet = "medicalUser.pk"
 regularUserDataSet = "regularUser.pk"
+
 healthUserDataSet = "healthUser.pk"
 notHealthUserDataSet = "notHealthUser.pk"
 
@@ -36,12 +47,12 @@ if __name__ == "__main__":
     ##
     #
     print "Loading the datasets..."
-    #with open(regularUserDataSet, 'rb') as input:
-    with open(notHealthUserDataSet, 'rb') as input:
+    with open(regularUserDataSet, 'rb') as input:
+    #with open(notHealthUserDataSet, 'rb') as input:
         regularUserFV = pickle.load(input)
     
-    #with open(medicalUserDataSet, 'rb') as input:
-    with open(healthUserDataSet, 'rb') as input:
+    with open(medicalUserDataSet, 'rb') as input:
+    #with open(healthUserDataSet, 'rb') as input:
         medicalUserFV = pickle.load(input)
     print "Loaded"
 
@@ -104,29 +115,23 @@ if __name__ == "__main__":
     ### Run classifiers
     ##
     #
-
-    parametersSVM = []
-    parametersKnn = []
-    parametersDT = []
-    parametersERT = []
-
     print "Running classifiers..."
     #TODO: run a logistic regression to evaluate the features and decide which ones are the best ones
 
-    y_ert = runExtraTreeClassifier(X, y, parametersERT, nCV, baseline)
-    y_nb  = runNB(X, y, nCV,baseline)
-    y_knn = runKNN(X, y, parametersKnn, nCV,baseline)
-    y_dt = runDecisionTree(X, y, parametersDT, nCV,baseline)
-    #y_svm = runSVM(X, y, parametersSVM, nCV,baseline)
+    y_ert = runExtraTreeClassifier(X, y, parametersERT, baseline)
+    y_nb  = runNB(X, y, parametersNB, baseline)
+    y_knn = runKNN(X, y, parametersKnn, baseline)
+    y_dt = runDecisionTree(X, y, parametersDT, baseline)
+    y_svm = runSVM(X, y, parametersSVM, baseline)
+    y_lg =  runLogRegression(X, y, parametersLogReg, baseline)
     print "Done"
 
     ####
     ### Check Results
     ##
     #
-    
-    #print 20 * '=', " SVM Results ", 20 * '='
-    #makeReport(X, y, y_svm)
+    print 20 * '=', " SVM Results ", 20 * '='
+    makeReport(X, y, y_svm)
     
     print 20 * '=', " NB  Results ", 20 * '='
     makeReport(X, y, y_nb,baseline)
@@ -139,6 +144,9 @@ if __name__ == "__main__":
 
     print 20 * '=', " ERF  Results ", 20 * '='
     makeReport(X, y, y_ert,baseline)
+    
+    print 20 * '=', " LogReg  Results ", 20 * '='
+    makeReport(X, y, y_lg,baseline)
     
     #import pylab as pl
     #pl.clf()

@@ -1,116 +1,172 @@
+#Report
 from sklearn import cross_validation
+from sklearn.metrics import classification_report, f1_score, accuracy_score
+#Classifiers
+from sklearn.naive_bayes import GaussianNB
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import ExtraTreesClassifier
+#General
+from collections import Counter
 
 def makeReport(X, y, y_pred, baseline):
-    
-    n_samples, n_features = X.shape
-    half = int(n_samples / 2)
-
-    #print "y ===> ", y
-    #print "y_pred ===> ", y_pred
     # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html#sklearn.metrics.classification_report
     
-    from sklearn.metrics import classification_report, f1_score
     target_names = ['Layman', 'Specialist']
     
-    f1 = f1_score(y[half:], y_pred, average=None)
-    print(classification_report( y[half:], y_pred, target_names=target_names))
+    acc = accuracy_score(y, y_pred)
+    f1 = f1_score(y, y_pred, average=None)
+    print(classification_report( y, y_pred, target_names=target_names))
+    
+    ns = Counter(y)
+    af1 = ( f1[0] * ns[0] + f1[1] * ns[1] ) / (ns[0] + ns[1])
+    
     print "F1 Score --> ", (f1)
-    af1 = sum(f1)/len(f1)
+    print "Mean -> ", af1
     print "GAIN --> %0.2f%% " % (100.0 * (af1 - baseline) / baseline)
 
-def runNB(X, y, nCV, baseline):
+    print "ACC Score --> ", (acc)
+    print "GAIN --> %0.2f%% " % (100.0 * (acc - baseline) / baseline)
+
+def runNB(X, y, parameters, baseline):
+    # http://scikit-learn.org/stable/modules/naive_bayes.html#naive-bayes
     
     print "Running NB"
+    nSamples, nFeatures = X.shape
 
-    # http://scikit-learn.org/stable/modules/naive_bayes.html#naive-bayes
-    n_samples, n_features = X.shape
-    half  = int(n_samples/2)
+    kFold = cross_validation.KFold(n=nSamples, n_folds=parameters["CV"], indices=True)
 
-    from sklearn.naive_bayes import GaussianNB
+    # Run classifier
     clf = GaussianNB()
+    lists = [clf.fit(X[train], y[train]).predict(X[test]) for train, test in kFold]
     
-    from sklearn import metrics
-    scores = cross_validation.cross_val_score(clf, X, y, cv=nCV, n_jobs=-1) # in 0.14 i am going to use it: scoring="f1")   
-    print "Accuracy NB: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
-
-    y_pred = clf.fit(X[:half], y[:half]).predict(X[half:])
+    y_pred = []
+    for l in lists:
+        y_pred += list(l)
+    
+    #scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) # in 0.14 i am going to use it: scoring="f1")   
+    #print "Accuracy NB: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
+    #print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
     
     print "Done"
     return y_pred
- 
-def runSVM(X, y, parameters, nCV, baseline):
+
+def runLogRegression(X, y, parameters, baseline):
+    #http://scikit-learn.org/dev/modules/generated/sklearn.linear_model.LogisticRegression.html#sklearn.linear_model.LogisticRegression
+
+    print "Running Logistic Regression"
+    nSamples, nFeatures = X.shape
+    
+    kFold = cross_validation.KFold(n=nSamples, n_folds=parameters["CV"], indices=True)
+    
+    # Run classifier
+    clf = LogisticRegression()
+    lists = [clf.fit(X[train], y[train]).predict(X[test]) for train, test in kFold]
+    
+    y_pred = []
+    for l in lists:
+        y_pred += list(l)
+
+    #scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) #,scoring="f1")   
+    #print "Accuracy LogReg: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
+    #print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    
+    print "Done"
+    return y_pred
+
+def runSVM(X, y, parameters, baseline):
+    #http://scikit-learn.org/dev/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC
     
     print "Running SVM"
-    n_samples, n_features = X.shape
-    half = int(n_samples / 2)
+    nSamples, nFeatures = X.shape
     
-    from sklearn import svm
+    kFold = cross_validation.KFold(n=nSamples, n_folds=parameters["CV"], indices=True)
+    
     # Run classifier
-    clf = svm.SVC(kernel='linear', probability=True)
-    y_pred = clf.fit(X[:half], y[:half]).predict(X[half:])
+    clf = SVC(kernel=parameters["kernel"], cache_size=parameters["cacheSize"], C=parameters["C"])
+    lists = [clf.fit(X[train], y[train]).predict(X[test]) for train, test in kFold]
+    
+    y_pred = []
+    for l in lists:
+        y_pred += list(l)
 
-    scores = cross_validation.cross_val_score(clf, X, y, cv=nCV, n_jobs=-1,scoring="f1")   
-    print "Accuracy SVM: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    #scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) #,scoring="f1")   
+    #print "Accuracy SVM: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
+    #print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
     
     print "Done"
     return y_pred
 
-def runKNN(X, y, parameters, nCV, baseline):
+def runKNN(X, y, parameters, baseline):
     #http://scikit-learn.org/dev/modules/generated/sklearn.neighbors.KNeighborsClassifier.html
 
     print "Running KNN"
-    n_samples, n_features = X.shape
-    half = int(n_samples / 2)
+    nSamples, nFeatures = X.shape
 
-    from sklearn.neighbors import KNeighborsClassifier
-    clf = KNeighborsClassifier(n_neighbors=3)
-    y_pred = clf.fit(X[:half], y[:half]).predict(X[half:])
-
-    scores = cross_validation.cross_val_score(clf, X, y, cv=nCV, n_jobs=-1)   
-    print "Accuracy KNN: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    kFold = cross_validation.KFold(n=nSamples, n_folds=parameters["CV"], indices=True)
+    
+    # Run classifier
+    clf = KNeighborsClassifier(n_neighbors=parameters["K"])
+    lists = [clf.fit(X[train], y[train]).predict(X[test]) for train, test in kFold]
+    
+    y_pred = []
+    for l in lists:
+        y_pred += list(l)
+    
+    #scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"])   
+    #print "Accuracy KNN: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
+    #print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
     
     print "Done"
     return y_pred
 
-def runDecisionTree(X, y, parameters, nCV, baseline):
-    #http://scikit-learn.org/dev/modules/generated/sklearn.neighbors.KNeighborsClassifier.html
+def runDecisionTree(X, y, parameters, baseline):
 
     print "Running Decision Tree"
-    n_samples, n_features = X.shape
-    half = int(n_samples / 2)
+    nSamples, nFeatures = X.shape
 
-    from sklearn.tree import DecisionTreeClassifier
-    clf = DecisionTreeClassifier(random_state=0)
-    y_pred = clf.fit(X[:half], y[:half]).predict(X[half:])
+    kFold = cross_validation.KFold(n=nSamples, n_folds=parameters["CV"], indices=True)
 
-    scores = cross_validation.cross_val_score(clf, X, y, cv=nCV, n_jobs=-1)   
-    print "Accuracy DT: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    # Run classifier
+    clf = DecisionTreeClassifier(random_state=0) #, compute_importances=True)
+    lists = [clf.fit(X[train], y[train]).predict(X[test]) for train, test in kFold]
+    
+    y_pred = []
+    for l in lists:
+        y_pred += list(l)
+    
+    #scores = cross_validation.cross_val_score(clf, X, y, cv=parameter["CV"], n_jobs=parameters["nJobs"])   
+    #print "Accuracy DT: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
+    #print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
     
     print "Done"
     return y_pred
 
-def runExtraTreeClassifier(X, y, parameters, nCV, baseline):
+def runExtraTreeClassifier(X, y, parameters, baseline):
+    # http://scikit-learn.org/dev/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html
 
     print "Running Extremely Randomized Trees"
-    n_samples, n_features = X.shape
-    half = int(n_samples / 2)
-
-    from sklearn.ensemble import ExtraTreesClassifier
-    clf = ExtraTreesClassifier(random_state=0, compute_importances=True)
-    y_pred = clf.fit(X[:half], y[:half]).predict(X[half:])
-
-    scores = cross_validation.cross_val_score(clf, X, y, cv=nCV, n_jobs=-1)   
-    print "Accuracy eRT: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    nSamples, nFeatures = X.shape
+    
+    kFold = cross_validation.KFold(n=nSamples, n_folds=parameters["CV"], indices=True)
+    
+    # Run classifier
+    clf = ExtraTreesClassifier(random_state=0, compute_importances=True, n_jobs=parameters["nJobs"], n_estimators=parameters["n_estimators"])
+    lists = [clf.fit(X[train], y[train]).predict(X[test]) for train, test in kFold]
+    
+    y_pred = []
+    for l in lists:
+        y_pred += list(l)
+    
+    #scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"])   
+    #print "Accuracy eRT: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
+    #print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
    
     measureFeatureImportance(clf)
     print "Done"
     return y_pred
-
 
 def measureFeatureImportance(classifier):
     
