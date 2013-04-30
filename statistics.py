@@ -28,7 +28,6 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
     """
         Expected a list of list of DataSet (TripData or AolData) objects
     """
-    
     countingAcronymsList = []
     countingTimePerSessionList = []
     countingTokensList = []
@@ -52,6 +51,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
     tableModifiedSessionHeader = [["Dtst","Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]] 
     tableGeneralModifiedHeader = [["Dtst", "Exp", "Exp(%)", "Shr", "Shr(%)", "Ref", "Ref(%)", "Rep", "Rep(%)" ]]
     tableMeshDepthHeader = [["Dtst(%)", "Depth 1", "Depth 2", "Depth 3", "Depth 4", "Depth 5", "Depth 6", "Depth 7", "Depth 8", "Depth 9", "Depth 10","Depth 11", "Depth 12"]]
+    tableSemanticByUserHeader = [["Dtst", "Symptom", "Symptom (%)", "Cause", "Cause (%)", "Remedy", "Remedy (%)", "Where", "Where (%)", "noMedical", "noMedical (%)"]] 
 
     generalTableRow = []
     generalMeshRow = []
@@ -62,6 +62,7 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
     generalModifiedRow = []
     modifiedSessionRow = []
     meshDepthRow = []
+    semanticByUserRow = []
 
     for dataPair in dataList:
         data, dataName = dataPair[0], dataPair[1]
@@ -76,7 +77,10 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
         numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
             numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
             countingSemantics, countingPureSemanticTypes, vectorOfActionSequence,\
-            countingReAccess, idMaxQueriesInSession, outliersToRemove, vectorOfCicleSequence, countingFullSemanticTypes = calculateQueriesPerSession(data)
+            countingReAccess, idMaxQueriesInSession, outliersToRemove, vectorOfCicleSequence, countingFullSemanticTypes,\
+                userSemanticType = calculateQueriesPerSession(data)
+        
+        semanticTypesCountedByUser = calculateSemanticTypesPercentages(userSemanticType)
 
         if removeOutliers:
             newData = [member for member in data if member.userId not in outliersToRemove]
@@ -161,6 +165,8 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
         totalMeshDepth = sum(countingMeshDepth.values())
         totalMeshDepth = 1/100 if totalMeshDepth == 0 else totalMeshDepth
         meshDepthRow.append( [dataName, 100/totalMeshDepth * countingMeshDepth[1], 100/totalMeshDepth * countingMeshDepth[2], 100/totalMeshDepth * countingMeshDepth[3], 100/totalMeshDepth * countingMeshDepth[4], 100/totalMeshDepth * countingMeshDepth[5], 100/totalMeshDepth * countingMeshDepth[6], 100/totalMeshDepth * countingMeshDepth[7],100/totalMeshDepth * countingMeshDepth[8], 100/totalMeshDepth * countingMeshDepth[9], 100/totalMeshDepth * countingMeshDepth[10], 100/totalMeshDepth * countingMeshDepth[11], 100/totalMeshDepth * countingMeshDepth[12]  ])
+        
+        semanticByUserRow.append( [dataName, semanticTypesCountedByUser["symptom"], 100.0 * semanticTypesCountedByUser["symptom"]/numberOfUsers, semanticTypesCountedByUser["cause"], 100.0 * semanticTypesCountedByUser["cause"]/ numberOfUsers, semanticTypesCountedByUser["remedy"], 100.0 * semanticTypesCountedByUser["remedy"]/numberOfUsers, semanticTypesCountedByUser["where"], 100.0 * semanticTypesCountedByUser["where"]/numberOfUsers, semanticTypesCountedByUser["noMedical"], 100.0 * semanticTypesCountedByUser["noMedical"]/numberOfUsers ])
     
 
     # Plot graphics
@@ -200,7 +206,9 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
         tableCicleSequenceHeader.append(l)
     for l in meshDepthRow:
         tableMeshDepthHeader.append(l)
-    
+    for l in semanticByUserRow:
+        tableSemanticByUserHeader.append(l)
+
     latexWriter.addTable(tableGeneralHeader, caption="General Numbers", transpose=True)
     latexWriter.addTable(tableModifiedSessionHeader, caption="Modifications in a session", transpose=True)
     latexWriter.addTable(tableGeneralModifiedHeader, caption="General Modified Statistics (Divided by the \#Queries)", transpose=True)
@@ -210,7 +218,26 @@ def calculateMetrics(dataList, usingMesh=True, removeStopWords=False, printValue
     latexWriter.addTable(tableMeshDepthHeader, caption="Mesh Depth", transpose=True)
     latexWriter.addTable(tableSemanticFocusHeader, caption="Semantic Focus", transpose=True)
     latexWriter.addTable(tableCicleSequenceHeader, caption="Cicle Sequence", transpose=True)
+    latexWriter.addTable(tableSemanticByUserHeader, caption="Semantic counts by user", transpose=True)
 
+
+def calculateSemanticTypesPercentages(userSemanticType):
+    
+    symptom, cause, remedy, where, noMedical = 0,0,0,0,0
+
+    for (user, semanticSet) in userSemanticType.iteritems():
+        if "symptom" in semanticSet:
+            symptom += 1
+        if "cause" in semanticSet:
+            cause += 1
+        if "remedy" in semanticSet:
+            remedy += 1
+        if "where" in semanticSet:
+            where += 1
+        if "noMedical" in semanticSet:
+            noMedical += 1
+
+    return {"symptom":symptom, "cause":cause, "remedy":remedy, "where":where, "noMedical":noMedical}
 
 def calculateMetricsForUsers(data):
     pass
@@ -444,7 +471,7 @@ def calculateQueriesPerSession(data):
     modifiedQueries = numberOfExpansions + numberOfShrinkage + numberOfReformulations + numberOfRepetitions 
    
     # calculate all semantic stuff
-    countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, vectorOfCicleSequence = calculateSemanticTypes(sessions)
+    countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, vectorOfCicleSequence, userSemanticType = calculateSemanticTypes(sessions)
     smt = [ s for member in data if member.semanticTypes is not None for s in member.semanticTypes if member.semanticTypes]
     countingFullSemanticTypes = Counter(smt)
     #print countingFullSemanticTypes
@@ -462,7 +489,7 @@ def calculateQueriesPerSession(data):
     return numberOfSessions, countingQueriesPerSession, npNumQueriesInSession,\
             countingTimePerSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions,\
             vectorOfModifiedSessions, countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, countingReAccess, idMaxQueriesInSession,\
-            outliersToRemove, vectorOfCicleSequence, countingFullSemanticTypes
+            outliersToRemove, vectorOfCicleSequence, countingFullSemanticTypes, userSemanticType
 
 
 def calculateQueryRanking(data):
@@ -602,8 +629,11 @@ def calculateSemanticTypes(sessions):
     countingPureSemanticTypes = defaultdict(int)
     vectorOfActionSequence = [0] * 8 # [ 2^{remedy,cause,symptom} in this order ] 
     vectorOfCicleSequence = [0] * 6 # {scs, srs, csc, crc, rsr, rcr}
+    userSemantic = {}
+    
+    for (user, session) in sessions.iteritems():
+        semanticSetByUser = set()
 
-    for session in sessions.values():
         for subSession in session.values():
             #print subSession
             
@@ -618,16 +648,26 @@ def calculateSemanticTypes(sessions):
                         if st in symptomTypes():
                             actionSequence.append("symptom")
                             countingSemantics["symptom"] += 1
+                            semanticSetByUser.add("symptom")
+                        
                         elif st in causeTypes():
                             actionSequence.append("cause")
                             countingSemantics["cause"] += 1
-                        elif st in causeTypes():
+                            semanticSetByUser.add("cause")
+                        
+                        elif st in remedyTypes():
                             actionSequence.append("remedy")
                             countingSemantics["remedy"] += 1
+                            semanticSetByUser.add("remedy")
+                        
                         elif st in whereTypes():
                             actionSequence.append("where")
                             countingSemantics["where"] += 1
+                            semanticSetByUser.add("where")
 
+                        elif st in noMedicalTypes():
+                            semanticSetByUser.add("noMedical")
+            
             #analyse the sequence of symptom followed by causes, etc.
             index = analyzeSequencyOfActions(actionSequence)
             cicleVector = cicleAnalyze(actionSequence)
@@ -636,11 +676,14 @@ def calculateSemanticTypes(sessions):
 
             #print "INDEX = ", index
             vectorOfActionSequence[index] += 1
+        
+        userSemantic[user] = semanticSetByUser
 
     #print countingSemantics
     #print countingPureSemanticTypes
     #print "Vector of Action Sequence ", vectorOfActionSequence
-    return countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, vectorOfCicleSequence
+    #print userSemantic
+    return countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, vectorOfCicleSequence, userSemantic
 
 def calculateTerms(data, coOccurrenceThreshold=0.6):
     """

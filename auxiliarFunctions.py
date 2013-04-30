@@ -108,32 +108,41 @@ def preProcessData(data, removeStopWords):
 
     return data
 
+#TODO: checkar isso aqui
 """
     Some important semantic types (list: http://metamap.nlm.nih.gov/SemanticTypeMappings_2011AA.txt)
-        -> Symptom   -> sosy (Sign or Symptom)
+    http://www.nlm.nih.gov/research/umls/META3_current_semantic_types.html  ---> semantic trees
+
+        -> Symptom              -> sosy (Sign or Symptom), lbtr (Laboratory or Test Result)
         
-        -> Cause     -> bact (Bacterium), virs (Virus), dsyn (Disease or Syndrome), orgm (? Organism ?)
+        -> Source                -> bact (Bacterium), virs (Virus), Fungs (fngs), Archaeon (arch)
         
-        -> Remedy    -> drdd (Drug Delivery Device), clnd (Clinical Drug), amas (Amino Acid Sequence ?), antb (Antibiotic), aapp(Amino Acid, Peptide, or Protein?), phsu (Pharmacologic Substance), imft (Immunologic Factor - vaccine, e.g.), vita (Vitamin)
+        -> (Cause) Disease/Dysfunction  -> dsyn (Disease or Syndrome), mobd (Mental or Behavioral Dysfunction), neop (Neoplastic Process), patf (Pathologic Function)
+        -> Cure                 -> clnd (Clinical Drug), amas (Amino Acid Sequence ?), antb (Antibiotic), aapp(Amino Acid, Peptide, or Protein?), phsu (Pharmacologic Substance), imft (Immunologic Factor - vaccine, e.g.), vita (Vitamin)
+
+        -> Prevention?
 
         -> where     -> bpoc (Body Part, Organ, or Organ Component), bsoj (Body Space or Junction), tisu (tissue), bdsy (Body System), blor (Body Location or Region)
 
-        ->>> Important and missing classification: inpo (Injury or Poisoning),  diap (Diagnostic Procedure), irda (Indicator, Reagent, or Diagnostic Aid), fndg (Finding), ftcn (Functional Concept), gngm (Gene or Genome), hcro (Health Care Related Organization), hlca (Health Care Activity), horm|Hormone, inch|Inorganic Chemical, lbpr|Laboratory Procedure, mobd|Mental or Behavioral Dysfunction
+        ->>> Important and missing classification: inpo (Injury or Poisoning),  diap (Diagnostic Procedure), irda (Indicator, Reagent, or Diagnostic Aid), fndg (Finding), ftcn (Functional Concept), gngm (Gene or Genome), hcro (Health Care Related Organization), hlca (Health Care Activity), horm|Hormone, inch|Inorganic Chemical, lbpr|Laboratory Procedure
 """
 
 def symptomTypes():
-    return ["sosy"]
+    return ["sosy","lbtr"] 
+
+def sourceTypes():
+    return ["bact", "virs", "fngs", "arch"] 
 
 def causeTypes():
-    return ["bact", "virs", "dsyn", "orgm"]
+    return ["dsyn", "mobd", "neop","patf"]
 
 def remedyTypes():
-    return ["drdd", "clnd", "amas", "antb","aapp","phsu","imft","vita"]
+    return ["clnd", "amas", "antb","aapp","phsu","imft","vita"]
 
 def whereTypes():
     return ["bpoc", "bsoj","tisu","bdsy","blor"]
 
 def noMedicalTypes():
-    return ["mnob","geoa","inpr", "qlco", "qnco", "ftcn", "idcn", "popg", "spco", "cnce","orgt","food","fish"]
+    return ["mnob","geoa","rnlw", "inpr", "idcn", "spco", "cnce", "orgt"]
     # mnob|Manufactured Object;  geoa|Geographic Area; inpr|Intellectual Product; qlco|Qualitative Concept; qnco|Quantitative Concept; ftcn|Functional Concept; idcn|Idea or Concept ; popg|Population Group; spco|Spatial Concept; cnce|Conceptual Entity; orgt|Organization
 
