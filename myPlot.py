@@ -12,7 +12,6 @@ class plotter:
     
     def __del__(self):
         self.pp.close()
-        print "Good bye!"
 
     def __finalPlot(self, x, y, label_, format_="o", saveName=None, showIt=True, closeIt=True, loglogFormat=False):
         
