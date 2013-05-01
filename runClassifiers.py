@@ -20,12 +20,14 @@ regularUserDataSet = "regularUser.pk"
 healthUserDataSet = "healthUser.pk"
 notHealthUserDataSet = "notHealthUser.pk"
 
-def transformeInDict(userDict, n=-1):
+def transformeInDict(userDict, n=-1, proportional=-1):
     listOfDicts = list()
     listOfLabels = list()
-    
+   
     p = range(len(userDict))
     random.shuffle(p)
+    if proportional:
+        n = int( int(proportional)/100.0 * len(userDict) )
     
     for v, (key, user) in zip(range(len(p)), userDict.iteritems()):
         if n >= 0 and p[v] >= n:
@@ -38,9 +40,17 @@ if __name__ == "__main__":
 
     preProcessing = sys.argv[1]
     forceBalance = sys.argv[2]
+    proportional = sys.argv[3]
+
     print preProcessing
-    if forceBalance:
+    if forceBalance and int(forceBalance) > 0:
         print "Forcing only %s examples for each dataset" % (forceBalance)
+
+    if proportional and int(proportional) > 0:
+        print "Using proportional representation. %s percente of the base." % (proportional)
+    
+    if forceBalance and int(forceBalance) > 0 and proportional and int(proportional):
+        print "ERROR! YOU SHOULD CHOOSE OR FORCEBALANCE OR PROPORTIONAL DATA!"
 
     ####
     ### Load Datasets
@@ -61,8 +71,8 @@ if __name__ == "__main__":
         n = int(forceBalance)
 
     print "Transforming datasets into Dictionaries..."
-    ld1, ll1 = transformeInDict(regularUserFV,n)
-    ld2, ll2 = transformeInDict(medicalUserFV,n)
+    ld1, ll1 = transformeInDict(regularUserFV, n, proportional)
+    ld2, ll2 = transformeInDict(medicalUserFV, n, proportional)
     print "Transformed"
     
     listOfDicts = ld1 + ld2
@@ -131,7 +141,7 @@ if __name__ == "__main__":
     ##
     #
     print 20 * '=', " SVM Results ", 20 * '='
-    makeReport(X, y, y_svm)
+    makeReport(X, y, y_svm, baseline)
     
     print 20 * '=', " NB  Results ", 20 * '='
     makeReport(X, y, y_nb,baseline)
