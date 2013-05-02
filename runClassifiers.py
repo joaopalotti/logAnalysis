@@ -129,35 +129,32 @@ if __name__ == "__main__":
     #TODO: run a logistic regression to evaluate the features and decide which ones are the best ones
 
     y_ert = runExtraTreeClassifier(X, y, parametersERT, baseline)
-    y_nb  = runNB(X, y, parametersNB, baseline)
-    y_knn = runKNN(X, y, parametersKnn, baseline)
-    y_dt = runDecisionTree(X, y, parametersDT, baseline)
-    y_svm = runSVM(X, y, parametersSVM, baseline)
-    y_lg =  runLogRegression(X, y, parametersLogReg, baseline)
-    print "Done"
-
-    ####
-    ### Check Results
-    ##
-    #
-    print 20 * '=', " SVM Results ", 20 * '='
-    makeReport(X, y, y_svm, baseline)
-    
-    print 20 * '=', " NB  Results ", 20 * '='
-    makeReport(X, y, y_nb,baseline)
-    
-    print 20 * '=', " KNN Results ", 20 * '='
-    makeReport(X, y, y_knn,baseline)
-    
-    print 20 * '=', " DT  Results ", 20 * '='
-    makeReport(X, y, y_dt,baseline)
-
     print 20 * '=', " ERF  Results ", 20 * '='
     makeReport(X, y, y_ert,baseline)
     
+    
+    y_nb  = runNB(X, y, parametersNB, baseline)
+    print 20 * '=', " NB  Results ", 20 * '='
+    makeReport(X, y, y_nb,baseline)
+    
+    y_knn = runKNN(X, y, parametersKnn, baseline)
+    print 20 * '=', " KNN Results ", 20 * '='
+    makeReport(X, y, y_knn,baseline)
+    
+    y_dt = runDecisionTree(X, y, parametersDT, baseline)
+    print 20 * '=', " DT  Results ", 20 * '='
+    makeReport(X, y, y_dt,baseline)
+    
+    y_lg =  runLogRegression(X, y, parametersLogReg, baseline)
     print 20 * '=', " LogReg  Results ", 20 * '='
     makeReport(X, y, y_lg,baseline)
     
+    y_svm = runSVM(X, y, parametersSVM, baseline)
+    print 20 * '=', " SVM Results ", 20 * '='
+    makeReport(X, y, y_svm, baseline)
+    
+    print "Done"
+
     #import pylab as pl
     #pl.clf()
     #pl.plot(recall, precision, label='Precision-Recall curve')
