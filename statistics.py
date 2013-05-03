@@ -877,14 +877,14 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simp
     writer.write('{0:45} ==> {1:.3f}\n'.format('Percentage of Acronyms in queries', (percentageAcronymInQueries)))
     
     writer.write("-" * 45 + "\n")
-    writer.write("10 Most Common Terms:\n")
+    writer.write("15 Most Common Terms:\n")
     
     writer.write("-" * 45 + "\n")
-    for pair in countingTokens.most_common(10):
+    for pair in countingTokens.most_common(15):
         writer.write('{0:45} ==> {1:30}\n'.format(pair[0], str(pair[1])))
     writer.write("-" * 45 + "\n")
      
-    writer.write("10 Most Common Terms: (not stop words)\n")
+    writer.write("15 Most Common Terms: (not stop words)\n")
     for (word, freq) in tenMostCommonTermsNoStopWord:
         writer.write('{0:45} ==> {1:30}\n'.format(word, freq))
     writer.write("-" * 45 + "\n")

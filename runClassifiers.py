@@ -14,12 +14,6 @@ parametersERT = {"nJobs":nJobs, "CV":nCV, "n_estimators":10}
 parametersLogReg = {"nJobs":nJobs, "CV":nCV}
 parametersNB = {"nJobs":nJobs, "CV":nCV}
 
-medicalUserDataSet = "medicalUser.pk"
-regularUserDataSet = "regularUser.pk"
-
-healthUserDataSet = "healthUser.pk"
-notHealthUserDataSet = "notHealthUser.pk"
-
 def transformeInDict(userDict, n=-1, proportional=-1):
     listOfDicts = list()
     listOfLabels = list()
@@ -39,17 +33,25 @@ def transformeInDict(userDict, n=-1, proportional=-1):
 if __name__ == "__main__":
 
     preProcessing = sys.argv[1]
-    forceBalance = sys.argv[2]
-    proportional = sys.argv[3]
+    forceBalance = int(sys.argv[2])
+    proportional = int(sys.argv[3])
+    minNumberOfQueries = int(sys.argv[4])
+    
+    medicalUserDataSet = "medicalUser-%d.pk" % (minNumberOfQueries)
+    regularUserDataSet = "regularUser-%d.pk" % (minNumberOfQueries)
+    
+    healthUserDataSet = "healthUser-%d.pk"   % (minNumberOfQueries)
+    notHealthUserDataSet = "notHealthUser-%d.pk" % (minNumberOfQueries)
+
 
     print preProcessing
-    if forceBalance and int(forceBalance) > 0:
+    if forceBalance > 0:
         print "Forcing only %s examples for each dataset" % (forceBalance)
 
-    if proportional and int(proportional) > 0:
+    if proportional > 0:
         print "Using proportional representation. %s percente of the base." % (proportional)
     
-    if forceBalance and int(forceBalance) > 0 and proportional and int(proportional):
+    if forceBalance > 0 and proportional > 0:
         print "ERROR! YOU SHOULD CHOOSE OR FORCEBALANCE OR PROPORTIONAL DATA!"
 
     ####
