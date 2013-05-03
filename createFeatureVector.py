@@ -9,7 +9,7 @@ from auxiliarFunctions import NLWords, preProcessData, createAcronymSet, symptom
 
 removeStopWords=False
 acronymsSet = createAcronymSet()
-minimalNumberOfQueries = 6
+minimalNumberOfQueries = "Invalid number...please enter this parameter!"
 maximalNumberOfQueries = 100
 
 class userClass:
@@ -237,6 +237,7 @@ def createDictOfUsers(data, label):
     return userDict
 
 def createFV(filename, label):
+    print "min = ", minimalNumberOfQueries, " max = ", maximalNumberOfQueries
     data = readMyFormat(filename) 
     data = preProcessData(data, removeStopWords)    # Sort the data by user and date
     data = keepUsersInsideLimiteOfQueires(data, minimalNumberOfQueries, maximalNumberOfQueries)
@@ -249,7 +250,11 @@ def createFV(filename, label):
 
 def keepUsersInsideLimiteOfQueires(data, Xmin, Xmax):
     userIds = sorted( [member.userId for member in data ] ) 
-    usersToRemove = [ k for k, g in groupby(userIds) if len(list(g)) < Xmin or len(list(g)) >= Xmax]
+    usersToRemove = set()
+    for k, g in groupby(userIds):
+        x = len(list(g)) 
+        if x > Xmax or x < Xmin:
+            usersToRemove.add(k)
     newData = [member for member in data if member.userId not in usersToRemove]
     return newData
 
@@ -267,28 +272,38 @@ def mergeFVs(*fvs):
 
 def healthNotHealthUsers():
     
+    honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.dataset.gz", 0)
+    aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.dataset.gz", 0)
+    goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.dataset.gz", 0)
+    tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.dataset.gz", 0)
+
+    notHealth = createFV("dataSetsOfficials/aolNotHealth/aolNotHealthPartial.v4.dataset.gz", 1)
+
     # 10% of the dataset only
-    honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.10.gz", 0)
-    aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.10.gz", 0)
-    goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.10.gz", 0)
-    tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.10.gz", 0)
+    #honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.10.gz", 0)
+    #aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.10.gz", 0)
+    #goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.10.gz", 0)
+    #tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.10.gz", 0)
     
     # 1% of the dataset only
-    notHealth = createFV("dataSetsOfficials/aolNotHealth/aolNotHealthPartial.v4.1.gz", 1)
+    #notHealth = createFV("dataSetsOfficials/aolNotHealth/aolNotHealthPartial.v4.1.gz", 1)
 
     ### Merge Feature sets and transforme them into inputs
     healthUserFV = mergeFVs(honFV, aolHealthFV, goldMinerFV, tripFV)
     notHealthUserFV = notHealth
-    
+ 
+    healthUserOutputFile = "healthUser-%d.pk" % (minimalNumberOfQueries)
+    notHealthUserOutputFile = "notHealthUser-%d.pk" % (minimalNumberOfQueries)
+   
     ####### Save and Load the Features
     import pickle
-    with open('healthUser.pk', 'wb') as output:
+    with open(healthUserOutputFile, 'wb') as output:
         pickle.dump(healthUserFV, output, pickle.HIGHEST_PROTOCOL)
-        print "CREATED FILE: healthUser.pk"
+        print "CREATED FILE: %s" % (healthUserOutputFile)
     
-    with open('notHealthUser.pk', 'wb') as output:
+    with open(notHealthUserOutputFile, 'wb') as output:
         pickle.dump(notHealthUserFV, output, pickle.HIGHEST_PROTOCOL)
-        print "CREATED FILE: notHealthUser.pk"
+        print "CREATED FILE: %s" % (notHealthUserOutputFile)
 
 def regularMedicalUsers():
     ####
@@ -314,16 +329,21 @@ def regularMedicalUsers():
     regularUserFV = mergeFVs(honFV, aolHealthFV)
     medicalUserFV = mergeFVs(tripFV, goldMinerFV)
 
+    regularUserOutputFile = "regularUser-%d.pk" % (minimalNumberOfQueries)
+    medicalUserOutputFile = "medicalUser-%d.pk" % (minimalNumberOfQueries)
+
     ####### Save and Load the Features
     import pickle
-    with open('regularUser.pk', 'wb') as output:
+    with open(regularUserOutputFile, 'wb') as output:
         pickle.dump(regularUserFV, output, pickle.HIGHEST_PROTOCOL)
-        print "CREATED FILE: regularUser.pk"
+        print "CREATED FILE: %s" % (regularUserOutputFile)
     
-    with open('medicalUser.pk', 'wb') as output:
+    with open(medicalUserOutputFile, 'wb') as output:
         pickle.dump(medicalUserFV, output, pickle.HIGHEST_PROTOCOL)
-        print "CREATED FILE: medicalUser.pk"
+        print "CREATED FILE: %s" % (medicalUserOutputFile)
     
 if __name__ == "__main__":
-    #regularMedicalUsers()
-    healthNotHealthUsers()
+
+    minimalNumberOfQueries = int(sys.argv[1])
+    regularMedicalUsers()
+    #healthNotHealthUsers()
