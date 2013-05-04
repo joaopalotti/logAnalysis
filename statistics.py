@@ -52,6 +52,8 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True):
     tableDiseaseByUserHeader = [ ["Dtst(%)","C01(Bacterial)","C02(Viral)","C03(Parasitic)","C04(Neoplasms)","C05(Musculoskeletal)","C06(Digestive)","C07(Stomatognathic)","C08(Respiratory)","C09(Otorhinolaryngologic)","C10(Nervous)","C11(Eye)","C12(Male Urogenital)","C13(Female Urogenital)","C14(Cardiovascular)","C15(Hemic and Lymphatic)","C16(Congenital)","C17(Skin)","C18(Nutritional)","C19(Endocrine)","C20(Immune)","C21(Environmental)","C22(Animal)","C23(Pathological Conditions)","C24(Occupational)","C25(Substance-Related)","C26(Wounds and Injuries)"] ]
     tableMeshByUserWeightedHeader = [ ["Dtst","A (Anatomy)","B (Organisms)","C (Diseases)","D (Chemicals/Drugs)","E (Analytical, Diagnostic)","F(Psychiatry/Psychology)","G(Phenomena/Processes)","H(Disciplines/Occupations)","I(Anthropology/Education)","J(Technology/Industry)","K(Humanities)","L(Information Science)","M(Named Groups)","N(Health Care)","V(Publication Chars)","Z(Geographicals)"] ]
     tableDiseaseByUserWeightedHeader = [ ["Dtst(%)","C01(Bacterial)","C02(Viral)","C03(Parasitic)","C04(Neoplasms)","C05(Musculoskeletal)","C06(Digestive)","C07(Stomatognathic)","C08(Respiratory)","C09(Otorhinolaryngologic)","C10(Nervous)","C11(Eye)","C12(Male Urogenital)","C13(Female Urogenital)","C14(Cardiovascular)","C15(Hemic and Lymphatic)","C16(Congenital)","C17(Skin)","C18(Nutritional)","C19(Endocrine)","C20(Immune)","C21(Environmental)","C22(Animal)","C23(Pathological Conditions)","C24(Occupational)","C25(Substance-Related)","C26(Wounds and Injuries)"] ]
+    tableBooleanUseHeader = [["Dtst", "# of ands", "% of ands", "# of ors", "% of ors",  "# of nots", "% of nots", "at least one", "% of booleans" ]]
+
     generalTableRow = []
     generalMeshRow = []
     meshTableRow = []
@@ -67,6 +69,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True):
     diseaseByUserRow = []
     meshByUserWeightedRow = []
     diseaseByUserWeightedRow = []
+    booleanUseRow = []
 
     for dataPair in dataList:
         data, dataName = dataPair[0], dataPair[1]
@@ -93,7 +96,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True):
         hasAcronym, countingAcronyms, usersUsingAcronyms = calculateAcronyms(data)
 
         numberOfUsers = calculateUsers(data)
-        npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord = calculateTerms(data)
+        npTerms, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord = calculateTerms(data)
                
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
         countingNL = calculateNLuse(data)
@@ -174,7 +177,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True):
         
         semanticByUserRow.append( [dataName, semanticTypesCountedByUser["symptom"], 100.0 * semanticTypesCountedByUser["symptom"]/numberOfUsers, semanticTypesCountedByUser["cause"], 100.0 * semanticTypesCountedByUser["cause"]/ numberOfUsers, semanticTypesCountedByUser["remedy"], 100.0 * semanticTypesCountedByUser["remedy"]/numberOfUsers, semanticTypesCountedByUser["where"], 100.0 * semanticTypesCountedByUser["where"]/numberOfUsers, semanticTypesCountedByUser["noMedical"], 100.0 * semanticTypesCountedByUser["noMedical"]/numberOfUsers ])
         semanticByUserWeightedRow.append( [dataName, semanticTypesCountedByUserWeighted["symptom"], 100.0 * semanticTypesCountedByUserWeighted["symptom"]/numberOfUsers, semanticTypesCountedByUserWeighted["cause"], 100.0 * semanticTypesCountedByUserWeighted["cause"]/ numberOfUsers, semanticTypesCountedByUserWeighted["remedy"], 100.0 * semanticTypesCountedByUserWeighted["remedy"]/numberOfUsers, semanticTypesCountedByUserWeighted["where"], 100.0 * semanticTypesCountedByUserWeighted["where"]/numberOfUsers, semanticTypesCountedByUserWeighted["noMedical"], 100.0 * semanticTypesCountedByUserWeighted["noMedical"]/numberOfUsers ])
-    
+        booleanUseRow.append( [dataName, booleanTerms['and'], 100.0 * booleanTerms['and']/numberOfQueries, booleanTerms['or'], 100.0 * booleanTerms['or']/numberOfQueries,booleanTerms['not'], 100.0 * booleanTerms['not'] / numberOfQueries, booleanTerms['any'], 100.0 * booleanTerms['any'] / numberOfQueries ] )
 
     # Plot graphics
     myPlotter = plotter() 
@@ -223,6 +226,8 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True):
         tableMeshByUserWeightedHeader.append(l)
     for l in diseaseByUserWeightedRow:
         tableDiseaseByUserWeightedHeader.append(l)
+    for l in booleanUseRow:
+        tableBooleanUseHeader.append(l)
 
     latexWriter.addTable(tableGeneralHeader, caption="General Numbers", transpose=True)
     latexWriter.addTable(tableModifiedSessionHeader, caption="Modifications in a session", transpose=True)
@@ -239,6 +244,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True):
     latexWriter.addTable(tableDiseaseByUserHeader, caption="Disease By User (\%)", transpose=True)
     latexWriter.addTable(tableMeshByUserWeightedHeader, caption="Mesh By User (\%) (WEIGHTED)", transpose=True)
     latexWriter.addTable(tableDiseaseByUserWeightedHeader, caption="Disease By User (\%) (WEIGHTED)", transpose=True)
+    latexWriter.addTable(tableBooleanUseHeader, caption="Boolean usage", transpose=True)
 
     print sum(countingMeshByUser.values()), sum(countingMeshWeightedByUser.values())
 
@@ -758,6 +764,21 @@ def calculateSemanticTypes(sessions):
     #print userSemantic
     return countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, vectorOfCicleSequence, userSemantic
 
+def countBooleanTerms(listOfQueries):
+
+    booleanTerms = {'or':0, 'and':0, 'not':0, 'any':0}
+    operators = ['or', 'and', 'not']
+    
+    for query in listOfQueries:
+        anybool = False
+        for op in operators:
+            if op in query:
+                booleanTerms[op] += 1
+                anybool = True
+        if anybool:
+            booleanTerms['any'] += 1
+    return booleanTerms            
+        
 def calculateTerms(data, coOccurrenceThreshold=0.6):
     """
         Calculate Max, Min, Mean, Median of terms along all the queries
@@ -780,6 +801,7 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
 
     #print queryInNumbers
     #print greatestQuery, len(greatestQuery)
+    booleanTerms = countBooleanTerms(listOfQueries)
 
     # Transform the query into a list of simple tokens and count them
     tokens = [ t.lower() for sublist in listOfQueries for t in sublist]
@@ -827,7 +849,7 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
     # Calculate basic metrics
     npTerms = generateStatsVector(queryInNumbers)
     
-    return npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord
+    return npTerms, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord
 
 
 def calculateQueriesPerUser(data):

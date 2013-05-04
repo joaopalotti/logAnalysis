@@ -37,7 +37,7 @@ if __name__ == "__main__":
     #calculateMetrics([ [aolHealth, "aolHealth"], [hon, "hon"], [trip, "trip"], [goldMiner, "goldminer"], [aolNotHealth, "aolNotHealth" ] ]) 
     
     
-    hon = readMyFormat("dataSetsOfficials/hon/olds/hon300")
+    hon = readMyFormat("dataSetsOfficials/hon/olds/hon3")
     calculateMetrics([ [hon, "hon"] ] ) 
     
     #hon = readMyFormat(PATH_TO_DATASETS + "honEnglishResult.v3.dataset.gz")
