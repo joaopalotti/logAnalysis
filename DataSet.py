@@ -57,7 +57,10 @@ class DataSet(object):
     def printMe(self, out=sys.stdout):
         writer = csv.writer(out, delimiter=',', quoting=csv.QUOTE_ALL, quotechar ='"', escapechar='\\', doublequote=False)
         # Should add here any important information and modify the corresponding readCSV
-        writer.writerow( [str(self.datetime), self.userId, self.keywords, self.previouskeywords, self.mesh, self.semanticTypes])
+        mesh = ';'.join(self.mesh) if self.mesh else ''
+        semanticTypes = ';'.join(self.semanticTypes) if self.semanticTypes else ''
+
+        writer.writerow( [str(self.datetime), self.userId, self.keywords, self.previouskeywords, mesh, semanticTypes])
 
     def normalPrint(self):
         #print "\t".join([str(self.datetime), str(self.userId), self.keywords, self.previouskeywords, self.mesh, self.semanticTypes]) 
