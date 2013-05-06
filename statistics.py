@@ -81,18 +81,22 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True):
         It is important to run the session analyse first because it is going to eliminate users considered as robots (more than X queries in one unique session)
         X -> numberOfQueriesInASessionThreshold, but you may want to check it later
         '''
+        
+        if removeOutliers:
+            outliersToRemove = removeOutliers( createSessions(data) )
+            newData = [member for member in data if member.userId not in outliersToRemove]
+            data = newData
+
+        
         numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
             numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
             countingSemantics, countingPureSemanticTypes, vectorOfActionSequence,\
-            countingReAccess, idMaxQueriesInSession, outliersToRemove, vectorOfCicleSequence, countingFullSemanticTypes,\
+            countingReAccess, idMaxQueriesInSession, vectorOfCicleSequence, countingFullSemanticTypes,\
                 userSemanticType = calculateQueriesPerSession(data)
         
         semanticTypesCountedByUser, semanticTypesCountedByUserWeighted, setOfUsersWithSemantic = calculateSemanticTypesPercentages(userSemanticType)
 
-        if removeOutliers:
-            newData = [member for member in data if member.userId not in outliersToRemove]
-            data = newData
-
+       
         hasAcronym, countingAcronyms, usersUsingAcronyms = calculateAcronyms(data)
 
         numberOfUsers = calculateUsers(data)
@@ -379,7 +383,7 @@ def calculateMeshMetricsByUser(userMesh):
     return countingMeshByUser, countingDiseaseByUser, usersUsingMesh, meanMeshDepthByUser, countingMeshWeightedByUser, countingDiseaseWeightedByUser
 
 def calculateUsers(data):
-    return len(set( (member.userId for member in data) ))
+    return len(set((member.userId for member in data)))
 
 def calculateDates(data):
 
@@ -486,10 +490,7 @@ def removeOutliers(sessions):
     return usersToRemove
     
 
-def calculateQueriesPerSession(data):
-    '''
-        I am considering all sessions here. An alternative option would be to consider only the sessions with more that X queries. (e.g. X > 3)
-    '''
+def createSessions(data):
     sessions = defaultdict(dict)
 
     for member in data:
@@ -514,8 +515,13 @@ def calculateQueriesPerSession(data):
 
     #for session, date in sessions.iteritems():
     #    print session, date
+    return sessions
 
-    outliersToRemove = removeOutliers(sessions)
+def calculateQueriesPerSession(data):
+    '''
+        I am considering all sessions here. An alternative option would be to consider only the sessions with more that X queries. (e.g. X > 3)
+    '''
+    sessions = createSessions(data)
 
     numberOfSessions = sum( len(s) for s in sessions.values() )
     queriesPerSession = [ len(q) for session in sessions.values() for q in session.values() ]
@@ -568,7 +574,7 @@ def calculateQueriesPerSession(data):
     return numberOfSessions, countingQueriesPerSession, npNumQueriesInSession,\
             countingTimePerSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions,\
             vectorOfModifiedSessions, countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, countingReAccess, idMaxQueriesInSession,\
-            outliersToRemove, vectorOfCicleSequence, countingFullSemanticTypes, userSemanticType
+            vectorOfCicleSequence, countingFullSemanticTypes, userSemanticType
 
 
 def calculateQueryRanking(data):
