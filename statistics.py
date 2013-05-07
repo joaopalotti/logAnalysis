@@ -963,10 +963,18 @@ def printMetricsForQueries(writer, greatestQuery, countingQueries, countingQueri
     writer.write('{0:45} ==> {1:.3f}\n'.format("Mean number of Queries per day", meanQueriesPerDay))
     
     writer.write("-" * 45 + "\n")
-    writer.write("10 Most Common Queries:\n")
+    writer.write("15 Most Common Queries:\n")
     writer.write("-" * 45 + "\n")
-    for pair in countingQueries.most_common(10):
-        writer.write('{0:45} ==> {1:30}\n'.format(pair[0], str(pair[1])))
+    for pair in countingQueries.most_common(15):
+        writer.write('{0:45} ==> {1:d}\n'.format(pair[0], pair[1]))
+    
+    writer.write("-" * 45 + "\n")   
+    writer.write("Queries by size:\n")
+    writer.write("-" * 45 + "\n")
+    querySizes = Counter( ( len(q) for q in countingQueries.elements()) )
+    writer.write('Size ==> Qt ==> %\n')
+    for q,c in querySizes.iteritems():
+        writer.write('{0:d} ==> {1:d} ==> {2:.3f}\n'.format(q,c,100.0*c/allQueries))
     writer.write("-" * 45 + "\n")   
     writer.write("-" * 80 + "\n")
     

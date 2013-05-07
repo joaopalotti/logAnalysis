@@ -7,6 +7,26 @@ import matplotlib.pyplot as plt
 import pylab as P
 import re
 
+def mySort(a, b):
+    if "aolNotHealth" in a:
+        return 1
+    if "aolHealth" in a: 
+        return -1
+    if "hon" in a and ("trip" in b or "goldminer" in b or "aolNotHealth" in b):
+        return -1
+    elif "hon" in a:
+        return 1
+    if "trip" in a and ("goldminer" in b or "aolNotHealth" in b):
+        return -1
+    elif "trip" in a:
+        return 1
+    if "goldminer" in a and "aolNotHealth" in b:
+        return -1
+    elif "goldminer" in a:
+        return 1
+    return 0
+    
+
 def normalize(values, total):
     vs = []
     print "TOTAL = ", total
@@ -27,6 +47,9 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
     gettingAllData = True if N is None else False
     allYs = {}
     
+    #print "FILES ---> " , files
+    #print "SORTED(FILES) ---> " , sorted(files, cmp=mySort)
+
     for file in files:
         
         if ignoreString and ignoreString in file:
@@ -74,7 +97,13 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
     xs = np.arange(1, N+1)
 
     cs = iter(colors)
-    for name, data in allYs.iteritems():
+
+    keyorder = ['aolHealth', 'hon', 'trip', 'goldminer', 'aolNotHealth']
+    #allYs = sorted(allYs.items(), cmp=mySort)
+    allYs = sorted(allYs.items(), key=lambda i:keyorder.index(i[0]))
+    print allYs
+
+    for name, data in allYs:
         c = cs.next()
         
         # Used only for the khresmoi rank of queries plot
@@ -89,13 +118,13 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
         #
 
         rects[name] = ax.bar(xs + sumWidth, data, width, color=c, label=name)
-        ax.legend( [rects[name]] , [name], loc=1 )
+        ax.legend( [rects[name]] , [name], loc=-1 )
         
         print "Using color ", c, " for data ", name
         sumWidth += width
 
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[::-1], labels[::-1])
+    ax.legend(handles[::1], labels[::1])
 
     ax.set_ylabel(Ylabel)
     ax.set_title(Xlabel)

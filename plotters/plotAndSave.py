@@ -12,7 +12,7 @@ barwidth=0.18
 plotGraph(barwidth, saveName="qps.pdf", pp=pp, globString="queriesPerSession*.data", rebaseString="queriesPerSession(?P<base>\w*)", Ylabel="Percentage of Sessions", Xlabel="Session Length (queries)", mapType=int, N=10) 
 
 #plotQuerySize("qs.pdf", pp)
-plotGraph(barwidth, saveName="qs.pdf", pp=pp, ignoreString="Relative", globString="queriesSize*.data", rebaseString="queriesSize(?P<base>\w*)", Ylabel="Percentage of each size", Xlabel="Size in number of words in a query", mapType=float, N=10) 
+plotGraph(barwidth, saveName="qs.pdf", pp=pp, ignoreString="Relative", globString="queriesSize*.data", rebaseString="queriesSize(?P<base>\w*)", Ylabel="Percentage per size ", Xlabel="Number of terms per query", mapType=float, N=5) 
 
 #plotMesh
 plotGraph(barwidth, saveName="md.pdf", pp=pp, globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*)", Ylabel="Percentage of Occurences", Xlabel="Mesh Depth", mapType=int, N=10) 
