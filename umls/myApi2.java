@@ -1,4 +1,3 @@
-
 //DEPENDENCY: opencsv and metamap jar must be in your classpath
 
 import java.util.zip.GZIPInputStream;
@@ -325,6 +324,7 @@ public class myApi2 {
         String outFile = "output.csv";
         int totalLines = -1;
         boolean append = false;
+        HashMap<String, List<String> > cache = new HashMap<String, List<String> >();
 
         InputStream input = System.in;
         PrintStream output = System.out;
@@ -509,8 +509,17 @@ public class myApi2 {
                         lineNumber++;
                         continue;
                     }
-                            
-                    List<String> processed = frontEnd.process( inString, output, options);
+                    
+                    List<String> processed = null;
+
+                    if ( cache.containsKey(inString) ){
+                        processed = cache.get(inString);
+                    }
+                    else{
+                        processed = frontEnd.process( inString, output, options);
+                        cache.put(inString, processed);
+                    }
+
                     if (processed == null){
                         lineNumber++;
                         continue;
