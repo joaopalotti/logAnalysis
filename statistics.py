@@ -907,20 +907,24 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simp
     writer.write("-" * 45 + "\n")
     writer.write("15 Most Common Terms:\n")
     
+    totalTokens = sum(countingTokens.values())
     writer.write("-" * 45 + "\n")
+    writer.write('Token ==> Freq --- Freq/numTokens ------- Freq/numQueries\n'
     for pair in countingTokens.most_common(15):
-        writer.write('{0:45} ==> {1:30}\n'.format(pair[0], str(pair[1])))
+        writer.write('{0:45} ==> {1:30} --- {2:.3f} ------- {3:.3f}\n'.format(pair[0], str(pair[1]), 100.0 * pair[1]/totalTokens, 100.0*pair[1]/numberOfQueries))
     writer.write("-" * 45 + "\n")
      
     writer.write("15 Most Common Terms: (not stop words)\n")
+    writer.write('Token ==> Freq --- Freq/numTokens ------- Freq/numQueries\n'
     for (word, freq) in tenMostCommonTermsNoStopWord:
-        writer.write('{0:45} ==> {1:30}\n'.format(word, freq))
+        writer.write('{0:45} ==> {1:30} --- {2:.3f} ------- {3:.3f}\n'.format(word, freq, 100.0 * freq / totalTokens, 100.0*freq/numberOfQueries))
     writer.write("-" * 45 + "\n")
 
     writer.write("50 Most Common Acronyms:\n")
+    writer.write('Token ==> Freq --- Freq/numAcronyms ------- Freq/numQueries\n'
     writer.write("-" * 45 + "\n")
     for pair in countingAcronyms.most_common(50): 
-        writer.write('{0:45} ==> {1:30}\n'.format(pair[0], str(pair[1])))
+        writer.write('{0:45} ==> {1:30} --- {2:.3f} ------- {3:.3f}\n'.format(pair[0], str(pair[1]), 100.0 * pair[1] / numberOfAcronyms, 100.0 * pair[1]/numberOfQueries ))
     writer.write( "-" * 45 + "\n")
 
     writer.write("Co-ocorrence pairs: \n")
@@ -1106,8 +1110,9 @@ def printSemantic(writer, vectorOfActionSequence, vectorOfCicleSequence, countin
     writer.write("-" * 40 + "\n") 
     writer.write("FULL SEMANTIC TYPES IN ORDER:\n")
     writer.write("-" * 40 + "\n")
+    allSemanticTypes = sum(countingFullSemanticTypes.values())
     for pair in countingFullSemanticTypes.most_common():
-        writer.write('{0:45} ==> {1:30}\n'.format(pair[0], str(pair[1])))
+        writer.write('{0:45} ==> {1:30} ----- {2:.3f}%\n'.format(pair[0], str(pair[1]),100.0 * pair[1]/allSemanticTypes ))
     writer.write("-" * 40 + "\n")
     writer.write("-" * 80 + "\n")
 

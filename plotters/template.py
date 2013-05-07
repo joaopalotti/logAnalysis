@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pylab as P
 import re
+import matplotlib as mpl
 
 def mySort(a, b):
     if "aolNotHealth" in a:
@@ -36,7 +37,11 @@ def normalize(values, total):
     print "OUTPUT = ", vs
     return vs
 
-def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c','m'], PATH_TO_DATA="/home/palotti/Dropbox/tuwien/PhD/logs/logAnalysis/plots/", globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*", Ylabel='Percentage of Occurences', Xlabel='Mesh Depth', mapType=int, N=None, absolute=False):
+def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c','m'], PATH_TO_DATA="/home/palotti/Dropbox/tuwien/PhD/logs/logAnalysis/plots/", globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*", Ylabel='Percentage of Occurences', Xlabel='Mesh Depth', mapType=int, N=None, absolute=False, barPlot=True):
+    #http://matplotlib.org/users/customizing.html
+    mpl.rcParams['font.size'] = 16
+    mpl.rcParams['figure.autolayout'] = True
+    mpl.rcParams['lines.linewidth'] = 3
 
     files = glob.glob(PATH_TO_DATA + globString)
 
@@ -107,17 +112,22 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
         c = cs.next()
         
         # Used only for the khresmoi rank of queries plot
-        #if name=="khr1":
-        #    name = "Task1"
-        #if name=="khr2":
-        #    name = "Task2"
-        #if name=="khr3":
-        #    name = "Task3"
-        #if name=="khr4":
-        #    name = "Task4"
-        #
+        if name=="hon":
+            name = "HON"
+        elif name=="trip":
+            name = "TRIP"
+        elif name=="aolNotHealth":
+            name = "AOL-NotHealth"
+        elif name=="aolHealth":
+            name = "AOL-Health"
+        elif name=="goldminer":
+            name = "GoldMiner"
+        
+        if barPlot:
+            rects[name] = ax.bar(xs + sumWidth, data, width, color=c, label=name)
+        else:
+            rects[name] = ax.plot(xs, data, color=c, label=name)
 
-        rects[name] = ax.bar(xs + sumWidth, data, width, color=c, label=name)
         ax.legend( [rects[name]] , [name], loc=-1 )
         
         print "Using color ", c, " for data ", name
@@ -126,16 +136,22 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::1], labels[::1])
 
-    ax.set_ylabel(Ylabel)
-    ax.set_title(Xlabel)
+    ax.set_ylabel(Ylabel) #, fontsize=15, fontweight="bold")
+    ax.set_xlabel(Xlabel) #, fontsize=15, fontweight="bold")
 
     lstString = str(N) + "\n or more" if not gettingAllData else str(N)
-    plt.xticks(xs+ (sumWidth/2), map(str,range(1,N) + [lstString] ) )
+    if barPlot:
+        plt.xticks(xs + (sumWidth/2), map(str,range(1,N) + [lstString] ) )
+    else:
+        plt.xticks(xs, map(str,range(1,N) + [lstString]))
+
 #plt.xticks(xs+width, ("1a","2b","3","4","5","6","7","8","9","10","11","12") )
-    print xs+width
+    #print xs+width
 
-
-    ax.set_xlim(0.75, N + 1.0)
+    if barPlot:
+        ax.set_xlim(0.75, N + 1.0)
+    else:
+        ax.set_xlim(0.5, N + 0.5)
     if not absolute:
         ax.set_ylim(0,1)
     else:

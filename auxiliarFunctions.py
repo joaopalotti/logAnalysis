@@ -47,10 +47,16 @@ def tokenizeAllData(data):
 
 def filterStopWords(data):
     stopWords = set()
-    #Using as reference: http://jmlr.csail.mit.edu/papers/volume5/lewis04a/a11-smart-stop-list/english.stop
-    with open(PATH_TO_AUX_FILES + "stopWords.txt","r") as f:
-        for line in f:
-            stopWords.add(line.strip())
+    
+    #Using as reference: http://jmlr.csail.mit.edu/papers/volume5/lewis04a/a11-smart-stop-list/english.stop -> stopWords.txt
+    #http://snowball.tartarus.org/algorithms/spanish/stop.txt                                               -> stopSpanish.txt
+    #http://snowball.tartarus.org/algorithms/french/stop.txt                                                -> stopFrench.txt
+    #http://snowball.tartarus.org/algorithms/english/stop.txt                                               -> stopEnglish.txt
+    files = ["stopSpanish.txt", "stopFrench.txt", "stopEnglish.txt"]
+    for swf in files:
+        with open(PATH_TO_AUX_FILES + swf, "r") as f:
+            for line in f:
+                stopWords.add(line.strip())
 
     for member in data:
         noStopWords = [ keyword for keyword in member.keywords if keyword not in stopWords]
@@ -66,10 +72,11 @@ def simpleFilterStopWords(countingTokens):
     tenMostCommonTerms = {}
 
     stopWords = set()
-    #Using as reference: http://jmlr.csail.mit.edu/papers/volume5/lewis04a/a11-smart-stop-list/english.stop
-    with open(PATH_TO_AUX_FILES + "stopWords.txt","r") as f:
-        for line in f:
-            stopWords.add(line.strip())
+    files = ["stopSpanish.txt", "stopFrench.txt", "stopEnglish.txt"]
+    for swf in files:
+        with open(PATH_TO_AUX_FILES + swf, "r") as f:
+            for line in f:
+                stopWords.add(line.strip())
     
     for pair in countingTokens.most_common():
         if pair[0] not in stopWords:
