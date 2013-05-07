@@ -127,7 +127,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True):
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
                                    countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers, idMaxQueriesInSession)
             printMeshClassificationMetrics(f, countingMesh, countingDisease, numberOfQueries, hasMeshValues, countingMeshDepth)
-            printSemantic(f, vectorOfActionSequence, vectorOfCicleSequence, countingFullSemanticTypes)
+            printSemantic(f, vectorOfActionSequence, vectorOfCicleSequence, countingFullSemanticTypes, numberOfQueries)
             printOutliers(f, outliersToRemove)
 
         countingAcronymsList.append([dataName, countingAcronyms])
@@ -909,19 +909,19 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simp
     
     totalTokens = sum(countingTokens.values())
     writer.write("-" * 45 + "\n")
-    writer.write('Token ==> Freq --- Freq/numTokens ------- Freq/numQueries\n'
+    writer.write('Token ==> Freq --- Freq/numTokens ------- Freq/numQueries\n')
     for pair in countingTokens.most_common(15):
-        writer.write('{0:45} ==> {1:30} --- {2:.3f} ------- {3:.3f}\n'.format(pair[0], str(pair[1]), 100.0 * pair[1]/totalTokens, 100.0*pair[1]/numberOfQueries))
+        writer.write('{0:45} ==> {1:d} --- {2:.3f} ------- {3:.3f}\n'.format(pair[0], pair[1], 100.0*pair[1]/totalTokens, 100.0*pair[1]/numberOfQueries))
     writer.write("-" * 45 + "\n")
      
     writer.write("15 Most Common Terms: (not stop words)\n")
-    writer.write('Token ==> Freq --- Freq/numTokens ------- Freq/numQueries\n'
+    writer.write('Token ==> Freq --- Freq/numTokens ------- Freq/numQueries\n')
     for (word, freq) in tenMostCommonTermsNoStopWord:
-        writer.write('{0:45} ==> {1:30} --- {2:.3f} ------- {3:.3f}\n'.format(word, freq, 100.0 * freq / totalTokens, 100.0*freq/numberOfQueries))
+        writer.write('{0:45} ==> {1:d} --- {2:.3f} ------- {3:.3f}\n'.format(word, int(freq), 100.0 * freq / totalTokens, 100.0*freq/numberOfQueries))
     writer.write("-" * 45 + "\n")
 
     writer.write("50 Most Common Acronyms:\n")
-    writer.write('Token ==> Freq --- Freq/numAcronyms ------- Freq/numQueries\n'
+    writer.write('Token ==> Freq --- Freq/numAcronyms ------- Freq/numQueries\n')
     writer.write("-" * 45 + "\n")
     for pair in countingAcronyms.most_common(50): 
         writer.write('{0:45} ==> {1:30} --- {2:.3f} ------- {3:.3f}\n'.format(pair[0], str(pair[1]), 100.0 * pair[1] / numberOfAcronyms, 100.0 * pair[1]/numberOfQueries ))
@@ -1074,7 +1074,7 @@ def printMeshClassificationMetrics(writer, countingMesh, countingDisease, number
     writer.write("-" * 40 + "\n")
     writer.write("-" * 80 + "\n")
 
-def printSemantic(writer, vectorOfActionSequence, vectorOfCicleSequence, countingFullSemanticTypes):
+def printSemantic(writer, vectorOfActionSequence, vectorOfCicleSequence, countingFullSemanticTypes, numberOfQueries):
 
     writer.write("-" * 80 + "\n")
     writer.write("-" * 40 + "\n")
@@ -1109,10 +1109,11 @@ def printSemantic(writer, vectorOfActionSequence, vectorOfCicleSequence, countin
     writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format("RCR", vectorOfCicleSequence[5], 100 * vectorOfCicleSequence[5]/totalCicleSequence))
     writer.write("-" * 40 + "\n") 
     writer.write("FULL SEMANTIC TYPES IN ORDER:\n")
+    writer.write('Type ==> Freq --- Freq/numSemantic ------- Freq/numQueries\n')
     writer.write("-" * 40 + "\n")
     allSemanticTypes = sum(countingFullSemanticTypes.values())
     for pair in countingFullSemanticTypes.most_common():
-        writer.write('{0:45} ==> {1:30} ----- {2:.3f}%\n'.format(pair[0], str(pair[1]),100.0 * pair[1]/allSemanticTypes ))
+        writer.write('{0:45} ==> {1:30} --- {2:.3f}% ------- {3:.3f}%\n'.format(pair[0], str(pair[1]),100.0 * pair[1]/allSemanticTypes, 100.0 * pair[1]/numberOfQueries ))
     writer.write("-" * 40 + "\n")
     writer.write("-" * 80 + "\n")
 
