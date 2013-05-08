@@ -923,6 +923,7 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simp
     writer.write("50 Most Common Acronyms:\n")
     writer.write('Token ==> Freq --- Freq/numAcronyms ------- Freq/numQueries\n')
     writer.write("-" * 45 + "\n")
+    numberOfAcronyms = sum(countingAcronyms.values())
     for pair in countingAcronyms.most_common(50): 
         writer.write('{0:45} ==> {1:30} --- {2:.3f} ------- {3:.3f}\n'.format(pair[0], str(pair[1]), 100.0 * pair[1] / numberOfAcronyms, 100.0 * pair[1]/numberOfQueries ))
     writer.write( "-" * 45 + "\n")
