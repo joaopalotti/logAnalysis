@@ -273,7 +273,7 @@ def mergeFVs(*fvs):
 def healthNotHealthUsers():
     
     honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.dataset.gz", 0)
-    aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.dataset.gz", 0)
+    aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed.v4.dataset.gz", 0)
     goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.dataset.gz", 0)
     tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.dataset.gz", 0)
 
@@ -312,7 +312,7 @@ def regularMedicalUsers():
     #
     
     #honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.dataset.gz", 0)
-    #aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.dataset.gz", 0)
+    #aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed.v4.dataset.gz", 0)
     #goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.dataset.gz", 1)
     #tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.dataset.gz", 1)
     

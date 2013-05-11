@@ -32,8 +32,8 @@ if __name__ == "__main__":
     #goldMiner = readMyFormat(PATH_TO_DATASETS + "goldminer/goldMiner.v4.dataset.gz")
     #hon = readMyFormat(PATH_TO_DATASETS + "hon/honEnglish.v4.dataset.gz")
     #trip = readMyFormat(PATH_TO_DATASETS + "trip/trip_mod.v4.dataset.gz")
-    #aolHealth = readMyFormat(PATH_TO_DATASETS + "aolHealth/aolHealth.v4.dataset.gz")
-    #aolNotHealth = readMyFormat(PATH_TO_DATASETS + "aolNotHealth/aolNotHealthPartial.v4.dataset.gz")
+    #aolHealth = readMyFormat(PATH_TO_DATASETS + "aolHealth/aolHealthCompleteFixed.v4.dataset.gz")
+    #aolNotHealth = readMyFormat(PATH_TO_DATASETS + "aolNotHealth/aolNotHealthAndNotClick.v4.dataset.gz")
     #calculateMetrics([ [aolHealth, "aolHealth"], [hon, "hon"], [trip, "trip"], [goldMiner, "goldminer"], [aolNotHealth, "aolNotHealth" ] ]) 
     
     

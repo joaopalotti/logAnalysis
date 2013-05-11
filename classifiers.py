@@ -11,26 +11,31 @@ from sklearn.ensemble import ExtraTreesClassifier
 #General
 from collections import Counter
 
-def makeReport(X, y, y_pred, baseline):
+def makeReport(X, y, y_pred,  accBaseline, f1Baseline, wf1Baseline):
     # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html#sklearn.metrics.classification_report
     
     target_names = ['Layman', 'Specialist']
     
     acc = accuracy_score(y, y_pred)
     f1 = f1_score(y, y_pred, average=None)
+    sf1 = f1_score(y, y_pred)
+    
     print(classification_report( y, y_pred, target_names=target_names))
     
     ns = Counter(y)
-    af1 = ( f1[0] * ns[0] + f1[1] * ns[1] ) / (ns[0] + ns[1])
+    wf1 = ( f1[0] * ns[0] + f1[1] * ns[1] ) / (ns[0] + ns[1])
     
     print "F1 Score --> ", (f1)
-    print "Mean -> ", af1
-    print "GAIN --> %0.2f%% " % (100.0 * (af1 - baseline) / baseline)
+    print "wf1 -> ", wf1
+    print "GAIN --> %0.2f%% " % (100.0 * (wf1 - wf1Baseline) / wf1Baseline)
+
+    print "sf1 -> ", sf1
+    print "GAIN --> %0.2f%% " % (100.0 * (sf1 - f1Baseline) / f1Baseline)
 
     print "ACC Score --> ", (acc)
-    print "GAIN --> %0.2f%% " % (100.0 * (acc - baseline) / baseline)
+    print "GAIN --> %0.2f%% " % (100.0 * (acc - accBaseline) / accBaseline)
 
-def runNB(X, y, parameters, baseline):
+def runNB(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     # http://scikit-learn.org/stable/modules/naive_bayes.html#naive-bayes
     
     print "Running NB"
@@ -53,7 +58,7 @@ def runNB(X, y, parameters, baseline):
     print "Done"
     return y_pred
 
-def runLogRegression(X, y, parameters, baseline):
+def runLogRegression(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     #http://scikit-learn.org/dev/modules/generated/sklearn.linear_model.LogisticRegression.html#sklearn.linear_model.LogisticRegression
 
     print "Running Logistic Regression"
@@ -76,7 +81,7 @@ def runLogRegression(X, y, parameters, baseline):
     print "Done"
     return y_pred
 
-def runSVM(X, y, parameters, baseline):
+def runSVM(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     #http://scikit-learn.org/dev/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC
     
     print "Running SVM"
@@ -99,7 +104,7 @@ def runSVM(X, y, parameters, baseline):
     print "Done"
     return y_pred
 
-def runKNN(X, y, parameters, baseline):
+def runKNN(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     #http://scikit-learn.org/dev/modules/generated/sklearn.neighbors.KNeighborsClassifier.html
 
     print "Running KNN"
@@ -122,7 +127,7 @@ def runKNN(X, y, parameters, baseline):
     print "Done"
     return y_pred
 
-def runDecisionTree(X, y, parameters, baseline):
+def runDecisionTree(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
 
     print "Running Decision Tree"
     nSamples, nFeatures = X.shape
@@ -144,7 +149,7 @@ def runDecisionTree(X, y, parameters, baseline):
     print "Done"
     return y_pred
 
-def runExtraTreeClassifier(X, y, parameters, baseline):
+def runExtraTreeClassifier(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     # http://scikit-learn.org/dev/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html
 
     print "Running Extremely Randomized Trees"

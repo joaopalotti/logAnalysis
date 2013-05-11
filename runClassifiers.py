@@ -1,18 +1,22 @@
 import pickle, sys
 import random
+import numpy as np
 #My classes
 from classifiers import *
 from createFeatureVector import userClass
+from sklearn.metrics import f1_score, accuracy_score
 
 nJobs = 2
 nCV = 10
+CSVM = 10000
 
-parametersSVM = {"nJobs":nJobs, "CV":nCV, "cacheSize":1000, "kernel":"linear", "C":1.0}
+parametersSVM = {"nJobs":nJobs, "CV":nCV, "cacheSize":1000, "kernel":"linear", "C":CSVM}
 parametersKnn = {"nJobs":nJobs, "CV":nCV, "K":100}
 parametersDT = {"nJobs":nJobs, "CV":nCV}
 parametersERT = {"nJobs":nJobs, "CV":nCV, "n_estimators":10}
 parametersLogReg = {"nJobs":nJobs, "CV":nCV}
 parametersNB = {"nJobs":nJobs, "CV":nCV}
+
 
 def transformeInDict(userDict, n=-1, proportional=-1):
     listOfDicts = list()
@@ -32,10 +36,12 @@ def transformeInDict(userDict, n=-1, proportional=-1):
 
 if __name__ == "__main__":
 
+    print "HOW TO USE: python runClassifiers.py [normalize|scale|minmax|nothing] [forceBalance|-1] [proportional|-1] [minNumberOfQueries] [nseed]"
     preProcessing = sys.argv[1]
     forceBalance = int(sys.argv[2])
     proportional = int(sys.argv[3])
     minNumberOfQueries = int(sys.argv[4])
+    nseed = int(sys.argv[5])
     
     medicalUserDataSet = "medicalUser-%d.pk" % (minNumberOfQueries)
     regularUserDataSet = "regularUser-%d.pk" % (minNumberOfQueries)
@@ -43,6 +49,7 @@ if __name__ == "__main__":
     healthUserDataSet = "healthUser-%d.pk"   % (minNumberOfQueries)
     notHealthUserDataSet = "notHealthUser-%d.pk" % (minNumberOfQueries)
 
+    print "using seed -> ", nseed
 
     print preProcessing
     if forceBalance > 0:
@@ -79,11 +86,25 @@ if __name__ == "__main__":
     
     listOfDicts = ld1 + ld2
     listOfLabels = ll1 + ll2
-   
-    print "Using %d regular users" % ( len(ld1) )
-    print "Using %d medical users" % ( len(ld2) )
-    baseline = 1.0 * max( [len(ld1), len(ld2)] ) / (len(ld1) + len(ld2))
-    print "Avg. accuracy of the greatest dataset => %f" % (100.0 * baseline)
+    y = np.array( listOfLabels )
+    
+    greatestClass = 0 if len(ll1) > len(ll2) else 1
+    y_greatest =  np.array((len(ll1) + len(ll2)) * [greatestClass] )
+
+    print "Using %d regular users -- class %s" % (len(ld1), ll1[0])
+    print "Using %d medical users -- class %s" % (len(ld2), ll2[0])
+    
+    accBaseline = accuracy_score(y, y_greatest)
+    print "Acc baseline --> ", (accBaseline)
+    print "Avg. accuracy of the greatest dataset => %.3f" % (100.0 * accBaseline)
+
+    f1 = f1_score( y, y_greatest, average=None)
+    print "F1 Score --> ", (f1) , " size --> ", len(f1)
+    ns = Counter(y)
+    wf1Baseline = ( f1[0] * ns[0] + f1[1] * ns[1] ) / (ns[0] + ns[1])
+    print "Weighted Mean -> ", wf1Baseline
+    f1Baseline = f1.mean()
+    print "Simple Mean -> %.3f" % (f1Baseline)
 
     print "Vectorizing dictionaries..."
     from sklearn.feature_extraction import DictVectorizer
@@ -104,20 +125,18 @@ if __name__ == "__main__":
     elif preProcessing == "nothing":
         X = X_noProcess
 
-    import numpy as np
-    y = np.array( listOfLabels )
     
     n_samples, n_features = X.shape
-
+    
     ####
     ### Shuffer samples  (TODO: Cross-validation)
     ##
     #
-
+    
     print "Shuffling the data..."
     # Shuffle samples
     p = range(n_samples) 
-    random.seed(0)
+    random.seed(nseed)
     random.shuffle(p)
     X, y = X[p], y[p]
     nCV = 5
@@ -130,30 +149,30 @@ if __name__ == "__main__":
     print "Running classifiers..."
     #TODO: run a logistic regression to evaluate the features and decide which ones are the best ones
 
-    y_ert = runExtraTreeClassifier(X, y, parametersERT, baseline)
+    y_ert = runExtraTreeClassifier(X, y, parametersERT, accBaseline, f1Baseline, wf1Baseline)
     print 20 * '=', " ERF  Results ", 20 * '='
-    makeReport(X, y, y_ert,baseline)
+    makeReport(X, y, y_ert, accBaseline, f1Baseline, wf1Baseline)
     
     
-    y_nb  = runNB(X, y, parametersNB, baseline)
+    y_nb  = runNB(X, y, parametersNB,  accBaseline, f1Baseline, wf1Baseline)
     print 20 * '=', " NB  Results ", 20 * '='
-    makeReport(X, y, y_nb,baseline)
+    makeReport(X, y, y_nb, accBaseline, f1Baseline, wf1Baseline)
     
-    y_knn = runKNN(X, y, parametersKnn, baseline)
+    y_knn = runKNN(X, y, parametersKnn,  accBaseline, f1Baseline, wf1Baseline)
     print 20 * '=', " KNN Results ", 20 * '='
-    makeReport(X, y, y_knn,baseline)
+    makeReport(X, y, y_knn, accBaseline, f1Baseline, wf1Baseline)
     
-    y_dt = runDecisionTree(X, y, parametersDT, baseline)
+    y_dt = runDecisionTree(X, y, parametersDT,  accBaseline, f1Baseline, wf1Baseline)
     print 20 * '=', " DT  Results ", 20 * '='
-    makeReport(X, y, y_dt,baseline)
+    makeReport(X, y, y_dt, accBaseline, f1Baseline, wf1Baseline)
     
-    y_lg =  runLogRegression(X, y, parametersLogReg, baseline)
+    y_lg =  runLogRegression(X, y, parametersLogReg,  accBaseline, f1Baseline, wf1Baseline)
     print 20 * '=', " LogReg  Results ", 20 * '='
-    makeReport(X, y, y_lg,baseline)
+    makeReport(X, y, y_lg, accBaseline, f1Baseline, wf1Baseline)
     
-    y_svm = runSVM(X, y, parametersSVM, baseline)
+    y_svm = runSVM(X, y, parametersSVM,  accBaseline, f1Baseline, wf1Baseline)
     print 20 * '=', " SVM Results ", 20 * '='
-    makeReport(X, y, y_svm, baseline)
+    makeReport(X, y, y_svm,  accBaseline, f1Baseline, wf1Baseline)
     
     print "Done"
 

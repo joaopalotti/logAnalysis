@@ -82,7 +82,7 @@ def simpleFilterStopWords(countingTokens):
         if pair[0] not in stopWords:
             tenMostCommonTerms[pair[0]] = pair[1]
         
-        if len(tenMostCommonTerms) == 15: # taking the 15 first terms instead of the top 10
+        if len(tenMostCommonTerms) == 20: # taking the 20 first terms instead of the top 10
             return sorted( tenMostCommonTerms.iteritems(), key=itemgetter(1) ) #sorting by value
 
     if len(tenMostCommonTerms) == 0:

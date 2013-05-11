@@ -494,7 +494,7 @@ public class myApi2 {
                     String inString = nextLine[2];
                     System.out.println("INPUT = " + inString);
 
-                    if( inString.matches(".* 's$") ){
+                    if( inString.matches(".*' s$") ){
                         System.out.println("BAD STRING FOUND. Skipping it ---> " + inString);
                         lineNumber++;
                         continue;

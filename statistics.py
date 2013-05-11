@@ -905,16 +905,16 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simp
     writer.write('{0:45} ==> {1:.3f}\n'.format('Percentage of Acronyms in queries', (percentageAcronymInQueries)))
     
     writer.write("-" * 45 + "\n")
-    writer.write("15 Most Common Terms:\n")
+    writer.write("20 Most Common Terms:\n")
     
     totalTokens = sum(countingTokens.values())
     writer.write("-" * 45 + "\n")
     writer.write('Token ==> Freq --- Freq/numTokens ------- Freq/numQueries\n')
-    for pair in countingTokens.most_common(15):
+    for pair in countingTokens.most_common(20):
         writer.write('{0:45} ==> {1:d} --- {2:.3f} ------- {3:.3f}\n'.format(pair[0], pair[1], 100.0*pair[1]/totalTokens, 100.0*pair[1]/numberOfQueries))
     writer.write("-" * 45 + "\n")
      
-    writer.write("15 Most Common Terms: (not stop words)\n")
+    writer.write("20 Most Common Terms: (not stop words)\n")
     writer.write('Token ==> Freq --- Freq/numTokens ------- Freq/numQueries\n')
     for (word, freq) in tenMostCommonTermsNoStopWord:
         writer.write('{0:45} ==> {1:d} --- {2:.3f} ------- {3:.3f}\n'.format(word, int(freq), 100.0 * freq / totalTokens, 100.0*freq/numberOfQueries))
@@ -967,11 +967,13 @@ def printMetricsForQueries(writer, greatestQuery, countingQueries, countingQueri
     writer.write('{0:45} ==> {1:30}\n'.format('Greatest Query', ' '.join(greatestQuery)))
     writer.write('{0:45} ==> {1:.3f}\n'.format("Mean number of Queries per day", meanQueriesPerDay))
     
+    numberOfQueries = sum(countingQueries.values())
+
     writer.write("-" * 45 + "\n")
     writer.write("15 Most Common Queries:\n")
     writer.write("-" * 45 + "\n")
     for pair in countingQueries.most_common(15):
-        writer.write('{0:45} ==> {1:d}\n'.format(pair[0], pair[1]))
+        writer.write('{0:45} ==> {1:30} --- {2:.3f}%\n'.format(pair[0], str(pair[1]), 100.0 * pair[1]/numberOfQueries ))
     
     writer.write("-" * 45 + "\n")   
     writer.write("Queries by size:\n")
