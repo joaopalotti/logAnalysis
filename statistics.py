@@ -970,9 +970,9 @@ def printMetricsForQueries(writer, greatestQuery, countingQueries, countingQueri
     numberOfQueries = sum(countingQueries.values())
 
     writer.write("-" * 45 + "\n")
-    writer.write("15 Most Common Queries:\n")
+    writer.write("20 Most Common Queries:\n")
     writer.write("-" * 45 + "\n")
-    for pair in countingQueries.most_common(15):
+    for pair in countingQueries.most_common(20):
         writer.write('{0:45} ==> {1:30} --- {2:.3f}%\n'.format(pair[0], str(pair[1]), 100.0 * pair[1]/numberOfQueries ))
     
     writer.write("-" * 45 + "\n")   
@@ -1075,6 +1075,10 @@ def printMeshClassificationMetrics(writer, countingMesh, countingDisease, number
     for k,v in countingMeshDepth.iteritems():
         writer.write('{0:>15} ------- {1:<10} ({2:.2f}%)\n'.format( k, v, 100 * v/totalMeshDepth))
     writer.write("-" * 40 + "\n")
+    writer.write("-" * 40 + "\n")
+    import numpy as np
+    meanMeshDepth = np.mean(list(countingMeshDepth.elements()))
+    writer.write('{0:45} ------- {1:.3f}\n'.format("Mean mesh depth:", meanMeshDepth))
     writer.write("-" * 80 + "\n")
 
 def printSemantic(writer, vectorOfActionSequence, vectorOfCicleSequence, countingFullSemanticTypes, numberOfQueries):
