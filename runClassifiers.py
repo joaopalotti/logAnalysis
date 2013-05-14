@@ -6,6 +6,9 @@ from classifiers import *
 from createFeatureVector import userClass
 from sklearn.metrics import f1_score, accuracy_score
 
+### HOW TO USE:
+# python runClassifiers.py [normalize|scale|minmax|nothing] [forceBalance|-1] [proportional|-1] [minNumberOfQueries] [nseed]"
+
 nJobs = 2
 nCV = 10
 CSVM = 10000
@@ -30,7 +33,9 @@ def transformeInDict(userDict, n=-1, proportional=-1):
     for v, (key, user) in zip(range(len(p)), userDict.iteritems()):
         if n >= 0 and p[v] >= n:
             continue 
-        listOfDicts.append(user.toDict())
+        udict = user.toDict()
+        #print user.label, udict
+        listOfDicts.append(udict)
         listOfLabels.append(user.label)
     return listOfDicts, listOfLabels
 

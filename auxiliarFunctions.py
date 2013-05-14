@@ -100,7 +100,7 @@ def compareSets(set1, set2):
         #print "shrink!\nDiff: ", set1 - set2
         return 0,1,0,0
     elif set1 < set2:
-        print "expand!\nDiff: ", set2 - set1
+        #print "expand!\nDiff: ", set2 - set1
         return 1,0,0,0
     else: 
         return 0,0,1,0

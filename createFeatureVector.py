@@ -5,15 +5,19 @@ import sys
 
 #My classes
 from readCSV import readMyFormat
-from auxiliarFunctions import NLWords, preProcessData, createAcronymSet, symptomTypes, causeTypes, remedyTypes, whereTypes, noMedicalTypes
+from auxiliarFunctions import NLWords, preProcessData, createAcronymSet, symptomTypes, causeTypes, remedyTypes, whereTypes, noMedicalTypes, compareSets
+from statistics import createSessions
 
 removeStopWords=False
 acronymsSet = createAcronymSet()
 minimalNumberOfQueries = "Invalid number...please enter this parameter!"
 maximalNumberOfQueries = 100
 
+### HOW TO USE:
+#   python createFeatureVector.py minimalNumberOfQueries 
+
 class userClass:
-    def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm):
+    def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm, expa, shri, refo, expshr, expref, shrref, expshrref):
         self.id = id
         self.label = label
         self.numberOfQueries = nq
@@ -27,9 +31,18 @@ class userClass:
         self.usingCause = usc
         self.usingRemedy = usrd
         self.usingNotMedical = usnm
-    
+
+        self.expansion = expa
+        self.shrinkage = shri
+        self.reformulation = refo
+        self.expshr = expshr
+        self.expref = expref
+        self.shrref = shrref
+        self.expshrref = expshrref
+
     def toDict(self):
-        return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical}
+        #return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical}
+        return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation ,'14.didExpShr':self.expshr ,'15.didExpRef': self.expref ,'16.didShrRef': self.shrref ,'17.didExpShrRef': self.expshrref}
         #TODO: should I consider different kinds of abbreviations?
         #TODO: take a look at the mesh and decide if it is possible to separete levels or groups from their data (same for UMLS)
 
@@ -185,6 +198,45 @@ def calculateMeanTimePerSession(data):
         mapUserMeanTimePerSession[user] = totalSeconds / numberOfSessions
     return mapUserMeanTimePerSession
 
+def calculateUserBehavior(data):
+    mapUserBehavior = dict()
+    sessions = createSessions(data)
+    
+    for user, session in sessions.iteritems():
+        vOMS = [0]*8
+        for subSession in session.values():
+
+            modifiedSubSession = False
+            previousQuery = subSession[0]
+            subQueryE, subQueryS, subQueryRef, subQueryRep = 0, 0, 0, 0
+            
+            for query in subSession[1:]:
+                e, s, ref, _ = compareSets( set(previousQuery[1]), set(query[1]) )
+                subQueryE, subQueryS, subQueryRef, = subQueryE + e, subQueryS + s, subQueryRef + ref
+                
+                #print "Session === ", subSession, "\n"
+                #print "Q1  = ", set(previousQuery[1]), " Q2 = ", set(query[1])
+                #print " numberOfExpansions = ", numberOfExpansions, " numberOfShrinkage = ", numberOfShrinkage, " numberOfReformulations = ", numberOfReformulations, " numberOfRepetitions = ", numberOfRepetitions
+                #print 
+
+                # If a repetition occurs, we do not consider it as a modified session
+                if e > 0 or s > 0 or ref > 0:
+                    modifiedSubSession = True 
+                previousQuery = query
+                
+            if modifiedSubSession:
+                be, bs, bref, brep = 0 if subQueryE == 0 else 1, 0 if subQueryS == 0 else 1, 0 if subQueryRef == 0 else 1, 0 if subQueryRep == 0 else 1
+                indexVal =  int( str(be) + str(bs) + str(bref), 2) 
+
+                #print "INDEX = ", indexVal, " exp : ", be, " shr: ", bs, " ref:", bref
+                vOMS[indexVal] += 1
+            
+        #print "indice 0 => ", vOMS[0]
+        mapUserBehavior[user] = (vOMS[4] > 0, vOMS[2] > 0, vOMS[1] > 0, vOMS[6] > 0, vOMS[5] > 0, vOMS[3] > 0, vOMS[7]>0)
+        
+    return mapUserBehavior
+
+
 def createDictOfUsers(data, label):
     userDict = dict()
 
@@ -200,6 +252,7 @@ def createDictOfUsers(data, label):
     countingUsingCause = calculateUsingSemantic(data, causeTypes())
     countingUsingRemedy = calculateUsingSemantic(data, remedyTypes())
     countingUsingNotMedical = calculateUsingSemantic(data, noMedicalTypes())
+    countingUserBehavior = calculateUserBehavior(data)
 
     for user in users:
         if user not in countingNumberOfQueriesPerUser or \
@@ -231,8 +284,11 @@ def createDictOfUsers(data, label):
         usc = countingUsingCause[user]
         usrd = countingUsingRemedy[user]
         usnm = countingUsingNotMedical[user]
+        expa, shri, refo, expshr, expref, shrref, expshrref = countingUserBehavior[user]
 
-        userDict[user] = userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm)
+
+        userDict[user] = userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
+                                   expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref)
 
     return userDict
 
