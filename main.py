@@ -30,6 +30,7 @@ if __name__ == "__main__":
 
     
     #goldMiner = readMyFormat(PATH_TO_DATASETS + "goldminer/goldMiner.v4.dataset.gz")
+    #calculateMetrics([ [goldMiner, "gm"] ] ) 
     #hon = readMyFormat(PATH_TO_DATASETS + "hon/honEnglish.v4.dataset.gz")
     #trip = readMyFormat(PATH_TO_DATASETS + "trip/trip_mod.v4.dataset.gz")
     #aolHealth = readMyFormat(PATH_TO_DATASETS + "aolHealth/aolHealthCompleteFixed.v4.dataset.gz")

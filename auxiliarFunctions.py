@@ -97,12 +97,13 @@ def compareSets(set1, set2):
     if set1 == set2:
         return 0,0,0,1
     elif set1 > set2:
+        #print "shrink!\nDiff: ", set1 - set2
         return 0,1,0,0
     elif set1 < set2:
+        print "expand!\nDiff: ", set2 - set1
         return 1,0,0,0
     else: 
         return 0,0,1,0
- 
 
 def preProcessData(data, removeStopWords):
     data = tokenizeAllData(data)
@@ -125,7 +126,7 @@ def preProcessData(data, removeStopWords):
         -> Source                -> bact (Bacterium), virs (Virus), Fungs (fngs), Archaeon (arch)
         
         -> (Cause) Disease/Dysfunction  -> dsyn (Disease or Syndrome), mobd (Mental or Behavioral Dysfunction), neop (Neoplastic Process), patf (Pathologic Function)
-        -> Cure                 -> clnd (Clinical Drug), amas (Amino Acid Sequence ?), antb (Antibiotic), aapp(Amino Acid, Peptide, or Protein?), phsu (Pharmacologic Substance), imft (Immunologic Factor - vaccine, e.g.), vita (Vitamin)
+        -> Cure                 -> clnd (Clinical Drug), antb (Antibiotic), aapp(Amino Acid, Peptide, or Protein?), phsu (Pharmacologic Substance), imft (Immunologic Factor - vaccine, e.g.), vita (Vitamin)
 
         -> Prevention?
 
@@ -144,7 +145,7 @@ def causeTypes():
     return ["dsyn", "mobd", "neop","patf"]
 
 def remedyTypes():
-    return ["clnd", "amas", "antb","aapp","phsu","imft","vita"]
+    return ["clnd", "antb","aapp","phsu","imft","vita"]
 
 def whereTypes():
     return ["bpoc", "bsoj","tisu","bdsy","blor"]
