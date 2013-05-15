@@ -100,7 +100,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True):
             numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
             countingSemantics, countingPureSemanticTypes, vectorOfActionSequence,\
             countingReAccess, idMaxQueriesInSession, vectorOfCicleSequence, countingFullSemanticTypes,\
-                userSemanticType = calculateQueriesPerSession(data)
+                userSemanticType, npSessions = calculateQueriesPerSession(data)
         
         semanticTypesCountedByUser, semanticTypesCountedByUserWeighted, setOfUsersWithSemantic = calculateSemanticTypesPercentages(userSemanticType)
 
@@ -134,7 +134,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True):
             printMetricsForQueries(f, greatestQuery, countingQueries, countingQueriesPerDay, meanQueriesPerDay)
             printMetricsForSessions(f, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime,\
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
-                                   countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers, idMaxQueriesInSession)
+                                   countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers, idMaxQueriesInSession, npSessions)
             printMeshClassificationMetrics(f, countingMesh, countingDisease, numberOfQueries, hasMeshValues, countingMeshDepth)
             printSemantic(f, vectorOfActionSequence, vectorOfCicleSequence, countingFullSemanticTypes, numberOfQueries)
             printOutliers(f, outliersToRemove)
@@ -558,13 +558,20 @@ def createSessions(data):
     #    print session, date
     return sessions
 
+
 def calculateQueriesPerSession(data):
     '''
         I am considering all sessions here. An alternative option would be to consider only the sessions with more that X queries. (e.g. X > 3)
     '''
     sessions = createSessions(data)
 
-    numberOfSessions = sum( len(s) for s in sessions.values() )
+    numberVectorOfSessions = [len(s) for s in sessions.values()]
+    numberOfSessions = sum( numberVectorOfSessions )
+    npSessions = generateStatsVector(numberVectorOfSessions)
+    #print "Sessions =", sessions
+    #print numberOfSessions
+    #print npSessions.mean, npSessions.median
+    
     queriesPerSession = [ len(q) for session in sessions.values() for q in session.values() ]
     sessionsWithMoreThanOneQuery = len([ 1 for session in sessions.values() for q in session.values() if len(q) > 1 ])
     
@@ -615,7 +622,7 @@ def calculateQueriesPerSession(data):
     return numberOfSessions, countingQueriesPerSession, npNumQueriesInSession,\
             countingTimePerSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions,\
             vectorOfModifiedSessions, countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, countingReAccess, idMaxQueriesInSession,\
-            vectorOfCicleSequence, countingFullSemanticTypes, userSemanticType
+            vectorOfCicleSequence, countingFullSemanticTypes, userSemanticType, npSessions
 
 
 def calculateQueryRanking(data):
@@ -1027,7 +1034,7 @@ def printMetricsForQueries(writer, greatestQuery, countingQueries, countingQueri
     writer.write("-" * 80 + "\n")
     
 
-def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions, countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers, idMaxQueriesInSession):
+def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions, countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers, idMaxQueriesInSession, npSessions):
 
     writer.write("-" * 80 + "\n")
     writer.write("-" * 40 + "\n")
@@ -1042,6 +1049,11 @@ def printMetricsForSessions(writer, numberOfSessions, numberOfQueries, npNumQuer
     writer.write('{0:45} ==> {1:.3f}\n'.format("Mean number of Queries in a session", (npNumQueriesInSession.mean)))
     writer.write('{0:45} ==> {1:.3f}\n'.format("Median number of Queries in a session", (npNumQueriesInSession.median)))
     writer.write('{0:45} ==> {1:.3f}\n'.format("Std dev of the number of Queries in a session", (npNumQueriesInSession.std)))
+    writer.write("-" * 40 + "\n")
+    writer.write("-" * 40 + "\n")
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Mean number of sessions per user", npSessions.mean))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Std dev of the number of sessions per user", npSessions.std))
+    writer.write('{0:45} ==> {1:.3f}\n'.format("Median number of sessions per user", npSessions.median))
     writer.write("-" * 40 + "\n")
     writer.write("Session Length in Time\n")
     writer.write("-" * 40 + "\n")
@@ -1120,6 +1132,8 @@ def printMeshClassificationMetrics(writer, countingMesh, countingDisease, number
     import numpy as np
     meanMeshDepth = np.mean(list(countingMeshDepth.elements()))
     writer.write('{0:45} ------- {1:.3f}\n'.format("Mean mesh depth:", meanMeshDepth))
+   
+    writer.write("-" * 40 + "\n")
     writer.write("-" * 80 + "\n")
 
 def printSemantic(writer, vectorOfActionSequence, vectorOfCicleSequence, countingFullSemanticTypes, numberOfQueries):
