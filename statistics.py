@@ -351,8 +351,8 @@ def calculateMeshWeighted(meshUserValues):
             mid = m.split('.')[0]
             if mid[0] == 'C':
                 countingDiseaseWeighted[mid] += (1.0 / meshInQuery)
-            else:
-                countingMeshWeighted[mid[0]] += (1.0 / meshInQuery)
+            
+            countingMeshWeighted[mid[0]] += (1.0 / meshInQuery)
 
     #print meshUserValues
     #print countingMeshWeighted, countingDiseaseWeighted
