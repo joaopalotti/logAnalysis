@@ -4,7 +4,7 @@ from nltk.tokenize.punkt import PunktWordTokenizer
 
 PATH_TO_AUX_FILES = "auxFiles/"
 
-NLWords = ["would", "wouldn't", "wouldnt", "could", "couldn't", "couldnt", "should", "shouldn't", "shouldnt", "how", "when", "where", "which", "who", "whom", "can", "cannot", "why", "what", "we", "they", "i", "do", "does", "must", "ought"]
+NLWords = ["would", "wouldn't", "wouldnt", "could", "couldn't", "couldnt", "should", "shouldn't", "shouldnt", "how", "when", "where", "which", "who", "whom", "can", "cannot", "why", "what", "we", "they", "i", "do", "does", "must", "ought", "whats", "wheres", "whos"]
 
 
 def createAcronymSet():
@@ -136,7 +136,7 @@ def preProcessData(data, removeStopWords):
 """
 
 def symptomTypes():
-    return ["sosy","lbtr"] 
+    return ["sosy","lbtr", "fndg"] 
 
 def sourceTypes():
     return ["bact", "virs", "fngs", "arch"] 
