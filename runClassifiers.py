@@ -39,15 +39,9 @@ def transformeInDict(userDict, n=-1, proportional=-1):
         listOfLabels.append(user.label)
     return listOfDicts, listOfLabels
 
-if __name__ == "__main__":
 
-    print "HOW TO USE: python runClassifiers.py [normalize|scale|minmax|nothing] [forceBalance|-1] [proportional|-1] [minNumberOfQueries] [nseed]"
-    preProcessing = sys.argv[1]
-    forceBalance = int(sys.argv[2])
-    proportional = int(sys.argv[3])
-    minNumberOfQueries = int(sys.argv[4])
-    nseed = int(sys.argv[5])
-    
+def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, nseed):
+   
     medicalUserDataSet = "medicalUser-%d.pk" % (minNumberOfQueries)
     regularUserDataSet = "regularUser-%d.pk" % (minNumberOfQueries)
     
@@ -156,31 +150,31 @@ if __name__ == "__main__":
 
     y_ert = runExtraTreeClassifier(X, y, parametersERT, accBaseline, f1Baseline, wf1Baseline)
     print 20 * '=', " ERF  Results ", 20 * '='
-    makeReport(X, y, y_ert, accBaseline, f1Baseline, wf1Baseline)
-    
+    ertacc, ertf1, ertwf1 = makeReport(X, y, y_ert, accBaseline, f1Baseline, wf1Baseline)
     
     y_nb  = runNB(X, y, parametersNB,  accBaseline, f1Baseline, wf1Baseline)
     print 20 * '=', " NB  Results ", 20 * '='
-    makeReport(X, y, y_nb, accBaseline, f1Baseline, wf1Baseline)
+    nbacc, nbf1, nbwf1 = makeReport(X, y, y_nb, accBaseline, f1Baseline, wf1Baseline)
     
     y_knn = runKNN(X, y, parametersKnn,  accBaseline, f1Baseline, wf1Baseline)
     print 20 * '=', " KNN Results ", 20 * '='
-    makeReport(X, y, y_knn, accBaseline, f1Baseline, wf1Baseline)
+    knnacc, knnf1, knnwf1 = makeReport(X, y, y_knn, accBaseline, f1Baseline, wf1Baseline)
     
     y_dt = runDecisionTree(X, y, parametersDT,  accBaseline, f1Baseline, wf1Baseline)
     print 20 * '=', " DT  Results ", 20 * '='
-    makeReport(X, y, y_dt, accBaseline, f1Baseline, wf1Baseline)
+    dtacc, dtf1, dtwf1 = makeReport(X, y, y_dt, accBaseline, f1Baseline, wf1Baseline)
     
     y_lg =  runLogRegression(X, y, parametersLogReg,  accBaseline, f1Baseline, wf1Baseline)
     print 20 * '=', " LogReg  Results ", 20 * '='
-    makeReport(X, y, y_lg, accBaseline, f1Baseline, wf1Baseline)
+    lgacc, lgf1, lgwf1 = makeReport(X, y, y_lg, accBaseline, f1Baseline, wf1Baseline)
     
     y_svm = runSVM(X, y, parametersSVM,  accBaseline, f1Baseline, wf1Baseline)
     print 20 * '=', " SVM Results ", 20 * '='
-    makeReport(X, y, y_svm,  accBaseline, f1Baseline, wf1Baseline)
+    svmacc, svmwf1, svmwf1 = makeReport(X, y, y_svm,  accBaseline, f1Baseline, wf1Baseline)
     
     print "Done"
 
+    return ( accBaseline, f1Baseline, wf1Baseline, ertacc, ertf1, ertwf1, nbacc, nbf1, nbwf1, knnacc, knnf1, knnwf1, dtacc, dtf1, dtwf1,lgacc, lgf1, lgwf1, svmacc, svmwf1, svmwf1)  
     #import pylab as pl
     #pl.clf()
     #pl.plot(recall, precision, label='Precision-Recall curve')
@@ -192,3 +186,12 @@ if __name__ == "__main__":
     #pl.legend(loc="lower left")
     #pl.show()
 
+if __name__ == "__main__":
+
+    print "HOW TO USE: python runClassifiers.py [normalize|scale|minmax|nothing] [forceBalance|-1] [proportional|-1] [minNumberOfQueries] [nseed]"
+    preProcessing = sys.argv[1]
+    forceBalance = int(sys.argv[2])
+    proportional = int(sys.argv[3])
+    minNumberOfQueries = int(sys.argv[4])
+    nseed = int(sys.argv[5])
+    runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, nseed) 

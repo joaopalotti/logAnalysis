@@ -35,6 +35,8 @@ def makeReport(X, y, y_pred,  accBaseline, f1Baseline, wf1Baseline):
     print "ACC Score --> ", (acc)
     print "GAIN --> %0.2f%% " % (100.0 * (acc - accBaseline) / accBaseline)
 
+    return acc, sf1, wf1, 
+
 def runNB(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     # http://scikit-learn.org/stable/modules/naive_bayes.html#naive-bayes
     
