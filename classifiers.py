@@ -53,9 +53,9 @@ def runNB(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     for l in lists:
         y_pred += list(l)
     
-    #scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) # in 0.14 i am going to use it: scoring="f1")   
-    #print "Accuracy NB: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    #print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"], scoring="f1") # in 0.14 i am going to use it: scoring="f1")   
+    print "simple F1 NB: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
+    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
     
     print "Done"
     return y_pred
@@ -76,9 +76,9 @@ def runLogRegression(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     for l in lists:
         y_pred += list(l)
 
-    #scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) #,scoring="f1")   
-    #print "Accuracy LogReg: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    #print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) ,scoring="f1")   
+    print "simple F1 LogReg: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
+    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
     
     print "Done"
     return y_pred
@@ -99,9 +99,9 @@ def runSVM(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     for l in lists:
         y_pred += list(l)
 
-    #scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) #,scoring="f1")   
-    #print "Accuracy SVM: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    #print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) ,scoring="f1")   
+    print "simple F1 SVM: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
+    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
     
     print "Done"
     return y_pred
@@ -122,9 +122,9 @@ def runKNN(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     for l in lists:
         y_pred += list(l)
     
-    #scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"])   
-    #print "Accuracy KNN: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    #print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) ,scoring="f1")   
+    print "simple F1 KNN: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
+    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
     
     print "Done"
     return y_pred
@@ -137,17 +137,18 @@ def runDecisionTree(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     kFold = cross_validation.KFold(n=nSamples, n_folds=parameters["CV"], indices=True)
 
     # Run classifier
-    clf = DecisionTreeClassifier(random_state=0) #, compute_importances=True)
+    clf = DecisionTreeClassifier(random_state=0, compute_importances=True)
     lists = [clf.fit(X[train], y[train]).predict(X[test]) for train, test in kFold]
     
     y_pred = []
     for l in lists:
         y_pred += list(l)
     
-    #scores = cross_validation.cross_val_score(clf, X, y, cv=parameter["CV"], n_jobs=parameters["nJobs"])   
-    #print "Accuracy DT: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    #print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) ,scoring="f1")   
+    print "simple F1 DT: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
+    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
     
+    measureFeatureImportance(clf)
     print "Done"
     return y_pred
 
@@ -167,9 +168,9 @@ def runExtraTreeClassifier(X, y, parameters,  accBaseline, f1Baseline, wf1Baseli
     for l in lists:
         y_pred += list(l)
     
-    #scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"])   
-    #print "Accuracy eRT: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    #print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) ,scoring="f1")   
+    print "simple F1 eRT: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
+    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
    
     measureFeatureImportance(clf)
     print "Done"
@@ -190,11 +191,11 @@ def measureFeatureImportance(classifier):
     
     
     # Plot the feature importances of the forest
-    import pylab as pl
-    pl.figure()
-    pl.title("Feature importances")
-    pl.bar(xrange(len(indices)), importances[indices],
-              color="r", yerr=std[indices], align="center")
-    pl.xticks(xrange(len(indices)), indices)
-    pl.xlim([-1, len(indices)])
-    pl.show()
+    #import pylab as pl
+    #pl.figure()
+    #pl.title("Feature importances")
+    #pl.bar(xrange(len(indices)), importances[indices],
+    #          color="r", yerr=std[indices], align="center")
+    #pl.xticks(xrange(len(indices)), indices)
+    #pl.xlim([-1, len(indices)])
+    #pl.show()
