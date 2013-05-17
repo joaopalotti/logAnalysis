@@ -55,7 +55,7 @@ def runNB(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     
     scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"], scoring="f1") # in 0.14 i am going to use it: scoring="f1")   
     print "simple F1 NB: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - f1Baseline) / f1Baseline)
     
     print "Done"
     return y_pred
@@ -76,9 +76,9 @@ def runLogRegression(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     for l in lists:
         y_pred += list(l)
 
-    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) ,scoring="f1")   
+    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"], scoring="f1")   
     print "simple F1 LogReg: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - f1Baseline) / f1Baseline)
     
     print "Done"
     return y_pred
@@ -99,9 +99,9 @@ def runSVM(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     for l in lists:
         y_pred += list(l)
 
-    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) ,scoring="f1")   
+    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"], scoring="f1")   
     print "simple F1 SVM: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - f1Baseline) / f1Baseline)
     
     print "Done"
     return y_pred
@@ -122,9 +122,9 @@ def runKNN(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     for l in lists:
         y_pred += list(l)
     
-    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) ,scoring="f1")   
+    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"], scoring="f1")   
     print "simple F1 KNN: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - f1Baseline) / f1Baseline)
     
     print "Done"
     return y_pred
@@ -144,9 +144,9 @@ def runDecisionTree(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     for l in lists:
         y_pred += list(l)
     
-    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) ,scoring="f1")   
+    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"], scoring="f1")   
     print "simple F1 DT: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - f1Baseline) / f1Baseline)
     
     measureFeatureImportance(clf)
     print "Done"
@@ -168,9 +168,9 @@ def runExtraTreeClassifier(X, y, parameters,  accBaseline, f1Baseline, wf1Baseli
     for l in lists:
         y_pred += list(l)
     
-    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"]) ,scoring="f1")   
+    scores = cross_validation.cross_val_score(clf, X, y, cv=parameters["CV"], n_jobs=parameters["nJobs"], scoring="f1")   
     print "simple F1 eRT: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
-    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - baseline) / baseline)
+    print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - f1Baseline) / f1Baseline)
    
     measureFeatureImportance(clf)
     print "Done"
