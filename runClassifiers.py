@@ -148,9 +148,9 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
     print "Running classifiers..."
     #TODO: run a logistic regression to evaluate the features and decide which ones are the best ones
 
-    #y_ert = runExtraTreeClassifier(X, y, parametersERT, accBaseline, f1Baseline, wf1Baseline)
-    #print 20 * '=', " ERF  Results ", 20 * '='
-    #ertacc, ertf1, ertwf1 = makeReport(X, y, y_ert, accBaseline, f1Baseline, wf1Baseline)
+    y_ert = runExtraTreeClassifier(X, y, parametersERT, accBaseline, f1Baseline, wf1Baseline)
+    print 20 * '=', " ERF  Results ", 20 * '='
+    ertacc, ertf1, ertwf1 = makeReport(X, y, y_ert, accBaseline, f1Baseline, wf1Baseline)
     
     y_nb  = runNB(X, y, parametersNB,  accBaseline, f1Baseline, wf1Baseline)
     print 20 * '=', " NB  Results ", 20 * '='
