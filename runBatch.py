@@ -33,9 +33,10 @@ def compareValues(minIndex):
     print "F1 ACC         = %.3f (+/- %.5f)" % (cF1sStat.mean, cF1sStat.std)
     print "wF1 ACC        = %.3f (+/- %.5f)" % (cwF1sStat.mean, cwF1sStat.std)
   
-    print "ACC GAIN --> %0.2f%% " % (100.0 * (cwF1sStat.mean - blF1sStat.mean) / blF1sStat.mean)
-    print "F1 GAIN --> %0.2f%% " %  (100.0 * (cF1sStat.mean - blwF1sStat.mean) / blwF1sStat.mean)
-    print "WF1 GAIN --> %0.2f%% " % (100.0 * (cAccsStat.mean - blAccsStat.mean) / blAccsStat.mean)
+    print "ACC GAIN --> %0.2f%% " % (100.0 * (cAccsStat.mean - blAccsStat.mean) / blAccsStat.mean)
+    print "F1 GAIN --> %0.2f%% " %  (100.0 * (cF1sStat.mean - blF1sStat.mean) / blF1sStat.mean)
+    print "WF1 GAIN --> %0.2f%% " % (100.0 * (cwF1sStat.mean - blwF1sStat.mean) / blwF1sStat.mean)
+
 
 
     print "Tacc, Probacc = ", tacc, probacc, probacc > 0.05

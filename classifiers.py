@@ -148,7 +148,7 @@ def runDecisionTree(X, y, parameters,  accBaseline, f1Baseline, wf1Baseline):
     print "simple F1 DT: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() / 2)
     print "GAIN --> %0.2f%% " % (100.0 * (scores.mean() - f1Baseline) / f1Baseline)
     
-    measureFeatureImportance(clf)
+    #measureFeatureImportance(clf)
     print "Done"
     return y_pred
 
