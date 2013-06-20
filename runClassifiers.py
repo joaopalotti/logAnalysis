@@ -1,13 +1,15 @@
 import pickle, sys
 import random
 import numpy as np
+from optparse import OptionParser
 #My classes
 from classifiers import *
 from createFeatureVector import userClass
 from sklearn.metrics import f1_score, accuracy_score
 
 ### HOW TO USE:
-# python runClassifiers.py [normalize|scale|minmax|nothing] [forceBalance|-1] [proportional|-1] [minNumberOfQueries] [nseed]"
+# python runClassifiers.py -h
+# python runClassifiers.pt --preprocessing=[normalize|scale|minmax|nothing] [forceBalance|-1] [proportional|-1] [minNumberOfQueries] [nseed]"
 
 nJobs = 2
 nCV = 10
@@ -187,11 +189,18 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
     #pl.show()
 
 if __name__ == "__main__":
+    
+    op = OptionParser(version="%prog 2")
+    op.add_option("--preprocessing", "-p", action="store", type="string", dest="preProcessing", help="Preprocessing option [normalize|scale|minmax|nothing] --  [default: %default]", metavar="OPT", default="normalize")
+    op.add_option("--forceBalance", "-b", action="store", type="int", dest="forceBalance", help="Force balance keeping only X instances of each class.", metavar="X", default=-1)
+    op.add_option("--proportional", "-g", action="store", type="int", dest="proportional", help="Force proportion of the data to X%.", metavar="X", default=-1)
+    op.add_option("--minNumberOfQueries", "-m", action="store", type="int", dest="minNumberOfQueries", help="Define the min. number of queries (X) necessary to use a user for classification.  [default: %default]", metavar="X", default=5)
+    op.add_option("--nseed", "-s", action="store", type="int", dest="nseed", help="Seed used for random processing during classification.  [default: %default]", metavar="X", default=29)
 
-    print "HOW TO USE: python runClassifiers.py [normalize|scale|minmax|nothing] [forceBalance|-1] [proportional|-1] [minNumberOfQueries] [nseed]"
-    preProcessing = sys.argv[1]
-    forceBalance = int(sys.argv[2])
-    proportional = int(sys.argv[3])
-    minNumberOfQueries = int(sys.argv[4])
-    nseed = int(sys.argv[5])
-    runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, nseed) 
+    (opts, args) = op.parse_args()
+    if len(sys.argv) > 0:
+        print "This program does not receive parameters this way: use -h to see the options."
+    
+    print "Using preprocessing: ", opts.preProcessing
+
+    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed) 

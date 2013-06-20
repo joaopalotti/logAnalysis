@@ -4,10 +4,8 @@ import operator
 from datetime import datetime
 
 from metrics import generateStatsVector
-from myPlot import plotter
 from latexTools import latexPrinter
 from auxiliarFunctions import *
-from plotFunctions import *
 
 """
 SOME IMPORTANT NOTES:
@@ -19,7 +17,7 @@ SOME IMPORTANT NOTES:
 numberOfQueriesInASessionThreshold = 100
 removeOutliers=True
 
-def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True):
+def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, plotGraphs=False):
     """
         Expected a list of list of DataSet (TripData or AolData) objects
     """
@@ -200,19 +198,23 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True):
         booleanUseRow.append( [dataName, booleanTerms['and'], 100.0 * booleanTerms['and']/numberOfQueries, booleanTerms['or'], 100.0 * booleanTerms['or']/numberOfQueries,booleanTerms['not'], 100.0 * booleanTerms['not'] / numberOfQueries, booleanTerms['any'], 100.0 * booleanTerms['any'] / numberOfQueries ] )
 
     # Plot graphics
-    myPlotter = plotter() 
-    plotQueriesPerSession(myPlotter, countingQueriesPerSessionList, printValuesToFile)
-    plotFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile)
-    plotLogLogFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile)
-    plotFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile)
-    plotLogLogFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile)
-    plotTimePerSession(myPlotter, countingTimePerSessionList, printValuesToFile)
-    plotAcronymFrequency(myPlotter, countingAcronymsList, printValuesToFile)
-    plotSizeOfWords(myPlotter, dataList, printValuesToFile)
-    plotSizeOfQueries(myPlotter, dataList, printValuesToFile)
-    plotMeshDepth(myPlotter, countingMeshDepthList, printValuesToFile)
-    plotUsersByNumberOfQueries(myPlotter, countingQueriesPerUserList, printValuesToFile)
-    plotQueryRanking(myPlotter, countingQueryRankingList, printValuesToFile)
+    if plotGraphs:
+        from myPlot import plotter
+        from plotFunctions import *
+
+        myPlotter = plotter() 
+        plotQueriesPerSession(myPlotter, countingQueriesPerSessionList, printValuesToFile)
+        plotFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile)
+        plotLogLogFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile)
+        plotFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile)
+        plotLogLogFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile)
+        plotTimePerSession(myPlotter, countingTimePerSessionList, printValuesToFile)
+        plotAcronymFrequency(myPlotter, countingAcronymsList, printValuesToFile)
+        plotSizeOfWords(myPlotter, dataList, printValuesToFile)
+        plotSizeOfQueries(myPlotter, dataList, printValuesToFile)
+        plotMeshDepth(myPlotter, countingMeshDepthList, printValuesToFile)
+        plotUsersByNumberOfQueries(myPlotter, countingQueriesPerUserList, printValuesToFile)
+        plotQueryRanking(myPlotter, countingQueryRankingList, printValuesToFile)
 
     #Print latex tables:
     latexWriter = latexPrinter() 
