@@ -172,11 +172,11 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
     
     y_svm = runSVM(X, y, parametersSVM,  accBaseline, f1Baseline, wf1Baseline)
     print 20 * '=', " SVM Results ", 20 * '='
-    svmacc, svmwf1, svmwf1 = makeReport(X, y, y_svm,  accBaseline, f1Baseline, wf1Baseline)
+    svmacc, svmf1, svmwf1 = makeReport(X, y, y_svm,  accBaseline, f1Baseline, wf1Baseline)
     
     print "Done"
 
-    return ( accBaseline, f1Baseline, wf1Baseline, ertacc, ertf1, ertwf1, nbacc, nbf1, nbwf1, knnacc, knnf1, knnwf1, dtacc, dtf1, dtwf1,lgacc, lgf1, lgwf1, svmacc, svmwf1, svmwf1)  
+    return ( accBaseline, f1Baseline, wf1Baseline, ertacc, ertf1, ertwf1, nbacc, nbf1, nbwf1, knnacc, knnf1, knnwf1, dtacc, dtf1, dtwf1,lgacc, lgf1, lgwf1, svmacc, svmf1, svmwf1)  
     #import pylab as pl
     #pl.clf()
     #pl.plot(recall, precision, label='Precision-Recall curve')

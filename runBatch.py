@@ -30,8 +30,8 @@ def compareValues(minIndex):
     print "wF1 = %.3f (+/- %.5f)" % (blwF1sStat.mean, blwF1sStat.std)
 
     print "Classifier ACC = %.3f (+/- %.5f)" % (cAccsStat.mean, cAccsStat.std)
-    print "F1 ACC         = %.3f (+/- %.5f)" % (cF1sStat.mean, cF1sStat.std)
-    print "wF1 ACC        = %.3f (+/- %.5f)" % (cwF1sStat.mean, cwF1sStat.std)
+    print "Classifier F1          = %.3f (+/- %.5f)" % (cF1sStat.mean, cF1sStat.std)
+    print "Classifier wF1        = %.3f (+/- %.5f)" % (cwF1sStat.mean, cwF1sStat.std)
   
     print "ACC GAIN --> %0.2f%% " % (100.0 * (cAccsStat.mean - blAccsStat.mean) / blAccsStat.mean)
     print "F1 GAIN --> %0.2f%% " %  (100.0 * (cF1sStat.mean - blF1sStat.mean) / blF1sStat.mean)
@@ -75,10 +75,10 @@ if __name__ == "__main__":
     compareValues(12)
 
     print "------- comparing LG ---------- "
-    compareValues(12)
+    compareValues(15)
     
     print "------- comparing SVM ---------- "
-    compareValues(15)
+    compareValues(18)
     
     #(accBaseline, f1Baseline, wf1Baseline, ertacc, ertf1, ertwf1, nbacc, nbf1, nbwf1, knnacc, knnf1, knnwf1, dtacc, dtf1, dtwf1,lgacc, lgf1, lgwf1, svmacc, svmwf1, svmwf1)  
 
