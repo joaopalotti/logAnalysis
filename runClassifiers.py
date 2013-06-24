@@ -2,8 +2,16 @@ import pickle, sys
 import random
 import numpy as np
 from optparse import OptionParser
+from collections import Counter
+from sklearn.naive_bayes import GaussianNB
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import ExtraTreesClassifier
+
 #My classes
-from classifiers import *
+from classifiers import classify, makeReport
 from createFeatureVector import userClass
 from sklearn.metrics import f1_score, accuracy_score
 
@@ -15,13 +23,7 @@ nJobs = 2
 nCV = 10
 CSVM = 10000
 
-parametersSVM = {"nJobs":nJobs, "CV":nCV, "cacheSize":1000, "kernel":"linear", "C":CSVM}
-parametersKnn = {"nJobs":nJobs, "CV":nCV, "K":100}
-parametersDT = {"nJobs":nJobs, "CV":nCV}
-parametersERT = {"nJobs":nJobs, "CV":nCV, "n_estimators":10}
-parametersLogReg = {"nJobs":nJobs, "CV":nCV}
-parametersNB = {"nJobs":nJobs, "CV":nCV}
-
+classifyParameters = {"KNN-K": 100, "ERT-n_estimators": 10, "SVM-cacheSize": 1000, "SVM-kernel": "linear", "SVM-C": CSVM} 
 
 def transformeInDict(userDict, n=-1, proportional=-1):
     listOfDicts = list()
@@ -149,34 +151,40 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
     #
     print "Running classifiers..."
     #TODO: run a logistic regression to evaluate the features and decide which ones are the best ones
-
-    y_ert = runExtraTreeClassifier(X, y, parametersERT, accBaseline, f1Baseline, wf1Baseline)
+    
+    y_ert = classify(ExtraTreesClassifier(random_state=0, compute_importances=True, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"]), \
+                     X, y, nCV, nJobs, tryToMeasureFeatureImportance=True)
     print 20 * '=', " ERF  Results ", 20 * '='
     ertacc, ertf1, ertwf1 = makeReport(X, y, y_ert, accBaseline, f1Baseline, wf1Baseline)
     
-    y_nb  = runNB(X, y, parametersNB,  accBaseline, f1Baseline, wf1Baseline)
+    y_nb  = classify(GaussianNB(),\
+                     X, y, nCV, nJobs)
     print 20 * '=', " NB  Results ", 20 * '='
     nbacc, nbf1, nbwf1 = makeReport(X, y, y_nb, accBaseline, f1Baseline, wf1Baseline)
     
-    y_knn = runKNN(X, y, parametersKnn,  accBaseline, f1Baseline, wf1Baseline)
+    y_knn = classify(KNeighborsClassifier(n_neighbors=classifyParameters["KNN-K"]),\
+                     X, y, nCV, nJobs)
     print 20 * '=', " KNN Results ", 20 * '='
     knnacc, knnf1, knnwf1 = makeReport(X, y, y_knn, accBaseline, f1Baseline, wf1Baseline)
     
-    y_dt = runDecisionTree(X, y, parametersDT,  accBaseline, f1Baseline, wf1Baseline)
+    y_dt = classify(DecisionTreeClassifier(random_state=0, compute_importances=True),\
+                    X, y, nCV, nJobs)
     print 20 * '=', " DT  Results ", 20 * '='
     dtacc, dtf1, dtwf1 = makeReport(X, y, y_dt, accBaseline, f1Baseline, wf1Baseline)
     
-    y_lg =  runLogRegression(X, y, parametersLogReg,  accBaseline, f1Baseline, wf1Baseline)
+    y_lg =  classify(LogisticRegression(),\
+                     X, y, nCV, nJobs)
     print 20 * '=', " LogReg  Results ", 20 * '='
     lgacc, lgf1, lgwf1 = makeReport(X, y, y_lg, accBaseline, f1Baseline, wf1Baseline)
     
-    y_svm = runSVM(X, y, parametersSVM,  accBaseline, f1Baseline, wf1Baseline)
+    y_svm = classify(SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"]),\
+                     X, y, wf1Baseline, nCV, nJobs)
     print 20 * '=', " SVM Results ", 20 * '='
-    svmacc, svmf1, svmwf1 = makeReport(X, y, y_svm,  accBaseline, f1Baseline, wf1Baseline)
+    svmacc, svmf1, svmwf1 = makeReport(X, y, y_svm, accBaseline, f1Baseline, wf1Baseline)
     
     print "Done"
 
-    return ( accBaseline, f1Baseline, wf1Baseline, ertacc, ertf1, ertwf1, nbacc, nbf1, nbwf1, knnacc, knnf1, knnwf1, dtacc, dtf1, dtwf1,lgacc, lgf1, lgwf1, svmacc, svmf1, svmwf1)  
+    return ( accBaseline, f1Baseline, wf1Baseline, ertacc, ertf1, ertwf1, nbacc, nbf2, nbwf1, knnacc, knnf1, knnwf1, dtacc, dtf1, dtwf1,lgacc, lgf1, lgwf1, svmacc, svmf1, svmwf1)  
     #import pylab as pl
     #pl.clf()
     #pl.plot(recall, precision, label='Precision-Recall curve')
@@ -203,4 +211,5 @@ if __name__ == "__main__":
     
     print "Using preprocessing: ", opts.preProcessing
 
-    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed) 
+    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed)
+
