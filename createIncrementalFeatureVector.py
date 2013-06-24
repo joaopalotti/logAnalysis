@@ -17,9 +17,10 @@ maximalNumberOfQueries = 100
 #   python createFeatureVector.py minimalNumberOfQueries 
 
 class userClass:
-    def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm, expa, shri, refo, expshr, expref, shrref, expshrref):
+    def __init__(self, id, label, queryCounter, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm, expa, shri, refo, expshr, expref, shrref, expshrref):
         self.id = id
         self.label = label
+        self.queryCounter = queryCounter
         self.numberOfQueries = nq
         self.numberOfSessions = ns
         self.meanMeshDepth = mmd
@@ -42,11 +43,11 @@ class userClass:
 
     def toDict(self):
         #return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical}
-        return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref}
+        return {'-1.queryCounter':self.queryCounter, '00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref}
                 
     #'14.didExpShr':self.expshr ,'15.didExpRef': self.expref ,'16.didShrRef': self.shrref ,'17.didExpShrRef': self.expshrref}
-        #TODO: should I consider different kinds of abbreviations?
-        #TODO: take a look at the mesh and decide if it is possible to separete levels or groups from their data (same for UMLS)
+    #TODO: should I consider different kinds of abbreviations?
+    #TODO: take a look at the mesh and decide if it is possible to separete levels or groups from their data (same for UMLS)
 
 '''
     Boolean feature.
@@ -60,16 +61,16 @@ def calculateNLPerUser(data):
     
     for (userId, _, keywords) in userIds:
         if userId not in tempMapUserNL:
-            userCounter = 1
+            queryCounter = 1
             tempMapUserNL[userId] = False
         else:
-            userCounter += 1
+            queryCounter += 1
         
-        mapIndex = userId + "_" + str(userCounter)
+        mapIndex = userId + "_" + str(queryCounter)
         mapUserNL[mapIndex] = ( tempMapUserNL[userId] or hasNLword(keywords) )
         tempMapUserNL[userId] = mapUserNL[mapIndex]
 
-    #    print "User now = ", userId, " counter ---> ", userCounter, " map ----> ",  mapUserNL[userId + "_" + str(userCounter) ]
+    #    print "User now = ", userId, " counter ---> ", queryCounter, " map ----> ",  mapUserNL[userId + "_" + str(queryCounter) ]
 
     #print "mapUserNL ---> ", mapUserNL
     return mapUserNL
@@ -90,13 +91,13 @@ def calculateMeanMeshDepthPerUser(data):
         
         if userId not in processedUser:
             processedUser.add(userId)
-            userCounter = 1
+            queryCounter = 1
             previousIndex = -1
         else:
-            userCounter += 1
-            previousIndex = userId + "_" + str(userCounter-1)
+            queryCounter += 1
+            previousIndex = userId + "_" + str(queryCounter-1)
             
-        userIndex = userId + "_" + str(userCounter)
+        userIndex = userId + "_" + str(queryCounter)
 
         if mesh is None and previousIndex == -1: #first query and without mesh
             mapUserMeanMeshDepth[userIndex] = 0
@@ -108,9 +109,9 @@ def calculateMeanMeshDepthPerUser(data):
                 mapUserMeanMeshDepth[userIndex] = meanMesh
             else:
                 #calculate new mean based on previous number
-                mapUserMeanMeshDepth[userIndex] = ((mapUserMeanMeshDepth[previousIndex] * (userCounter - 1) ) + meanMesh) / userCounter
+                mapUserMeanMeshDepth[userIndex] = ((mapUserMeanMeshDepth[previousIndex] * (queryCounter - 1) ) + meanMesh) / queryCounter
     
-        #print "User id = ", userId, "counter =", userCounter," mesh = ", mesh, " map => ", mapUserMeanMeshDepth[userIndex]
+        #print "User id = ", userId, "counter =", queryCounter," mesh = ", mesh, " map => ", mapUserMeanMeshDepth[userIndex]
     return mapUserMeanMeshDepth
 
 def calculateNumberOfQueriesPerUser(data):
@@ -123,14 +124,14 @@ def calculateNumberOfQueriesPerUser(data):
     for userId, _ in userIds:
         if userId not in processedUser:
             processedUser.add(userId)
-            userCounter = 1
+            queryCounter = 1
         else:
-            userCounter += 1
+            queryCounter += 1
 
-        userIndex = userId + "_" + str(userCounter)
-        mapUserQueries[userIndex] = userCounter
+        userIndex = userId + "_" + str(queryCounter)
+        mapUserQueries[userIndex] = queryCounter
 
-        #print "User id = ", userId, "counter =", userCounter," map => ", mapUserQueries[userIndex]
+        #print "User id = ", userId, "counter =", queryCounter," map => ", mapUserQueries[userIndex]
     return mapUserQueries
 
 def calculateMeanWordsPerQuery(data):
@@ -142,21 +143,21 @@ def calculateMeanWordsPerQuery(data):
         
         if userId not in processedUser:
             processedUser.add(userId)
-            userCounter = 1
+            queryCounter = 1
             previousIndex = -1
         else:
-            userCounter += 1
-            previousIndex = userId + "_" + str(userCounter-1)
+            queryCounter += 1
+            previousIndex = userId + "_" + str(queryCounter-1)
             
-        userIndex = userId + "_" + str(userCounter)
+        userIndex = userId + "_" + str(queryCounter)
 
         if previousIndex == -1: #first query
             mapUserMeanWords[userIndex] = float(nwords)
         else:
             #calculate new mean based on previous number
-            mapUserMeanWords[userIndex] = ((mapUserMeanWords[previousIndex] * (userCounter - 1) ) + nwords) / userCounter
+            mapUserMeanWords[userIndex] = ((mapUserMeanWords[previousIndex] * (queryCounter - 1) ) + nwords) / queryCounter
         
-        #print "User id = ", userId, "counter =", userCounter," nwords = ", nwords, " map => ", mapUserMeanWords[userIndex]
+        #print "User id = ", userId, "counter =", queryCounter," nwords = ", nwords, " map => ", mapUserMeanWords[userIndex]
     return mapUserMeanWords
 
 def calculateNumberOfSessionsPerUser(data):
@@ -168,16 +169,16 @@ def calculateNumberOfSessionsPerUser(data):
 
         if userId not in userSessionCounter:
             userSessionCounter[userId] = 1
-            userCounter = 1
+            queryCounter = 1
         else:
-            userCounter += 1
+            queryCounter += 1
             if newSession:
                 userSessionCounter[userId] += 1
         
-        userIndex = userId + "_" + str(userCounter)
+        userIndex = userId + "_" + str(queryCounter)
         mapUserSession[userIndex] = userSessionCounter[userId]
 
-        #print "User id = ", userId, "counter = ", userCounter," newSession => ", newSession, " map => ", mapUserSession[userIndex]
+        #print "User id = ", userId, "counter = ", queryCounter," newSession => ", newSession, " map => ", mapUserSession[userIndex]
     
     return mapUserSession
 
@@ -204,16 +205,16 @@ def calculateUsingAbbreviation(data):
     for (userId, _, keywords) in userIds:
         if userId not in tempMapUserAbb:
             tempMapUserAbb[userId] = False
-            userCounter = 1
+            queryCounter = 1
         else:
-            userCounter += 1
+            queryCounter += 1
 
-        userIndex = userId + "_" + str(userCounter)
+        userIndex = userId + "_" + str(queryCounter)
 
         mapUserAbb[userIndex] = ( tempMapUserAbb[userId] or hasAbbreviation(keywords) )
         tempMapUserAbb[userId] = mapUserAbb[userIndex]
 
-        #cprint "user =", userId, " counter =", userCounter, "mapUserAbb ---> ", mapUserAbb[userIndex]
+        #cprint "user =", userId, " counter =", queryCounter, "mapUserAbb ---> ", mapUserAbb[userIndex]
     return mapUserAbb
 
 def hasAbbreviation(words):
@@ -230,7 +231,7 @@ def calculateMeanTimePerSession(data):
         
         if userId not in processedUser:
             processedUser.add(userId)
-            userCounter = 1
+            queryCounter = 1
             numberOfSessions = 1
             totalSeconds = 0
             firstTimeInSession = date
@@ -238,9 +239,9 @@ def calculateMeanTimePerSession(data):
             oldMeanTime, meanTimeSoFar = 0,0
 
         else:
-            userCounter += 1
+            queryCounter += 1
 
-        userIndex = userId + "_" + str(userCounter)
+        userIndex = userId + "_" + str(queryCounter)
 
         # new user session...
         if newSession:
@@ -253,7 +254,7 @@ def calculateMeanTimePerSession(data):
         meanTimeSoFar = (sessionLength + (numberOfSessions - 1) * oldMeanTime)/ numberOfSessions
         mapUserMeanTimePerSession[userIndex] = meanTimeSoFar
 
-        #print "User id = ", userId, "counter = ", userCounter," date =>", date, 
+        #print "User id = ", userId, "counter = ", queryCounter," date =>", date, 
         #print "newSession => ", newSession, " sessions: ", numberOfSessions, "secs: ", sessionLength, " map => ", mapUserMeanTimePerSession[userIndex]
     return mapUserMeanTimePerSession
 
@@ -318,11 +319,11 @@ def createDictOfUsers(data, label):
     
     for u, _ in users:
         if u == previousUser:
-            userCounter += 1
+            queryCounter += 1
         else:
             previousUser = u
-            userCounter = 1
-        user = u + "_" + str(userCounter)
+            queryCounter = 1
+        user = u + "_" + str(queryCounter)
 
         if user not in countingNumberOfQueriesPerUser or \
            user not in countingNumberOfSessionsPerUser or \
@@ -356,7 +357,7 @@ def createDictOfUsers(data, label):
         expa, shri, refo, expshr, expref, shrref, expshrref = 0,0,0,0,0,0,0 #countingUserBehavior[user]
 
 
-        userDict[user] = userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
+        userDict[user] = userClass(user, label, queryCounter, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
                                    expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref)
 
     return userDict
