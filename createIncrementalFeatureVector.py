@@ -52,71 +52,132 @@ class userClass:
     Boolean feature.
 '''
 def calculateNLPerUser(data):
+    tempMapUserNL = dict()
     mapUserNL = dict()
     
-    userIds = sorted( (member.userId, member.keywords) for member in data )
+    #Not using datetime, but it is important to keep the order of queries issued by the user
+    userIds = sorted( (member.userId, member.datetime, member.keywords) for member in data )
     
-    for (userId, keywords) in userIds:
-        if userId not in mapUserNL:
-            mapUserNL[userId] = False
-        mapUserNL[userId] = ( mapUserNL[userId] or hasNLword(keywords) )
+    for (userId, _, keywords) in userIds:
+        if userId not in tempMapUserNL:
+            userCounter = 1
+            tempMapUserNL[userId] = False
+        else:
+            userCounter += 1
+        
+        mapIndex = userId + "_" + str(userCounter)
+        mapUserNL[mapIndex] = ( tempMapUserNL[userId] or hasNLword(keywords) )
+        tempMapUserNL[userId] = mapUserNL[mapIndex]
+
+    #    print "User now = ", userId, " counter ---> ", userCounter, " map ----> ",  mapUserNL[userId + "_" + str(userCounter) ]
 
     #print "mapUserNL ---> ", mapUserNL
     return mapUserNL
 
 def hasNLword(words):
-
     #print ( [ w for w in words if w.lower() in NLWords ] )
     return any( [ w for w in words if w.lower() in NLWords ] )
     
 def calculateMeanMeshDepthPerUser(data):
     mapUserMeanMeshDepth = dict()
+    processedUser = set()
     tempMap = defaultdict(list)
 
-    userIds = sorted( (member.userId, member.mesh) for member in data )
+    #Not using datetime, but it is important to keep the order of queries issued by the user
+    userIds = sorted( (member.userId, member.datetime, member.mesh) for member in data )
     
-    for (userId, mesh) in userIds:
-        if mesh is not None:
-            tempMap[userId] += mesh 
+    for (userId, _, mesh) in userIds:
+        
+        if userId not in processedUser:
+            processedUser.add(userId)
+            userCounter = 1
+            previousIndex = -1
+        else:
+            userCounter += 1
+            previousIndex = userId + "_" + str(userCounter-1)
+            
+        userIndex = userId + "_" + str(userCounter)
 
-    for (userId, mesh) in tempMap.iteritems():
-        #print sum([len(m.split(".")) for m in mesh ])
-        #print len(mesh)
-        mapUserMeanMeshDepth[userId] = sum( [ len(m.split(".")) for m in mesh ] ) / len(mesh)
+        if mesh is None and previousIndex == -1: #first query and without mesh
+            mapUserMeanMeshDepth[userIndex] = 0
+        
+        else:
+            meanMesh =  sum(len(m.split(".")) for m in mesh)/len(mesh) if mesh is not None else 0
 
+            if previousIndex == -1: #first query
+                mapUserMeanMeshDepth[userIndex] = meanMesh
+            else:
+                #calculate new mean based on previous number
+                mapUserMeanMeshDepth[userIndex] = ((mapUserMeanMeshDepth[previousIndex] * (userCounter - 1) ) + meanMesh) / userCounter
+    
+        #print "User id = ", userId, "counter =", userCounter," mesh = ", mesh, " map => ", mapUserMeanMeshDepth[userIndex]
     return mapUserMeanMeshDepth
 
 def calculateNumberOfQueriesPerUser(data):
-    userIds = sorted( [member.userId for member in data ] ) 
-    usersNumberOfQueries = [ (k , len(list(g))) for k, g in groupby(userIds) ]
+
+    userIds = sorted( [member.userId, member.datetime] for member in data  ) 
+    #usersNumberOfQueries = [ (k , len(list(g))) for k, g in groupby(userIds) ]
+    processedUser = set()
     mapUserQueries = dict()
-    for u, nq in usersNumberOfQueries:
-        mapUserQueries[u] = nq
     
+    for userId, _ in userIds:
+        if userId not in processedUser:
+            processedUser.add(userId)
+            userCounter = 1
+        else:
+            userCounter += 1
+
+        userIndex = userId + "_" + str(userCounter)
+        mapUserQueries[userIndex] = userCounter
+
+        #print "User id = ", userId, "counter =", userCounter," map => ", mapUserQueries[userIndex]
     return mapUserQueries
 
 def calculateMeanWordsPerQuery(data):
     mapUserMeanWords = dict()
-    userWords = [ (member.userId, len(member.keywords)) for member in data ]
-    #print userWords
-    
-    tempMap = defaultdict(list)
-    for (userId, lenght) in userWords:
-        tempMap[userId].append(lenght)
+    userWords = [ (member.userId, member.datetime, len(member.keywords)) for member in data ]
+    processedUser = set()
 
-    for (userId, listOfLenghts) in tempMap.iteritems():
-        meanSize = sum(listOfLenghts)/len(listOfLenghts)
-        #print userId, " ---> ",meanSize
-        mapUserMeanWords[userId] = meanSize
+    for (userId, _, nwords) in userWords:
+        
+        if userId not in processedUser:
+            processedUser.add(userId)
+            userCounter = 1
+            previousIndex = -1
+        else:
+            userCounter += 1
+            previousIndex = userId + "_" + str(userCounter-1)
+            
+        userIndex = userId + "_" + str(userCounter)
 
+        if previousIndex == -1: #first query
+            mapUserMeanWords[userIndex] = float(nwords)
+        else:
+            #calculate new mean based on previous number
+            mapUserMeanWords[userIndex] = ((mapUserMeanWords[previousIndex] * (userCounter - 1) ) + nwords) / userCounter
+        
+        #print "User id = ", userId, "counter =", userCounter," nwords = ", nwords, " map => ", mapUserMeanWords[userIndex]
     return mapUserMeanWords
 
 def calculateNumberOfSessionsPerUser(data):
-    userIds = sorted( ( member.userId for member in data if member.previouskeywords is None ) )
-    usersNumberOfSessions = [ (k , len(list(g))) for k, g in groupby(userIds) ]
+    userIds = sorted( [member.userId, member.datetime, member.previouskeywords is None] for member in data )
     mapUserSession = dict()
-    for u, ns in usersNumberOfSessions:
-        mapUserSession[u] = ns
+    userSessionCounter = dict()
+
+    for userId, _, newSession in userIds:
+
+        if userId not in userSessionCounter:
+            userSessionCounter[userId] = 1
+            userCounter = 1
+        else:
+            userCounter += 1
+            if newSession:
+                userSessionCounter[userId] += 1
+        
+        userIndex = userId + "_" + str(userCounter)
+        mapUserSession[userIndex] = userSessionCounter[userId]
+
+        #print "User id = ", userId, "counter = ", userCounter," newSession => ", newSession, " map => ", mapUserSession[userIndex]
     
     return mapUserSession
 
@@ -137,68 +198,63 @@ def calculateUsingSemantic(data, semanticType):
 
 def calculateUsingAbbreviation(data):
     mapUserAbb = dict()
+    tempMapUserAbb = dict() 
+    userIds = sorted( (member.userId, member.datetime, member.keywords) for member in data )
     
-    userIds = sorted( (member.userId, member.keywords) for member in data )
-    
-    for (userId, keywords) in userIds:
-        if userId not in mapUserAbb:
-            mapUserAbb[userId] = False
-        mapUserAbb[userId] = ( mapUserAbb[userId] or hasAbbreviation(keywords) )
+    for (userId, _, keywords) in userIds:
+        if userId not in tempMapUserAbb:
+            tempMapUserAbb[userId] = False
+            userCounter = 1
+        else:
+            userCounter += 1
 
-    #print "mapUserAbb ---> ", mapUserAbb
+        userIndex = userId + "_" + str(userCounter)
+
+        mapUserAbb[userIndex] = ( tempMapUserAbb[userId] or hasAbbreviation(keywords) )
+        tempMapUserAbb[userId] = mapUserAbb[userIndex]
+
+        #cprint "user =", userId, " counter =", userCounter, "mapUserAbb ---> ", mapUserAbb[userIndex]
     return mapUserAbb
 
 def hasAbbreviation(words):
     return any( [ w for w in words if w.lower() in acronymsSet] )
 
 def calculateMeanTimePerSession(data):
+    
     mapUserMeanTimePerSession = dict()
-    
-    userDateBool = [ ( member.userId, member.datetime , member.previouskeywords is None) for member in data ] # (user, date, newSession? )
+    userDateBool = sorted( ( member.userId, member.datetime , member.previouskeywords is None) for member in data ) # (user, date, newSession? )
+    processedUser = set()
+    lastDate = 0
 
-    tempMap = defaultdict(list)
-
-    for (user, date, newSession) in userDateBool:
-        tempMap[user].append( (date, newSession) )
-        #print user, date, newSession
-
-    for (user, dateNewSession) in tempMap.iteritems():
+    for (userId, date, newSession) in userDateBool:
         
-        totalSeconds = 0
-        numberOfSessions = 0
+        if userId not in processedUser:
+            processedUser.add(userId)
+            userCounter = 1
+            numberOfSessions = 1
+            totalSeconds = 0
+            firstTimeInSession = date
+            newSession = 0
+            oldMeanTime, meanTimeSoFar = 0,0
 
-        startDate = dateNewSession[0][0]
-        endDate = startDate
-        #print "User ---> ", user, " Start --> ", startDate
-        
-        for date, newSession in dateNewSession[1:]:
-            #Seeks the next session
-            if not newSession:
-                endDate = date
-                continue
-            
-            # It is a new session:
-            else:
-                seconds = (endDate - startDate).total_seconds()
-                #print "SECONDS --> ", seconds 
-               
-                # Reset the date limits
-                startDate = date
-                endDate = date
-                
-                totalSeconds += seconds
-                numberOfSessions += 1
-        
-        #the last session
-        seconds = (endDate - startDate).total_seconds()
-        #print "SECONDS --> ", seconds 
-        
-        totalSeconds += seconds
-        numberOfSessions += 1
+        else:
+            userCounter += 1
 
-        mapUserMeanTimePerSession[user] = totalSeconds / numberOfSessions
-        #print "User = ", user, " MeanTime =", mapUserMeanTimePerSession[user]
-    
+        userIndex = userId + "_" + str(userCounter)
+
+        # new user session...
+        if newSession:
+            firstTimeInSession = date
+
+            numberOfSessions += 1
+            oldMeanTime = meanTimeSoFar
+        
+        sessionLength = (date - firstTimeInSession).total_seconds()
+        meanTimeSoFar = (sessionLength + (numberOfSessions - 1) * oldMeanTime)/ numberOfSessions
+        mapUserMeanTimePerSession[userIndex] = meanTimeSoFar
+
+        #print "User id = ", userId, "counter = ", userCounter," date =>", date, 
+        #print "newSession => ", newSession, " sessions: ", numberOfSessions, "secs: ", sessionLength, " map => ", mapUserMeanTimePerSession[userIndex]
     return mapUserMeanTimePerSession
 
 def calculateUserBehavior(data):
@@ -244,20 +300,30 @@ def createDictOfUsers(data, label):
     userDict = dict()
 
     users = set( (member.userId for member in data) )
-    countingNumberOfQueriesPerUser = calculateNumberOfQueriesPerUser(data)
-    countingNumberOfSessionsPerUser = calculateNumberOfSessionsPerUser(data)
-    countingMeanMeshDepthPerUser = calculateMeanMeshDepthPerUser(data)
-    countingNLPerUser = calculateNLPerUser(data)
-    countingWordsPerQuery = calculateMeanWordsPerQuery(data)
-    countingMeanTimePerSession = calculateMeanTimePerSession(data)
-    countingUsingAbbreviation = calculateUsingAbbreviation(data)
-    countingUsingSymptons = calculateUsingSemantic(data, symptomTypes())
-    countingUsingCause = calculateUsingSemantic(data, causeTypes())
-    countingUsingRemedy = calculateUsingSemantic(data, remedyTypes())
-    countingUsingNotMedical = calculateUsingSemantic(data, noMedicalTypes())
-    countingUserBehavior = calculateUserBehavior(data)
+    countingNumberOfQueriesPerUser = calculateNumberOfQueriesPerUser(data)      # Transformed
+    countingNumberOfSessionsPerUser = calculateNumberOfSessionsPerUser(data)    # Transformed
+    countingMeanMeshDepthPerUser = calculateMeanMeshDepthPerUser(data)          # Transformed
+    countingNLPerUser = calculateNLPerUser(data)                                # Transformed
+    countingWordsPerQuery = calculateMeanWordsPerQuery(data)                    # Transformed 
+    countingMeanTimePerSession = calculateMeanTimePerSession(data)              # Transformed
+    countingUsingAbbreviation = calculateUsingAbbreviation(data)                # Transformed
+    #countingUsingSymptons = calculateUsingSemantic(data, symptomTypes())        # TODO
+    #countingUsingCause = calculateUsingSemantic(data, causeTypes())             # TODO
+    #countingUsingRemedy = calculateUsingSemantic(data, remedyTypes())           # TODO
+    #countingUsingNotMedical = calculateUsingSemantic(data, noMedicalTypes())    # TODO
+    #countingUserBehavior = calculateUserBehavior(data)                          # TODO
 
-    for user in users:
+    users = sorted( (member.userId, member.datetime) for member in data )
+    previousUser = -1
+    
+    for u, _ in users:
+        if u == previousUser:
+            userCounter += 1
+        else:
+            previousUser = u
+            userCounter = 1
+        user = u + "_" + str(userCounter)
+
         if user not in countingNumberOfQueriesPerUser or \
            user not in countingNumberOfSessionsPerUser or \
            user not in countingNLPerUser or\
@@ -283,11 +349,11 @@ def createDictOfUsers(data, label):
         mwpq = countingWordsPerQuery[user]
         mtps = countingMeanTimePerSession[user]
         uab = countingUsingAbbreviation[user]
-        usy = countingUsingSymptons[user]
-        usc = countingUsingCause[user]
-        usrd = countingUsingRemedy[user]
-        usnm = countingUsingNotMedical[user]
-        expa, shri, refo, expshr, expref, shrref, expshrref = countingUserBehavior[user]
+        usy = 0 #countingUsingSymptons[user]
+        usc = 0 #countingUsingCause[user]
+        usrd = 0 #countingUsingRemedy[user]
+        usnm = 0 #countingUsingNotMedical[user]
+        expa, shri, refo, expshr, expref, shrref, expshrref = 0,0,0,0,0,0,0 #countingUserBehavior[user]
 
 
         userDict[user] = userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
@@ -370,16 +436,16 @@ def regularMedicalUsers():
     ##
     #
     
-    #honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.dataset.gz", 0)
-    #aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed.v4.dataset.gz", 0)
-    #goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.dataset.gz", 1)
-    #tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.dataset.gz", 1)
+    honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.dataset.gz", 0)
+    aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed.v4.dataset.gz", 0)
+    goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.dataset.gz", 1)
+    tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.dataset.gz", 1)
     
     # 10% of the dataset only
-    honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.10.gz", 0)
-    aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.10.gz", 0)
-    goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.10.gz", 1)
-    tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.10.gz", 1)
+    #honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.10.gz", 0)
+    #aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.10.gz", 0)
+    #goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.10.gz", 1)
+    #tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.10.gz", 1)
 
     ####
     ### Merge Feature sets and transforme them into inputs

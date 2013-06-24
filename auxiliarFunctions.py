@@ -107,10 +107,10 @@ def compareSets(set1, set2):
 
 def preProcessData(data, removeStopWords):
     data = tokenizeAllData(data)
-    
+
     if removeStopWords:
         data = filterStopWords(data)
-    
+ 
     #Sort Data by id/datetime, just to be sure
     data = sorted(data, key= lambda member: (member.userId, member.datetime))
 

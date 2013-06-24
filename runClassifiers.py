@@ -28,12 +28,12 @@ classifyParameters = {"KNN-K": 100, "ERT-n_estimators": 10, "SVM-cacheSize": 100
 def transformeInDict(userDict, n=-1, proportional=-1):
     listOfDicts = list()
     listOfLabels = list()
-   
+ 
     p = range(len(userDict))
     random.shuffle(p)
     if proportional:
         n = int( int(proportional)/100.0 * len(userDict) )
-    
+
     for v, (key, user) in zip(range(len(p)), userDict.iteritems()):
         if n >= 0 and p[v] >= n:
             continue 
