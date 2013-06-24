@@ -81,7 +81,7 @@ def hasNLword(words):
     
 def calculateMeanMeshDepthPerUser(data):
     mapUserMeanMeshDepth = dict()
-    processedUser = set()
+    previousUser = str(-1)
     tempMap = defaultdict(list)
 
     #Not using datetime, but it is important to keep the order of queries issued by the user
@@ -89,8 +89,8 @@ def calculateMeanMeshDepthPerUser(data):
     
     for (userId, _, mesh) in userIds:
         
-        if userId not in processedUser:
-            processedUser.add(userId)
+        if userId != previousUser:
+            previousUser = userId
             queryCounter = 1
             previousIndex = -1
         else:
@@ -118,12 +118,12 @@ def calculateNumberOfQueriesPerUser(data):
 
     userIds = sorted( [member.userId, member.datetime] for member in data  ) 
     #usersNumberOfQueries = [ (k , len(list(g))) for k, g in groupby(userIds) ]
-    processedUser = set()
+    previousUser = str("invalid user")
     mapUserQueries = dict()
     
     for userId, _ in userIds:
-        if userId not in processedUser:
-            processedUser.add(userId)
+        if userId != previousUser:
+            previousUser = userId
             queryCounter = 1
         else:
             queryCounter += 1
@@ -137,12 +137,12 @@ def calculateNumberOfQueriesPerUser(data):
 def calculateMeanWordsPerQuery(data):
     mapUserMeanWords = dict()
     userWords = [ (member.userId, member.datetime, len(member.keywords)) for member in data ]
-    processedUser = set()
+    previousUser = str("invalid user")
 
     for (userId, _, nwords) in userWords:
         
-        if userId not in processedUser:
-            processedUser.add(userId)
+        if userId != previousUser:
+            previousUser = userId
             queryCounter = 1
             previousIndex = -1
         else:
@@ -224,13 +224,13 @@ def calculateMeanTimePerSession(data):
     
     mapUserMeanTimePerSession = dict()
     userDateBool = sorted( ( member.userId, member.datetime , member.previouskeywords is None) for member in data ) # (user, date, newSession? )
-    processedUser = set()
+    previousUser = str("invalid user")
     lastDate = 0
 
     for (userId, date, newSession) in userDateBool:
         
-        if userId not in processedUser:
-            processedUser.add(userId)
+        if userId != previousUser:
+            previousUser = userId
             queryCounter = 1
             numberOfSessions = 1
             totalSeconds = 0
