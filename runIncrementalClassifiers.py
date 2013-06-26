@@ -66,11 +66,10 @@ def plotResult(clf, intervals, accs, f1s, wf1s, accBaseline, f1Baseline, wf1Base
     pl.xlabel('Training Percentage')
     pl.ylabel('Metric')
     pl.ylim([0.0, 1.00])
-    pl.xlim([0, 100])
-    pl.title('Incrementail Training for %s' % clf)
+    pl.xlim([intervals[0], intervals[-1]])
+    pl.title('Incremental Training for %s' % clf)
     pl.legend(loc="lower left")
     pl.show()
-
 
 def applyPreProcessing(data, preProcessing):
     from sklearn import preprocessing
@@ -199,11 +198,12 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
     clfs = [GaussianNB(), ExtraTreesClassifier(random_state=0, compute_importances=True, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"]), KNeighborsClassifier(n_neighbors=classifyParameters["KNN-K"]), DecisionTreeClassifier(random_state=0, compute_importances=True), LogisticRegression(), SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"]) ]
     print "Running classifiers..."
     for clf in clfs:
-        #y_nbInc = classifyIncremental(clf, X, integralList, y, nCV, nJobs)
-        y_nbInc = classifyIncremental(clf, X, percentageList, y, nCV, nJobs)
+        y_nbInc = classifyIncremental(clf, X, integralList, y, nCV, nJobs)
+        #y_nbInc = classifyIncremental(clf, X, percentageList, y, nCV, nJobs)
         print 20 * '=', " Results ", 20 * '='
         accs, f1s, wf1s = makeIncrementalReport(X, y, y_nbInc, accBaseline, f1Baseline, wf1Baseline)
-        plotResult(clf, percentageIntervals, accs, f1s, wf1s, accBaseline, f1Baseline, wf1Baseline)
+        plotResult(clf, range(0,5), accs, f1s, wf1s, accBaseline, f1Baseline, wf1Baseline)
+        #plotResult(clf, percentageIntervals, accs, f1s, wf1s, accBaseline, f1Baseline, wf1Baseline)
 
     print "Done"
 
