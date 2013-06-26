@@ -17,10 +17,9 @@ maximalNumberOfQueries = 100
 #   python createFeatureVector.py minimalNumberOfQueries 
 
 class userClass:
-    def __init__(self, id, label, queryCounter, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm, expa, shri, refo, expshr, expref, shrref, expshrref):
+    def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm, expa, shri, refo, expshr, expref, shrref, expshrref):
         self.id = id
         self.label = label
-        self.queryCounter = queryCounter
         self.numberOfQueries = nq
         self.numberOfSessions = ns
         self.meanMeshDepth = mmd
@@ -43,7 +42,7 @@ class userClass:
 
     def toDict(self):
         #return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical}
-        return {'-1.queryCounter':self.queryCounter, '00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref}
+        return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref}
                 
     #'14.didExpShr':self.expshr ,'15.didExpRef': self.expref ,'16.didShrRef': self.shrref ,'17.didExpShrRef': self.expshrref}
     #TODO: should I consider different kinds of abbreviations?
@@ -66,11 +65,11 @@ def calculateNLPerUser(data):
         else:
             queryCounter += 1
         
-        mapIndex = userId + "_" + str(queryCounter)
+        mapIndex = userId + "_" + str(queryCounter).zfill(2)
         mapUserNL[mapIndex] = ( tempMapUserNL[userId] or hasNLword(keywords) )
         tempMapUserNL[userId] = mapUserNL[mapIndex]
 
-    #    print "User now = ", userId, " counter ---> ", queryCounter, " map ----> ",  mapUserNL[userId + "_" + str(queryCounter) ]
+    #    print "User now = ", userId, " counter ---> ", queryCounter, " map ----> ",  mapUserNL[userId + "_" + str(queryCounter).zfill(2) ]
 
     #print "mapUserNL ---> ", mapUserNL
     return mapUserNL
@@ -95,9 +94,9 @@ def calculateMeanMeshDepthPerUser(data):
             previousIndex = -1
         else:
             queryCounter += 1
-            previousIndex = userId + "_" + str(queryCounter-1)
+            previousIndex = userId + "_" + str(queryCounter-1).zfill(2)
             
-        userIndex = userId + "_" + str(queryCounter)
+        userIndex = userId + "_" + str(queryCounter).zfill(2)
 
         if mesh is None and previousIndex == -1: #first query and without mesh
             mapUserMeanMeshDepth[userIndex] = 0
@@ -128,7 +127,7 @@ def calculateNumberOfQueriesPerUser(data):
         else:
             queryCounter += 1
 
-        userIndex = userId + "_" + str(queryCounter)
+        userIndex = userId + "_" + str(queryCounter).zfill(2)
         mapUserQueries[userIndex] = queryCounter
 
         #print "User id = ", userId, "counter =", queryCounter," map => ", mapUserQueries[userIndex]
@@ -147,9 +146,9 @@ def calculateMeanWordsPerQuery(data):
             previousIndex = -1
         else:
             queryCounter += 1
-            previousIndex = userId + "_" + str(queryCounter-1)
+            previousIndex = userId + "_" + str(queryCounter-1).zfill(2)
             
-        userIndex = userId + "_" + str(queryCounter)
+        userIndex = userId + "_" + str(queryCounter).zfill(2)
 
         if previousIndex == -1: #first query
             mapUserMeanWords[userIndex] = float(nwords)
@@ -175,7 +174,7 @@ def calculateNumberOfSessionsPerUser(data):
             if newSession:
                 userSessionCounter[userId] += 1
         
-        userIndex = userId + "_" + str(queryCounter)
+        userIndex = userId + "_" + str(queryCounter).zfill(2)
         mapUserSession[userIndex] = userSessionCounter[userId]
 
         #print "User id = ", userId, "counter = ", queryCounter," newSession => ", newSession, " map => ", mapUserSession[userIndex]
@@ -209,12 +208,12 @@ def calculateUsingAbbreviation(data):
         else:
             queryCounter += 1
 
-        userIndex = userId + "_" + str(queryCounter)
+        userIndex = userId + "_" + str(queryCounter).zfill(2)
 
         mapUserAbb[userIndex] = ( tempMapUserAbb[userId] or hasAbbreviation(keywords) )
         tempMapUserAbb[userId] = mapUserAbb[userIndex]
 
-        #cprint "user =", userId, " counter =", queryCounter, "mapUserAbb ---> ", mapUserAbb[userIndex]
+        #print "user =", userId, " counter =", queryCounter, "mapUserAbb ---> ", mapUserAbb[userIndex]
     return mapUserAbb
 
 def hasAbbreviation(words):
@@ -241,7 +240,7 @@ def calculateMeanTimePerSession(data):
         else:
             queryCounter += 1
 
-        userIndex = userId + "_" + str(queryCounter)
+        userIndex = userId + "_" + str(queryCounter).zfill(2)
 
         # new user session...
         if newSession:
@@ -298,7 +297,7 @@ def calculateUserBehavior(data):
 
 
 def createDictOfUsers(data, label):
-    userDict = dict()
+    userDict = defaultdict(list)
 
     users = set( (member.userId for member in data) )
     countingNumberOfQueriesPerUser = calculateNumberOfQueriesPerUser(data)      # Transformed
@@ -323,7 +322,8 @@ def createDictOfUsers(data, label):
         else:
             previousUser = u
             queryCounter = 1
-        user = u + "_" + str(queryCounter)
+
+        user = u + "_" + str(queryCounter).zfill(2)
 
         if user not in countingNumberOfQueriesPerUser or \
            user not in countingNumberOfSessionsPerUser or \
@@ -356,9 +356,10 @@ def createDictOfUsers(data, label):
         usnm = 0 #countingUsingNotMedical[user]
         expa, shri, refo, expshr, expref, shrref, expshrref = 0,0,0,0,0,0,0 #countingUserBehavior[user]
 
-
-        userDict[user] = userClass(user, label, queryCounter, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
-                                   expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref)
+        #list here? userDict[u] -> list
+        userDict[u].append( userClass(u, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc,\
+                                   usrd=usrd, usnm=usnm,expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref) )
+        #print "User => ", user, label, queryCounter
 
     return userDict
 
@@ -437,16 +438,16 @@ def regularMedicalUsers():
     ##
     #
     
-    honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.dataset.gz", 0)
-    aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed.v4.dataset.gz", 0)
-    goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.dataset.gz", 1)
-    tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.dataset.gz", 1)
+    #honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.dataset.gz", 0)
+    #aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed.v4.dataset.gz", 0)
+    #goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.dataset.gz", 1)
+    #tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.dataset.gz", 1)
     
     # 10% of the dataset only
-    #honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.10.gz", 0)
-    #aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.10.gz", 0)
-    #goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.10.gz", 1)
-    #tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.10.gz", 1)
+    honFV = createFV("dataSetsOfficials/hon/olds/honEnglish.v4.10.dataset.gz", 0)
+    aolHealthFV = createFV("dataSetsOfficials/aolHealth/olds/aolHealthCompleteFixed4.v4.10.dataset.gz", 0)
+    goldMinerFV = createFV("dataSetsOfficials/goldminer/olds/goldMiner.v4.10.dataset.gz", 1)
+    tripFV = createFV("dataSetsOfficials/trip/olds/trip_mod.v4.10.dataset.gz", 1)
 
     ####
     ### Merge Feature sets and transforme them into inputs

@@ -19,15 +19,12 @@ goldminer:
 goldminer-log-file-2010-and-2011.txt    ---- (222006) original file
 goldminer.dataset.gz                    ---- (222005) transformed - before metamap and without header
 goldMiner.v4.dataset.gz                 ---- (221834) Transformed and processed by metamap
-goldMiner.v4.10.gz                      ---- (22183) 10% of the base - for tests
 olds/                                   ---- some files used to test
 
 hon:
 honAll.csv                              ---- (289184) Original file
 honEnglish.csv                          ---- (252394) Only "English" (latin-1)
 honEnglish.dataset.gz                   ---- (252394) Transformed into dataset format before metamap
-honEnglish.v4.10.gz                     ---- (252382) After metamap
-honEnglish.v4.dataset.gz                ---- (25238 ) 10% of the previous dataset
 olds/                                   ---- some files used to test
 
 trip:
@@ -36,6 +33,5 @@ triplogs1yrMine.gz                      ---- (1853559) Small modification, exclu
 trip.dataset.gz                         ---- (1853559) My dataset version
 trip_old.v4.dataset.gz                  ---- (1853251) Contaning some error in the CSV file
 trip_mod.v4.dataset.gz                  ---- (1853233) Error fixed - after metamap 
-trip_mod.v4.10.gz                       ---- (185323)  10% of the previous dataset
 olds/                                   ---- some files used to test
 

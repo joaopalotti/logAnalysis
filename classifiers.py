@@ -2,7 +2,17 @@
 from sklearn import cross_validation
 from sklearn.metrics import classification_report, f1_score, accuracy_score
 #General
-from collections import Counter
+from collections import Counter, defaultdict
+
+def makeIncrementalReport(X, y, listOfYs, accBaseline, f1Baseline, wf1Baseline):
+    a, f, wf = [], [], []
+    for i in listOfYs:
+        print "Partition ", i
+        print len(listOfYs[i])
+        #print listOfYs[i]
+        acc, sf1, wf1 = makeReport(X, y, listOfYs[i], accBaseline, f1Baseline, wf1Baseline)
+        a, f, wf = a + [acc], f + [sf1], wf + [wf1]
+    return a, f, wf
 
 def makeReport(X, y, y_pred, accBaseline, f1Baseline, wf1Baseline):
     # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html#sklearn.metrics.classification_report
@@ -58,6 +68,34 @@ def classify(clf, X, y, CV, nJobs, tryToMeasureFeatureImportance=False):
 
     print "Done"
     return y_pred
+
+#llq -> listOfListOfQueries
+def classifyIncremental(clf, X, listOfLists, y, CV, nJobs, tryToMeasureFeatureImportance=False):
+    
+    print clf
+    nSamples, nFeatures = X.shape
+
+    for l in listOfLists:
+        print "l = ",l.shape
+    print "x = ", X.shape
+    print "y = ", y.shape
+
+    kFold = cross_validation.KFold(n=nSamples, n_folds=CV, indices=True)
+
+    # Run classifier
+    #lists = [clf.fit(X[train], y[train]).predict(X[test]) for train, test in kFold]
+    results = defaultdict(list)
+    for train, test in kFold:
+        for i, l in zip(range(len(listOfLists)), listOfLists):
+            results[i] += list(clf.fit(X[train], y[train]).predict(l[test]))
+
+    scores = cross_validation.cross_val_score(clf, X, y, cv=CV, n_jobs=nJobs) #, scoring="f1") 
+    if tryToMeasureFeatureImportance:
+        measureFeatureImportance(clf)
+
+    print "Result size = ", len(results)
+    print "Done"
+    return results
 
 def measureFeatureImportance(classifier):
     
