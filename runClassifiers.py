@@ -97,18 +97,22 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
 
     print "Using %d regular users -- class %s" % (len(ld1), ll1[0])
     print "Using %d medical users -- class %s" % (len(ld2), ll2[0])
-    
+     
     accBaseline = accuracy_score(y, y_greatest)
-    print "Acc baseline --> ", (accBaseline)
-    print "Avg. accuracy of the greatest dataset => %.3f" % (100.0 * accBaseline)
+    print "Avg. ACC of the greatest dataset => %.3f" % (100.0 * accBaseline)
 
     f1 = f1_score( y, y_greatest, average=None)
     print "F1 Score --> ", (f1) , " size --> ", len(f1)
+    
+    sf1Baseline = f1_score( y, y_greatest)
+    print "Simple F1 -> %.3f" % (sf1Baseline)
+    
+    mf1Baseline = f1.mean()
+    print "Mean F1 -> %.3f" % (mf1Baseline)
+    
     ns = Counter(y)
     wf1Baseline = ( f1[0] * ns[0] + f1[1] * ns[1] ) / (ns[0] + ns[1])
-    print "Weighted Mean -> ", wf1Baseline
-    f1Baseline = f1.mean()
-    print "Simple Mean -> %.3f" % (f1Baseline)
+    print "Weighted F1 -> ", wf1Baseline
 
     print "Vectorizing dictionaries..."
     from sklearn.feature_extraction import DictVectorizer
@@ -128,7 +132,6 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
         X = preprocessing.normalize(X_noProcess, norm='l2')
     elif preProcessing == "nothing":
         X = X_noProcess
-
     
     n_samples, n_features = X.shape
     
@@ -156,32 +159,32 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
     y_ert = classify(ExtraTreesClassifier(random_state=0, compute_importances=True, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"]), \
                      X, y, nCV, nJobs, tryToMeasureFeatureImportance=True)
     print 20 * '=', " ERF  Results ", 20 * '='
-    ertacc, ertf1, ertwf1 = makeReport(X, y, y_ert, accBaseline, f1Baseline, wf1Baseline)
+    ertacc, ertfsf1, ertwf1, ertmf1 = makeReport(X, y, y_ert, accBaseline, f1Baseline, wf1Baseline)
     
     y_nb  = classify(GaussianNB(),\
                      X, y, nCV, nJobs)
     print 20 * '=', " NB  Results ", 20 * '='
-    nbacc, nbf1, nbwf1 = makeReport(X, y, y_nb, accBaseline, f1Baseline, wf1Baseline)
+    nbacc, nbsf1, nbwf1, nbmf1 = makeReport(X, y, y_nb, accBaseline, f1Baseline, wf1Baseline)
     
     y_knn = classify(KNeighborsClassifier(n_neighbors=classifyParameters["KNN-K"]),\
                      X, y, nCV, nJobs)
     print 20 * '=', " KNN Results ", 20 * '='
-    knnacc, knnf1, knnwf1 = makeReport(X, y, y_knn, accBaseline, f1Baseline, wf1Baseline)
+    knnacc, knnsf1, knnwf1, knnmf1 = makeReport(X, y, y_knn, accBaseline, f1Baseline, wf1Baseline)
     
     y_dt = classify(DecisionTreeClassifier(random_state=0, compute_importances=True),\
                     X, y, nCV, nJobs)
     print 20 * '=', " DT  Results ", 20 * '='
-    dtacc, dtf1, dtwf1 = makeReport(X, y, y_dt, accBaseline, f1Baseline, wf1Baseline)
+    dtacc, dtsf1, dtwf1, dtwmf1 = makeReport(X, y, y_dt, accBaseline, f1Baseline, wf1Baseline)
     
     y_lg =  classify(LogisticRegression(),\
                      X, y, nCV, nJobs)
     print 20 * '=', " LogReg  Results ", 20 * '='
-    lgacc, lgf1, lgwf1 = makeReport(X, y, y_lg, accBaseline, f1Baseline, wf1Baseline)
+    lgacc, lgsf1, lgwf1, lgmf1 = makeReport(X, y, y_lg, accBaseline, f1Baseline, wf1Baseline)
     
     y_svm = classify(SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"]),\
                      X, y, wf1Baseline, nCV, nJobs)
     print 20 * '=', " SVM Results ", 20 * '='
-    svmacc, svmf1, svmwf1 = makeReport(X, y, y_svm, accBaseline, f1Baseline, wf1Baseline)
+    svmacc, svmsf1, svmwf1, svmmf1 = makeReport(X, y, y_svm, accBaseline, f1Baseline, wf1Baseline)
     
     print "Done"
 

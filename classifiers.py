@@ -4,51 +4,50 @@ from sklearn.metrics import classification_report, f1_score, accuracy_score
 #General
 from collections import Counter, defaultdict
 
-def makeIncrementalReport(X, y, listOfYs, accBaseline, f1Baseline, wf1Baseline):
-    a, f, wf = [], [], []
+def makeIncrementalReport(X, y, listOfYs, accBaseline, f1Baseline, wf1Baseline, mf1Baseline):
+    a, f, wf, mf = [], [], [], []
     for i in listOfYs:
         print "Partition ", i
         print len(listOfYs[i])
         #print listOfYs[i]
-        acc, sf1, wf1 = makeReport(X, y, listOfYs[i], accBaseline, f1Baseline, wf1Baseline)
-        a, f, wf = a + [acc], f + [sf1], wf + [wf1]
-    return a, f, wf
+        acc, sf1, wf1, mf1 = makeReport(X, y, listOfYs[i], accBaseline, f1Baseline, wf1Baseline, mf1Baseline)
+        a, f, wf, mf = a + [acc], f + [sf1], wf + [wf1], mf + [mf1]
+    return a, f, wf, mf
 
-def makeReport(X, y, y_pred, accBaseline, f1Baseline, wf1Baseline):
+def makeReport(X, y, y_pred, accBaseline, f1Baseline, mf1Baseline, wf1Baseline):
     # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html#sklearn.metrics.classification_report
     
     target_names = ['Layman', 'Specialist']
     
     acc = accuracy_score(y, y_pred)
     f1 = f1_score(y, y_pred, average=None)
+    # Simple F1 calculated by the f1 function
     sf1 = f1_score(y, y_pred)
-    
-    print(classification_report(y, y_pred, target_names=target_names))
-    
+    # Mean F1 ==> (F1(c1) + F1(c2)) / 2 
+    mf1 = f1.mean()
+    # Weighted F1
     ns = Counter(y)
     wf1 = ( f1[0] * ns[0] + f1[1] * ns[1] ) / (ns[0] + ns[1])
     
+    print(classification_report(y, y_pred, target_names=target_names))
+    
     print "F1 Scores (no average) --> ", (f1)
+    
+    print "sf1 -> ", sf1
+    print "GAIN --> %0.2f%% " % (100.0 * (sf1 - f1Baseline) / f1Baseline)
+    
+    print "mf1 -> ", mf1
+    print "GAIN --> %0.2f%% " % (100.0 * (mf1 - mf1Baseline) / mf1Baseline)
     
     print "wf1 -> ", wf1
     print "GAIN --> %0.2f%% " % (100.0 * (wf1 - wf1Baseline) / wf1Baseline)
-
-    print "sf1 -> ", sf1
-    print "GAIN --> %0.2f%% " % (100.0 * (sf1 - f1Baseline) / f1Baseline)
-
+    
     print "ACC Score --> ", (acc)
     print "GAIN --> %0.2f%% " % (100.0 * (acc - accBaseline) / accBaseline)
 
-    return acc, sf1, wf1, 
+    return acc, sf1, wf1, mf1,
 
 def classify(clf, X, y, CV, nJobs, tryToMeasureFeatureImportance=False):
-
-    # http://scikit-learn.org/stable/modules/naive_bayes.html#naive-bayes   ---> clf = GaussianNB()
-    #http://scikit-learn.org/dev/modules/generated/sklearn.linear_model.LogisticRegression.html#sklearn.linear_model.LogisticRegression ---> clf = LogisticRegression()
-    #http://scikit-learn.org/dev/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC ---> clf = SVC(kernel=parameters["kernel"], cache_size=parameters["cacheSize"], C=parameters["C"])
-    #http://scikit-learn.org/dev/modules/generated/sklearn.neighbors.KNeighborsClassifier.html ---> clf = KNeighborsClassifier(n_neighbors=parameters["K"])
-    #http://scikit-learn.org/dev/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier ---> clf = DecisionTreeClassifier(random_state=0, compute_importances=True)
-    # http://scikit-learn.org/dev/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html ---> ExtraTreesClassifier(random_state=0, compute_importances=True, n_jobs=parameters["nJobs"], n_estimators=parameters["n_estimators"])
 
     print clf
     nSamples, nFeatures = X.shape
