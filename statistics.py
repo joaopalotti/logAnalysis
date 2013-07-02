@@ -92,7 +92,6 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
             outliersToRemove = removeOutliers( createSessions(data) )
             newData = [member for member in data if member.userId not in outliersToRemove]
             data = newData
-
         
         numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
             numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\

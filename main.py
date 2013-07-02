@@ -7,6 +7,12 @@ PATH_TO_DATASETS = "dataSetsOfficials/"
 
 if __name__ == "__main__":
 
+    #in50 = readMyFormat("in50", "v4")
+    #calculateMetrics([ [in50, "in50"] ] ) 
+    
+    in50 = readMyFormat("out.v5", "v5")
+    calculateMetrics([ [in50, "outv5"] ] ) 
+    
     #khr = readKhresmoiRank("../../logs/krslogs/clicked_rank_task1.csv")
     #calculateMetrics([ [khr, "khr4"]] ) 
     #khr = readKhresmoiRank("../../logs/krslogs/clicked_rank_task2.csv")
@@ -38,8 +44,8 @@ if __name__ == "__main__":
     #calculateMetrics([ [aolHealth, "aolHealth"], [hon, "hon"], [trip, "trip"], [goldMiner, "goldminer"], [aolNotHealth, "aolNotHealth" ] ]) 
     
     
-    hon = readMyFormat("dataSetsOfficials/hon/olds/hon3")
-    calculateMetrics([ [hon, "hon"] ] ) 
+    #hon = readMyFormat("dataSetsOfficials/hon/olds/hon3")
+    #calculateMetrics([ [hon, "hon"] ] ) 
     
     #hon = readMyFormat(PATH_TO_DATASETS + "honEnglishResult.v3.dataset.gz")
     #hon = readMyFormat(PATH_TO_DATASETS + "honEnglish.v4.dataset")

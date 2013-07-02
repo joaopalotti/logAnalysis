@@ -3,7 +3,9 @@ import re, sys, csv
 
 class DataSet(object):
     
-    def __init__(self, dttime, userId, keywords, previouskeywords=None, category=None, publication=None, rank=None, clickurl=None, mesh=None, semanticTypes=None, usingTimestamp=False):
+    # CHVFound -> number of concepts that are in the CHV list
+    # hasCHV -> if any of the concepts found are exactly as the CHV suggests
+    def __init__(self, dttime, userId, keywords, previouskeywords=None, category=None, publication=None, rank=None, clickurl=None, mesh=None, semanticTypes=None, usingTimestamp=False, CHVFound=0, hasCHV=False, hasUMLS=False, hasCHVMisspelled=False): 
       
         withMs = re.compile("(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).(\d{3})")
         withMsAndQuote = re.compile("\"(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).(\d{3})\"")
@@ -48,21 +50,29 @@ class DataSet(object):
         #self.publication = publication if publication else None
         
         if self.semanticTypes is not None:
-            if any( s for s in self.semanticTypes if len(s) != 4 ) == True:
-                self.normalPrint()
+            if any(s for s in self.semanticTypes if len(s) != 4 ) == True:
                 assert False
 
-        #print "UserId = ", self.userId, " time =", self.datetime, " keywords = ", self.keywords
-        
+        self.CHVFound = int(CHVFound)
+        self.hasCHV = (hasCHV == "True")
+        self.hasUMLS = (hasUMLS == "True")
+        self.hasCHVMisspelled = (hasCHVMisspelled == "True")
+       
+        #print self
+
     def printMe(self, out=sys.stdout):
         writer = csv.writer(out, delimiter=',', quoting=csv.QUOTE_ALL, quotechar ='"', escapechar='\\', doublequote=False)
         # Should add here any important information and modify the corresponding readCSV
         mesh = ';'.join(self.mesh) if self.mesh else ''
         semanticTypes = ';'.join(self.semanticTypes) if self.semanticTypes else ''
 
-        writer.writerow( [str(self.datetime), self.userId, self.keywords, self.previouskeywords, mesh, semanticTypes])
+        writer.writerow( [str(self.datetime), self.userId, self.keywords, self.previouskeywords, mesh, semanticTypes,\
+                            self.CHVFound, self.hasCHV, self.hasUMLS, self.hasCHVMisspelled])
 
-    def normalPrint(self):
-        #print "\t".join([str(self.datetime), str(self.userId), self.keywords, self.previouskeywords, self.mesh, self.semanticTypes]) 
-        print (self.datetime, "|\t|", self.userId, "|\t|", self.keywords, "|\t|", self.previouskeywords, "|\t|", self.mesh, "|\t|", self.semanticTypes)
-        #print self.mesh, "|\t|", self.semanticTypes
+    def __str__(self):
+        mesh = ';'.join(self.mesh) if self.mesh else ''
+        semanticTypes = ';'.join(self.semanticTypes) if self.semanticTypes else ''
+        previous = self.previouskeywords if self.previouskeywords else ''
+        
+        return ",".join([str(self.datetime), str(self.userId), self.keywords, previous, mesh, semanticTypes, str(self.CHVFound), str(self.hasCHV), str(self.hasUMLS), str(self.hasCHVMisspelled)]) 
+        

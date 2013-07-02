@@ -95,7 +95,8 @@ def readKhresmoi(filename):
     return data
 
 
-def readMyFormat(filename):
+def readMyFormat(filename, version):
+
     print ("Reading file: ", filename)
     start = time()
      
@@ -113,16 +114,22 @@ def readMyFormat(filename):
     ## The concept of session should already be defined when this file was created. 
     for row in reader:
         #print row, len(row)
-        
-        if len(row) != 6:
-            print "(len(row) !=6) ERROR in this line: ", row
+
+        if version == "v4" and len(row) != 6:
+            print "Version4 --- (len(row) !=6) ERROR in this line: ", row
             continue
+        
+        if version == "v5" and len(row) != 10:
+            print "Version5 --- (len(row) !=10) ERROR in this line: ", row
         
         #No keywords in this line, skip it
         if len(row[2]) == 0 or row[2] == None:
             continue
 
-        temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4], semanticTypes=row[5])
+        if version == "v4":
+            temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4], semanticTypes=row[5])
+        elif version == "v5":
+            temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4], semanticTypes=row[5], CHVFound=row[6], hasCHV=row[7], hasUMLS=row[8], hasCHVMisspelled=row[9] )
 
         data.append(temp)
     return data
