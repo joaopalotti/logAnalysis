@@ -2,7 +2,6 @@ from __future__ import division
 import sys, csv, re
 from readCSV import readMyFormat
 from auxiliarFunctions import tokenize
-from CHV import CHV
 
 usingScoop = True
 
@@ -20,6 +19,13 @@ queries = []
 
 from collections import defaultdict
 popCounter = defaultdict(int)
+
+class CHV(object):
+    def __init__(self, text, isCHV, isUMLS, misspelled):
+        self.text = text
+        self.isCHV = isCHV
+        self.isUMLS = isUMLS
+        self.misspelled = misspelled
 
 for member in data:        
     query = tokenize(member.keywords)

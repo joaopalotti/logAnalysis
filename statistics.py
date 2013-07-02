@@ -121,6 +121,8 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
         countingMesh, countingDisease, hasMeshValues, countingMeshDepth, usersUsingMesh, mapUserMeanMeshDepth, \
                 countingMeshByUser, countingDiseaseByUser, countingMeshWeightedByUser, countingDiseaseWeightedByUser,\
                 countingMeshWeighted, countingDiseaseWeighted = calculateMesh(data)
+        
+        calculateCHV(data)
 
         # Print statistics
         with open(dataName + ".result", "w") as f:
@@ -274,6 +276,9 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
     latexWriter.addTable(tableBooleanUseHeader, caption="Boolean usage", transpose=True)
 
     print sum(countingMeshByUser.values()), sum(countingMeshWeightedByUser.values())
+
+def calculateCHV(data):
+
 
 def calculateSemanticTypesPercentages(userSemanticType):
     
