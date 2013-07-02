@@ -34,7 +34,10 @@ class latexPrinter:
         self.document.write("\\begin{table}[ht]\n")
         self.document.write("\\begin{center}\n")
              
-        cols = 'c|' * len(rows[0])
+        if transpose:
+            cols = 'c|' * len(rows)
+        else:
+            cols = 'c|' * len(rows[0])
         self.document.write("\\begin{tabular}{|" + cols + "}\n")
         
         self.document.write("\\toprule\n")
