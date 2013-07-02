@@ -3,7 +3,11 @@ import sys, csv, re
 from readCSV import readMyFormat
 from auxiliarFunctions import tokenize
 from CHV import CHV
-#from scoop import futures
+
+usingScoop = True
+
+if usingScoop:
+    from scoop import futures
 
 chvfile = sys.argv[1]
 v4datasetFile = sys.argv[2]
@@ -11,7 +15,7 @@ outfilename = sys.argv[3]
 
 popularNames = []
 
-data = readMyFormat(v4datasetFile)
+data = readMyFormat(v4datasetFile, "v4")
 queries = []
 
 from collections import defaultdict
@@ -50,8 +54,11 @@ def findAllContains(query):
 
 if __name__ == "__main__":
     
-    #originalFound = futures.map(findAllContains, queries)
-    originalFound = map(findAllContains, queries)
+    if usingScoop:
+        originalFound = list(futures.map(findAllContains, queries))
+    else:
+        originalFound = map(findAllContains, queries)
+
     found = [ f for f in originalFound if len(f) > 0]
     #iprint found
 
@@ -77,12 +84,12 @@ if __name__ == "__main__":
     outf = open(outfilename, "w")
     writer = csv.writer(outf, delimiter=',', quoting=csv.QUOTE_ALL, quotechar ='"', escapechar='\\', doublequote=False)
     for member, found in zip(data, originalFound):        
-        print found
         CHVFound = len(found)
         hasCHV = any( [f.isCHV for f in found] )
         hasUMLS = any( [f.isUMLS for f in found] )
         hasCHVMisspelled = any( [f.misspelled for f in found] )
-        print member.userId, member.keywords, CHVFound, hasCHV, hasUMLS, hasCHVMisspelled
+        #print found
+        #print member.userId, member.keywords, CHVFound, hasCHV, hasUMLS, hasCHVMisspelled
         
         mesh = ';'.join(member.mesh) if member.mesh else ''
         semanticTypes = ';'.join(member.semanticTypes) if member.semanticTypes else ''
