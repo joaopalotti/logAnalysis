@@ -82,7 +82,15 @@ if __name__ == "__main__":
     print "Number of CHV and NOT UMLS: ", sum( [ 1 for l in found for f in l if (f.isUMLS == False and f.isCHV == True) ] ) / bigTotal
     print "Number of UMLS and NOT CHV: ", sum( [ 1 for l in found for f in l if (f.isUMLS == True and f.isCHV == False) ] ) / bigTotal
     print "Number of UMLS and CHV: ", sum( [ 1 for l in found for f in l if (f.isUMLS == True and f.isCHV == True) ] ) / bigTotal
-    
+
+    print "Stats per query"
+    print "Number of queries: ", len(queries)
+    print "(query) Number of not CHV nor UMLS: ", sum( [ 1 for l in found for f in l if (f.isUMLS == False and f.isCHV == False) ] ) / len(query)
+    print "(query) Number of CHV and NOT UMLS: ", sum( [ 1 for l in found for f in l if (f.isUMLS == False and f.isCHV == True) ] ) / len(query)
+    print "(query) Number of UMLS and NOT CHV: ", sum( [ 1 for l in found for f in l if (f.isUMLS == True and f.isCHV == False) ] ) / len(query)
+    print "(query) Number of UMLS and CHV: ", sum( [ 1 for l in found for f in l if (f.isUMLS == True and f.isCHV == True) ] ) / len(query)
+
+
     print "Term and frequency"
     for pop, c in sorted(popCounter.items(), key=lambda t: t[1], reverse=True):
         print pop,"->", c
