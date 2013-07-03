@@ -4,17 +4,17 @@ from sklearn.metrics import classification_report, f1_score, accuracy_score
 #General
 from collections import Counter, defaultdict
 
-def makeIncrementalReport(X, y, listOfYs, accBaseline, f1Baseline, wf1Baseline, mf1Baseline):
+def makeIncrementalReport(X, y, listOfYs, accBaseline, sf1Baseline, wf1Baseline, mf1Baseline):
     a, f, wf, mf = [], [], [], []
     for i in listOfYs:
         print "Partition ", i
         print len(listOfYs[i])
         #print listOfYs[i]
-        acc, sf1, wf1, mf1 = makeReport(X, y, listOfYs[i], accBaseline, f1Baseline, wf1Baseline, mf1Baseline)
+        acc, sf1, wf1, mf1 = makeReport(X, y, listOfYs[i], accBaseline, sf1Baseline, wf1Baseline, mf1Baseline)
         a, f, wf, mf = a + [acc], f + [sf1], wf + [wf1], mf + [mf1]
     return a, f, wf, mf
 
-def makeReport(X, y, y_pred, accBaseline, f1Baseline, mf1Baseline, wf1Baseline):
+def makeReport(X, y, y_pred, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline):
     # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html#sklearn.metrics.classification_report
     
     target_names = ['Layman', 'Specialist']
@@ -34,7 +34,7 @@ def makeReport(X, y, y_pred, accBaseline, f1Baseline, mf1Baseline, wf1Baseline):
     print "F1 Scores (no average) --> ", (f1)
     
     print "sf1 -> ", sf1
-    print "GAIN --> %0.2f%% " % (100.0 * (sf1 - f1Baseline) / f1Baseline)
+    print "GAIN --> %0.2f%% " % (100.0 * (sf1 - sf1Baseline) / sf1Baseline)
     
     print "mf1 -> ", mf1
     print "GAIN --> %0.2f%% " % (100.0 * (mf1 - mf1Baseline) / mf1Baseline)

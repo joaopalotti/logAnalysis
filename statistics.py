@@ -111,7 +111,6 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
         numberOfMeshWeightedDiseases = sum(countingDiseaseWeighted.values())
 
         appendGeneral(generalTableRow, dataName, lastDay, firstDay, numberOfUsers, numberOfQueries, npTerms, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession, npTime, countingNL, countingReAccess, hasAcronym, percentageAcronymInQueries, usersUsingAcronyms, setOfUsersWithSemantic)
-        
         appendGeneralModified(generalModifiedRow, dataName, numberOfQueries, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions)
         appendGeneralMesh(generalMeshRow, dataName, hasMeshValues, numberOfQueries, numberOfMeshTerms, numberOfMeshDiseases, usersUsingMesh, numberOfUsers, mapUserMeanMeshDepth)
 

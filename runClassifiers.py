@@ -41,7 +41,7 @@ def transformeInDict(userDict, n=-1, proportional=-1):
         #print user.label, udict
         listOfDicts.append(udict)
         listOfLabels.append(user.label)
-        print udict  #### Check how this features are related with the features calculated by the random tree method
+        #print udict  #### Check how this features are related with the features calculated by the random tree method
     return listOfDicts, listOfLabels
 
 
@@ -101,10 +101,10 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
     accBaseline = accuracy_score(y, y_greatest)
     print "Avg. ACC of the greatest dataset => %.3f" % (100.0 * accBaseline)
 
-    f1 = f1_score( y, y_greatest, average=None)
+    f1 = f1_score(y, y_greatest, average=None)
     print "F1 Score --> ", (f1) , " size --> ", len(f1)
     
-    sf1Baseline = f1_score( y, y_greatest)
+    sf1Baseline = f1_score(y, y_greatest) # TODO: maybe? , pos_label=greatestClass)
     print "Simple F1 -> %.3f" % (sf1Baseline)
     
     mf1Baseline = f1.mean()
@@ -159,36 +159,36 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
     y_ert = classify(ExtraTreesClassifier(random_state=0, compute_importances=True, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"]), \
                      X, y, nCV, nJobs, tryToMeasureFeatureImportance=True)
     print 20 * '=', " ERF  Results ", 20 * '='
-    ertacc, ertfsf1, ertwf1, ertmf1 = makeReport(X, y, y_ert, accBaseline, f1Baseline, wf1Baseline)
+    ertacc, ertsf1, ertwf1, ertmf1 = makeReport(X, y, y_ert, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
     
     y_nb  = classify(GaussianNB(),\
                      X, y, nCV, nJobs)
     print 20 * '=', " NB  Results ", 20 * '='
-    nbacc, nbsf1, nbwf1, nbmf1 = makeReport(X, y, y_nb, accBaseline, f1Baseline, wf1Baseline)
+    nbacc, nbsf1, nbwf1, nbmf1 = makeReport(X, y, y_nb, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
     
     y_knn = classify(KNeighborsClassifier(n_neighbors=classifyParameters["KNN-K"]),\
                      X, y, nCV, nJobs)
     print 20 * '=', " KNN Results ", 20 * '='
-    knnacc, knnsf1, knnwf1, knnmf1 = makeReport(X, y, y_knn, accBaseline, f1Baseline, wf1Baseline)
+    knnacc, knnsf1, knnwf1, knnmf1 = makeReport(X, y, y_knn, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
     
     y_dt = classify(DecisionTreeClassifier(random_state=0, compute_importances=True),\
                     X, y, nCV, nJobs)
     print 20 * '=', " DT  Results ", 20 * '='
-    dtacc, dtsf1, dtwf1, dtwmf1 = makeReport(X, y, y_dt, accBaseline, f1Baseline, wf1Baseline)
+    dtacc, dtsf1, dtwf1, dtwmf1 = makeReport(X, y, y_dt, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
     
     y_lg =  classify(LogisticRegression(),\
                      X, y, nCV, nJobs)
     print 20 * '=', " LogReg  Results ", 20 * '='
-    lgacc, lgsf1, lgwf1, lgmf1 = makeReport(X, y, y_lg, accBaseline, f1Baseline, wf1Baseline)
+    lgacc, lgsf1, lgwf1, lgmf1 = makeReport(X, y, y_lg, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
     
     y_svm = classify(SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"]),\
-                     X, y, wf1Baseline, nCV, nJobs)
+                     X, y, nCV, nJobs)
     print 20 * '=', " SVM Results ", 20 * '='
-    svmacc, svmsf1, svmwf1, svmmf1 = makeReport(X, y, y_svm, accBaseline, f1Baseline, wf1Baseline)
+    svmacc, svmsf1, svmwf1, svmmf1 = makeReport(X, y, y_svm, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
     
     print "Done"
 
-    return ( accBaseline, f1Baseline, wf1Baseline, ertacc, ertf1, ertwf1, nbacc, nbf2, nbwf1, knnacc, knnf1, knnwf1, dtacc, dtf1, dtwf1,lgacc, lgf1, lgwf1, svmacc, svmf1, svmwf1)  
+    return ( accBaseline, sf1Baseline, mf1Baseline, wf1Baseline, ertacc, ertsf1, ertwf1, nbacc, nbsf1, nbwf1, knnacc, knnsf1, knnwf1, dtacc, dtsf1, dtwf1, lgacc, lgsf1, lgwf1, svmacc, svmsf1, svmwf1)  
     #import pylab as pl
     #pl.clf()
     #pl.plot(recall, precision, label='Precision-Recall curve')
