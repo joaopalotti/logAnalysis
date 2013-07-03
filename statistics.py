@@ -6,8 +6,6 @@ from datetime import datetime
 from metrics import generateStatsVector
 from latexTools import latexPrinter
 from auxiliarFunctions import *
-
-#from tables import tableGeneralHeader, tableGeneralMeshHeader, tableMeshHeader, tableWeightedMeshHeader, tableDiseaseByUserHeader, tableDiseasesHeader, tableWeightedDiseasesHeader, tableSemanticFocusHeader, tableCicleSequenceHeader, tableModifiedSessionHeader, tableGeneralModifiedHeader, tableMeshDepthHeader, tableSemanticByUserHeader, tableSemanticByUserWeightedHeader, tableMeshByUserHeader, tableDiseaseWeightedByUserHeader, tableMeshByUserWeightedHeader, tableBooleanUseHeader, tableCHVHeader, tableDiseaseByUserWeightedHeader
 from tables import *
 
 """
@@ -62,18 +60,13 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
                 userSemanticType, npSessions = calculateQueriesPerSession(data)
         
         semanticTypesCountedByUser, semanticTypesCountedByUserWeighted, setOfUsersWithSemantic = calculateSemanticTypesPercentages(userSemanticType)
-
-       
         hasAcronym, countingAcronyms, usersUsingAcronyms = calculateAcronyms(data)
-
         numberOfUsers = calculateUsers(data)
         npTerms, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord = calculateTerms(data)
-               
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
         countingNL = calculateNLuse(data)
         countingQueriesPerUser = calculateQueriesPerUser(data)
         countingQueryRanking = calculateQueryRanking(data)
-
         usersMetrics = calculateMetricsForUsers(data)
 
         numberOfQueries = sum(countingQueries.values())
@@ -120,8 +113,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
         appendGeneral(generalTableRow, dataName, lastDay, firstDay, numberOfUsers, numberOfQueries, npTerms, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession, npTime, countingNL, countingReAccess, hasAcronym, percentageAcronymInQueries, usersUsingAcronyms, setOfUsersWithSemantic)
         
         appendGeneralModified(generalModifiedRow, dataName, numberOfQueries, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions)
-        
-        generalMeshRow.append( [dataName,  hasMeshValues, 100.0 * hasMeshValues/numberOfQueries, numberOfMeshTerms, numberOfMeshTerms/numberOfQueries, numberOfMeshDiseases, numberOfMeshDiseases/numberOfQueries, len(usersUsingMesh), 100.0*len(usersUsingMesh)/numberOfUsers, sum(mapUserMeanMeshDepth.values())/len(mapUserMeanMeshDepth.items()) ] ) 
+        appendGeneralMesh(generalMeshRow, dataName, hasMeshValues, numberOfQueries, numberOfMeshTerms, numberOfMeshDiseases, usersUsingMesh, numberOfUsers, mapUserMeanMeshDepth)
 
         #To avoid division by zero
         numberOfMeshTerms = numberOfMeshTerms if numberOfMeshTerms != 0 else 1
@@ -129,41 +121,38 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
         numberOfMeshWeightedTerms = numberOfMeshWeightedTerms if numberOfMeshWeightedTerms != 0 else 1
         numberOfMeshWeightedDiseases = numberOfMeshWeightedDiseases if numberOfMeshWeightedDiseases != 0 else 1
         
-        meshTableRow.append( [ dataName, 100 * countingMesh["A"]/ numberOfMeshTerms, 100 * countingMesh["B"]/ numberOfMeshTerms, 100 * countingMesh["C"]/ numberOfMeshTerms, 100 * countingMesh["D"]/ numberOfMeshTerms, 100 * countingMesh["E"]/ numberOfMeshTerms, 100 * countingMesh["F"]/ numberOfMeshTerms, 100 * countingMesh["G"]/ numberOfMeshTerms, 100 * countingMesh["H"]/ numberOfMeshTerms, 100 * countingMesh["I"]/ numberOfMeshTerms, 100 * countingMesh["J"]/ numberOfMeshTerms, 100 * countingMesh["K"]/ numberOfMeshTerms, 100 * countingMesh["L"]/ numberOfMeshTerms, 100 * countingMesh["M"]/ numberOfMeshTerms, 100 * countingMesh["N"]/ numberOfMeshTerms, 100 * countingMesh["V"]/ numberOfMeshTerms, 100 * countingMesh["Z"]/ numberOfMeshTerms  ] )
-        diseaseTableRow.append( [ dataName,  100 * countingDisease["C01"]/ numberOfMeshDiseases, 100 * countingDisease["C02"]/ numberOfMeshDiseases, 100 * countingDisease["C03"]/ numberOfMeshDiseases, 100 * countingDisease["C04"]/ numberOfMeshDiseases, 100 * countingDisease["C05"]/ numberOfMeshDiseases, 100 * countingDisease["C06"]/ numberOfMeshDiseases, 100 * countingDisease["C07"]/ numberOfMeshDiseases, 100 * countingDisease["C08"]/ numberOfMeshDiseases, 100 * countingDisease["C09"]/ numberOfMeshDiseases, 100 * countingDisease["C10"]/ numberOfMeshDiseases, 100 * countingDisease["C11"]/ numberOfMeshDiseases, 100 * countingDisease["C12"]/ numberOfMeshDiseases, 100 * countingDisease["C13"]/ numberOfMeshDiseases, 100 * countingDisease["C14"]/ numberOfMeshDiseases, 100 * countingDisease["C15"]/ numberOfMeshDiseases, 100 * countingDisease["C16"]/ numberOfMeshDiseases, 100 * countingDisease["C17"]/ numberOfMeshDiseases, 100 * countingDisease["C18"]/ numberOfMeshDiseases, 100 * countingDisease["C19"]/ numberOfMeshDiseases, 100 * countingDisease["C20"]/ numberOfMeshDiseases, 100 * countingDisease["C21"]/ numberOfMeshDiseases, 100 * countingDisease["C22"]/ numberOfMeshDiseases, 100 * countingDisease["C23"]/ numberOfMeshDiseases, 100 * countingDisease["C24"]/ numberOfMeshDiseases, 100 * countingDisease["C25"]/ numberOfMeshDiseases, 100 * countingDisease["C26"]/ numberOfMeshDiseases ] )
-        meshTableWeightedRow.append( [ dataName, 100 * countingMeshWeighted["A"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["B"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["C"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["D"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["E"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["F"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["G"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["H"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["I"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["J"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["K"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["L"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["M"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["N"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["V"]/ numberOfMeshWeightedTerms, 100 * countingMeshWeighted["Z"]/ numberOfMeshWeightedTerms  ] )
-        diseaseTableWeightedRow.append( [ dataName,  100 * countingDiseaseWeighted["C01"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C02"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C03"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C04"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C05"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C06"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C07"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C08"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C09"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C10"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C11"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C12"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C13"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C14"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C15"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C16"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C17"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C18"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C19"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C20"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C21"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C22"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C23"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C24"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C25"]/ numberOfMeshWeightedDiseases, 100 * countingDiseaseWeighted["C26"]/ numberOfMeshWeightedDiseases ] )
-        meshByUserRow.append( [ dataName, 100 * countingMeshByUser["A"]/ numberOfUsers, 100 * countingMeshByUser["B"]/ numberOfUsers, 100 * countingMeshByUser["C"]/ numberOfUsers, 100 * countingMeshByUser["D"]/ numberOfUsers, 100 * countingMeshByUser["E"]/ numberOfUsers, 100 * countingMeshByUser["F"]/ numberOfUsers, 100 * countingMeshByUser["G"]/ numberOfUsers, 100 * countingMeshByUser["H"]/ numberOfUsers, 100 * countingMeshByUser["I"]/ numberOfUsers, 100 * countingMeshByUser["J"]/ numberOfUsers, 100 * countingMeshByUser["K"]/ numberOfUsers, 100 * countingMeshByUser["L"]/ numberOfUsers, 100 * countingMeshByUser["M"]/ numberOfUsers, 100 * countingMeshByUser["N"]/ numberOfUsers, 100 * countingMeshByUser["V"]/ numberOfUsers, 100 * countingMeshByUser["Z"]/ numberOfUsers  ] )
-        diseaseByUserRow.append( [ dataName,  100 * countingDiseaseByUser["C01"]/ numberOfUsers, 100 * countingDiseaseByUser["C02"]/ numberOfUsers, 100 * countingDiseaseByUser["C03"]/ numberOfUsers, 100 * countingDiseaseByUser["C04"]/ numberOfUsers, 100 * countingDiseaseByUser["C05"]/ numberOfUsers, 100 * countingDiseaseByUser["C06"]/ numberOfUsers, 100 * countingDiseaseByUser["C07"]/ numberOfUsers, 100 * countingDiseaseByUser["C08"]/ numberOfUsers, 100 * countingDiseaseByUser["C09"]/ numberOfUsers, 100 * countingDiseaseByUser["C10"]/ numberOfUsers, 100 * countingDiseaseByUser["C11"]/ numberOfUsers, 100 * countingDiseaseByUser["C12"]/ numberOfUsers, 100 * countingDiseaseByUser["C13"]/ numberOfUsers, 100 * countingDiseaseByUser["C14"]/ numberOfUsers, 100 * countingDiseaseByUser["C15"]/ numberOfUsers, 100 * countingDiseaseByUser["C16"]/ numberOfUsers, 100 * countingDiseaseByUser["C17"]/ numberOfUsers, 100 * countingDiseaseByUser["C18"]/ numberOfUsers, 100 * countingDiseaseByUser["C19"]/ numberOfUsers, 100 * countingDiseaseByUser["C20"]/ numberOfUsers, 100 * countingDiseaseByUser["C21"]/ numberOfUsers, 100 * countingDiseaseByUser["C22"]/ numberOfUsers, 100 * countingDiseaseByUser["C23"]/ numberOfUsers, 100 * countingDiseaseByUser["C24"]/ numberOfUsers, 100 * countingDiseaseByUser["C25"]/ numberOfUsers, 100 * countingDiseaseByUser["C26"]/ numberOfUsers ] )
-        meshByUserWeightedRow.append( [ dataName, 100 * countingMeshWeightedByUser["A"]/ numberOfUsers, 100 * countingMeshWeightedByUser["B"]/ numberOfUsers, 100 * countingMeshWeightedByUser["C"]/ numberOfUsers, 100 * countingMeshWeightedByUser["D"]/ numberOfUsers, 100 * countingMeshWeightedByUser["E"]/ numberOfUsers, 100 * countingMeshWeightedByUser["F"]/ numberOfUsers, 100 * countingMeshWeightedByUser["G"]/ numberOfUsers, 100 * countingMeshWeightedByUser["H"]/ numberOfUsers, 100 * countingMeshWeightedByUser["I"]/ numberOfUsers, 100 * countingMeshWeightedByUser["J"]/ numberOfUsers, 100 * countingMeshWeightedByUser["K"]/ numberOfUsers, 100 * countingMeshWeightedByUser["L"]/ numberOfUsers, 100 * countingMeshWeightedByUser["M"]/ numberOfUsers, 100 * countingMeshWeightedByUser["N"]/ numberOfUsers, 100 * countingMeshWeightedByUser["V"]/ numberOfUsers, 100 * countingMeshWeightedByUser["Z"]/ numberOfUsers  ] )
-        diseaseByUserWeightedRow.append( [ dataName,  100 * countingDiseaseWeightedByUser["C01"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C02"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C03"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C04"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C05"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C06"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C07"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C08"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C09"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C10"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C11"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C12"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C13"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C14"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C15"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C16"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C17"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C18"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C19"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C20"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C21"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C22"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C23"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C24"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C25"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C26"]/ numberOfUsers ] )
-        
-        CHVRow.append( [dataName, sum(countingCHVFound.values())/numberOfQueries, numberCHV/numberOfQueries, numberUMLS/numberOfQueries, numberCHVMisspelled/numberOfQueries])
-        
+        appendMesh(meshTableRow, dataName, countingMesh, numberOfMeshTerms)
+        appendDisease(diseaseTableRow, dataName, countingDisease, numberOfMeshDiseases)
+        appendMeshWeighted(meshTableWeightedRow, dataName, countingMeshWeighted, numberOfMeshWeightedTerms)
+        appendDiseaseWeighted(diseaseTableWeightedRow, dataName, countingDiseaseWeighted, numberOfMeshWeightedDiseases)
+        appendMeshByUser(meshByUserRow, dataName, countingMeshByUser, numberOfUsers)
+        appendDiseaseByUser(diseaseByUserRow, dataName, countingDiseaseByUser, numberOfUsers)
+        appendMeshByUserWeighted(meshByUserWeightedRow, dataName, countingMeshWeightedByUser, numberOfUsers)
+        appendDiseaseByUserWeighte(diseaseByUserWeightedRow, dataName, countingDiseaseWeightedByUser, numberOfUsers)
+
         # ["Dtst", "Nothing", "Symptom", "Cause", "Remedy", "SymptomCause", "SymptomRemedy", "CauseRemedy", "SymptomCauseRemedy"]
         totalActions = sum(vectorOfActionSequence)
         totalActions = 1/100 if totalActions == 0 else totalActions
         print "Actions -> ", totalActions, " Queries -> ", numberOfQueries
-
-        semanticFocusRow.append( [ dataName, 100 * vectorOfActionSequence[0]/totalActions, 100 * vectorOfActionSequence[1]/totalActions, 100 * vectorOfActionSequence[2]/totalActions, 100 * vectorOfActionSequence[4]/totalActions, 100 * vectorOfActionSequence[3]/totalActions, 100 * vectorOfActionSequence[5]/totalActions, 100 * vectorOfActionSequence[6]/totalActions, 100 * vectorOfActionSequence[7]/totalActions ] )
+        appendSemanticFocus(semanticFocusRow, dataName, vectorOfActionSequence, totalActions)
 
         #["Dtst","Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]
         totalOfModifiedSessions = sum(vectorOfModifiedSessions)
         totalOfModifiedSessions = 1/100 if totalOfModifiedSessions == 0 else totalOfModifiedSessions
-
-        modifiedSessionRow.append( [dataName, 100 * vectorOfModifiedSessions[0]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[4]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[2]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[1]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[6]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[5]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[3]/totalOfModifiedSessions, 100 * vectorOfModifiedSessions[7]/totalOfModifiedSessions ] )
+        appendModifiedSession( modifiedSessionRow, dataName, vectorOfModifiedSessions, totalOfModifiedSessions)
         
         totalCicleSequence = sum(vectorOfCicleSequence)
         totalCicleSequence = 1/100 if totalCicleSequence == 0 else totalCicleSequence
-        cicleSequenceRow.append( [dataName, totalCicleSequence, 100.0 * totalCicleSequence/numberOfSessions, 100 * vectorOfCicleSequence[0]/totalCicleSequence, 100 * vectorOfCicleSequence[1]/totalCicleSequence, 100 * vectorOfCicleSequence[2]/totalCicleSequence, 100 * vectorOfCicleSequence[3]/totalCicleSequence, 100 * vectorOfCicleSequence[4]/totalCicleSequence, 100 * vectorOfCicleSequence[5]/totalCicleSequence] )
+        appendCicleSequence(dataName, totalCicleSequence, numberOfSessions, vectorOfCicleSequence)
     
         totalMeshDepth = sum(countingMeshDepth.values())
         totalMeshDepth = 1/100 if totalMeshDepth == 0 else totalMeshDepth
-        meshDepthRow.append( [dataName, 100/totalMeshDepth * countingMeshDepth[1], 100/totalMeshDepth * countingMeshDepth[2], 100/totalMeshDepth * countingMeshDepth[3], 100/totalMeshDepth * countingMeshDepth[4], 100/totalMeshDepth * countingMeshDepth[5], 100/totalMeshDepth * countingMeshDepth[6], 100/totalMeshDepth * countingMeshDepth[7],100/totalMeshDepth * countingMeshDepth[8], 100/totalMeshDepth * countingMeshDepth[9], 100/totalMeshDepth * countingMeshDepth[10], 100/totalMeshDepth * countingMeshDepth[11], 100/totalMeshDepth * countingMeshDepth[12]  ])
         
-        semanticByUserRow.append( [dataName, semanticTypesCountedByUser["symptom"], 100.0 * semanticTypesCountedByUser["symptom"]/numberOfUsers, semanticTypesCountedByUser["cause"], 100.0 * semanticTypesCountedByUser["cause"]/ numberOfUsers, semanticTypesCountedByUser["remedy"], 100.0 * semanticTypesCountedByUser["remedy"]/numberOfUsers, semanticTypesCountedByUser["where"], 100.0 * semanticTypesCountedByUser["where"]/numberOfUsers, semanticTypesCountedByUser["noMedical"], 100.0 * semanticTypesCountedByUser["noMedical"]/numberOfUsers ])
-        semanticByUserWeightedRow.append( [dataName, semanticTypesCountedByUserWeighted["symptom"], 100.0 * semanticTypesCountedByUserWeighted["symptom"]/numberOfUsers, semanticTypesCountedByUserWeighted["cause"], 100.0 * semanticTypesCountedByUserWeighted["cause"]/ numberOfUsers, semanticTypesCountedByUserWeighted["remedy"], 100.0 * semanticTypesCountedByUserWeighted["remedy"]/numberOfUsers, semanticTypesCountedByUserWeighted["where"], 100.0 * semanticTypesCountedByUserWeighted["where"]/numberOfUsers, semanticTypesCountedByUserWeighted["noMedical"], 100.0 * semanticTypesCountedByUserWeighted["noMedical"]/numberOfUsers ])
-        booleanUseRow.append( [dataName, booleanTerms['and'], 100.0 * booleanTerms['and']/numberOfQueries, booleanTerms['or'], 100.0 * booleanTerms['or']/numberOfQueries,booleanTerms['not'], 100.0 * booleanTerms['not'] / numberOfQueries, booleanTerms['any'], 100.0 * booleanTerms['any'] / numberOfQueries ] )
+        appendMeshDepth(meshDepthRow, dataName, totalMeshDepth, countingMeshDepth)
+        appendSemanticByUser(semanticByUserRow, dataName, semanticTypesCountedByUser, numberOfUsers)
+        appendSemanticByUserWeighted(semanticByUserWeightedRow, dataName, numberOfUsers, semanticTypesCountedByUserWeighted)
+        appendBooleanUse(booleanUseRow, dataName, booleanTerms, numberOfQueries)
+        appendCHV(CHVRow, dataName, countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, numberOfQueries)
 
     # Plot graphics
     if plotGraphs:
