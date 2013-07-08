@@ -5,7 +5,7 @@ class DataSet(object):
     
     # CHVFound -> number of concepts that are in the CHV list
     # hasCHV -> if any of the concepts found are exactly as the CHV suggests
-    def __init__(self, dttime, userId, keywords, previouskeywords=None, category=None, publication=None, rank=None, clickurl=None, mesh=None, semanticTypes=None, usingTimestamp=False, CHVFound=0, hasCHV=False, hasUMLS=False, hasCHVMisspelled=False): 
+    def __init__(self, dttime, userId, keywords, previouskeywords=None, category=None, publication=None, rank=None, clickurl=None, mesh=None, semanticTypes=None, usingTimestamp=False, CHVFound=0, hasCHV=False, hasUMLS=False, hasCHVMisspelled=False, comboScore=0): 
       
         withMs = re.compile("(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).(\d{3})")
         withMsAndQuote = re.compile("\"(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).(\d{3})\"")
@@ -57,6 +57,7 @@ class DataSet(object):
         self.hasCHV = (hasCHV == "True")
         self.hasUMLS = (hasUMLS == "True")
         self.hasCHVMisspelled = (hasCHVMisspelled == "True")
+        self.comboScore = comboScore
        
         #print self
 

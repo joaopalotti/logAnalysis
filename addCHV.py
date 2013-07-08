@@ -21,11 +21,12 @@ from collections import defaultdict
 popCounter = defaultdict(int)
 
 class CHV(object):
-    def __init__(self, text, isCHV, isUMLS, misspelled):
+    def __init__(self, text, isCHV, isUMLS, misspelled, combo):
         self.text = text
         self.isCHV = isCHV
         self.isUMLS = isUMLS
         self.misspelled = misspelled
+        self.comboScore = combo
 
 for member in data:        
     query = tokenize(member.keywords)
@@ -35,7 +36,8 @@ with open(chvfile, "r") as csvfile:
     reader = csv.reader(csvfile, delimiter='\t')
     for row in reader:
         #print row
-        popularNames += [ CHV(text=tokenize(row[1]), isCHV=(row[5]=="yes"), isUMLS=(row[6]=="yes"), misspelled=(row[7]=="yes")) ]
+        popularNames += [ CHV(text=tokenize(row[1]), isCHV=(row[5]=="yes"), isUMLS=(row[6]=="yes"), misspelled=(row[7]=="yes"),\
+                              combo=(float(row[12]) if row[11] != "\\N" else -1)) ]
 
 #Two lists: Popular expression ["heart", "attack"] and query ["whatever", "it", "is"]
 def contains(pop, query):
@@ -102,11 +104,12 @@ if __name__ == "__main__":
         hasCHV = any( [f.isCHV for f in found] )
         hasUMLS = any( [f.isUMLS for f in found] )
         hasCHVMisspelled = any( [f.misspelled for f in found] )
-        #print found
-        #print member.userId, member.keywords, CHVFound, hasCHV, hasUMLS, hasCHVMisspelled
+        meanComboScore = sum(f.comboScore for f in found if f.comboScore != -1) / (1.0 * len(member.keywords))
+        print found
+        print member.userId, member.keywords, CHVFound, hasCHV, hasUMLS, hasCHVMisspelled, meanComboScore
         
         mesh = ';'.join(member.mesh) if member.mesh else ''
         semanticTypes = ';'.join(member.semanticTypes) if member.semanticTypes else ''
 
-        writer.writerow( [str(member.datetime), member.userId, member.keywords, member.previouskeywords, mesh, semanticTypes, CHVFound, hasCHV, hasUMLS, hasCHVMisspelled])
+        writer.writerow( [str(member.datetime), member.userId, member.keywords, member.previouskeywords, mesh, semanticTypes, CHVFound, hasCHV, hasUMLS, hasCHVMisspelled, meanComboScore])
     outf.close()

@@ -77,7 +77,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
                 countingMeshByUser, countingDiseaseByUser, countingMeshWeightedByUser, countingDiseaseWeightedByUser,\
                 countingMeshWeighted, countingDiseaseWeighted = calculateMesh(data)
         
-        countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled = calculateCHV(data)
+        countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, meanComboScore = calculateCHV(data)
 
         # Print statistics
         with open(dataName + ".result", "w") as f:
@@ -151,7 +151,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
         appendSemanticByUser(semanticByUserRow, dataName, semanticTypesCountedByUser, numberOfUsers)
         appendSemanticByUserWeighted(semanticByUserWeightedRow, dataName, numberOfUsers, semanticTypesCountedByUserWeighted)
         appendBooleanUse(booleanUseRow, dataName, booleanTerms, numberOfQueries)
-        appendCHV(CHVRow, dataName, countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, numberOfQueries)
+        appendCHV(CHVRow, dataName, countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, numberOfQueries, meanComboScore)
 
     # Plot graphics
     if plotGraphs:
@@ -247,9 +247,10 @@ def calculateCHV(data):
         numberCHV += 1 if member.hasCHV == True else 0
         numberUMLS += 1 if member.hasUMLS == True else 0
         numberCHVMisspelled += 1 if member.hasCHVMisspelled == True else 0
+        comboScore += member.comboScore
 
     #print Counter(countingCHVFound), numberCHV, numberUMLS, numberCHVMisspelled
-    return Counter(countingCHVFound), numberCHV, numberUMLS, numberCHVMisspelled
+    return Counter(countingCHVFound), numberCHV, numberUMLS, numberCHVMisspelled, comboScore/len(data)
 
 def calculateSemanticTypesPercentages(userSemanticType):
     
