@@ -58,8 +58,6 @@ class DataSet(object):
         self.hasUMLS = (hasUMLS == "True")
         self.hasCHVMisspelled = (hasCHVMisspelled == "True")
         self.comboScore = comboScore
-       
-        #print self
 
     def printMe(self, out=sys.stdout):
         writer = csv.writer(out, delimiter=',', quoting=csv.QUOTE_ALL, quotechar ='"', escapechar='\\', doublequote=False)
@@ -78,5 +76,8 @@ class DataSet(object):
         return [str(self.datetime), str(self.userId), self.keywords, previous, mesh, semanticTypes, str(self.CHVFound), str(self.hasCHV), str(self.hasUMLS), str(self.hasCHVMisspelled), str(self.comboScore)] 
         
     def __str__(self):
-        return ",".join(self.vectorizeMe())
+        vec = self.vectorizeMe()
+        vec[2] = " ".join(vec[2])
+        vec[3] = " ".join(vec[3])
+        return ",".join(vec)
         

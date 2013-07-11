@@ -19,7 +19,7 @@ from sklearn.metrics import f1_score, accuracy_score
 
 ### HOW TO USE:
 # python runClassifiers.py -h
-# python runClassifiers.pt --preprocessing=[normalize|scale|minmax|nothing] [forceBalance|-1] [proportional|-1] [minNumberOfQueries] [nseed]"
+# python runClassifiers.pt --preprocessing=[normalize|scale|minmax|nothing] -b [forceBalance|-1] -g [proportional|-1] -m [minNumberOfQueries] -s [nseed]"
 
 nJobs = 2
 nCV = 10
@@ -37,7 +37,7 @@ def transformeInDict(userDict, n=-1, proportional=-1):
 
     p = range(len(allUserIds))
     random.shuffle(p)
-    if proportional:
+    if proportional > 0:
         n = int( int(proportional)/100.0 * len(allUserIds) )
 
     #for v, (key, user) in zip(range(len(p)), userDict.iteritems()):
@@ -242,6 +242,11 @@ if __name__ == "__main__":
         print "This program does not receive parameters this way: use -h to see the options."
         sys.exit(0)
     
+    print "Using preprocessing: ", opts.preProcessing
+    print "Using ", opts.minNumberOfQueries, "as the minimal number of queries"
+    print "Forcing Balance = ",opts.forceBalance
+    print "Proportional =",opts.proportional
+
     print "Using preprocessing: ", opts.preProcessing
     runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.integral)
 

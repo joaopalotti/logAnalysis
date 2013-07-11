@@ -12,12 +12,15 @@ removeStopWords=False
 acronymsSet = createAcronymSet()
 minimalNumberOfQueries = "Invalid number...please enter this parameter!"
 maximalNumberOfQueries = 100
+simpleTest = True
+formatVersion = "v5" #"v4"
 
 ### HOW TO USE:
 #   python createFeatureVector.py minimalNumberOfQueries 
 
 class userClass:
-    def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm, expa, shri, refo, expshr, expref, shrref, expshrref):
+    def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm, expa, shri, refo, expshr, expref, shrref, expshrref,\
+                chvf=0.0, chv=0.0, umls=0.0, chvm=0.0, combo=0.0):
         self.id = id
         self.label = label
         self.numberOfQueries = nq
@@ -39,14 +42,16 @@ class userClass:
         self.expref = expref
         self.shrref = shrref
         self.expshrref = expshrref
+        
+        self.chvf = chvf
+        self.chv = chv
+        self.umls = umls
+        self.chvm = chvm
+        self.comboScore = combo
 
     def toDict(self):
-        #return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical}
-        return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref}
+        return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions,'02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref, '15.CHVFound': self.chvf, '16.CHV':self.chv, '17.UMLS':self.umls, '18.CHVMisspelled':self.chvm, '19.ComboScore':self.comboScore}
                 
-    #'14.didExpShr':self.expshr ,'15.didExpRef': self.expref ,'16.didShrRef': self.shrref ,'17.didExpShrRef': self.expshrref}
-    #TODO: should I consider different kinds of abbreviations?
-    #TODO: take a look at the mesh and decide if it is possible to separete levels or groups from their data (same for UMLS)
 
 '''
     Boolean feature.
@@ -77,7 +82,35 @@ def calculateNLPerUser(data):
 def hasNLword(words):
     #print ( [ w for w in words if w.lower() in NLWords ] )
     return any( [ w for w in words if w.lower() in NLWords ] )
-    
+   
+
+def calculateCHV(data):
+
+    tempMap = defaultdict(list)
+    mapUserCHVFound, mapUserCHV, mapUserUMLS, mapUserMisspelled, mapComboScore = {}, {}, {}, {}, {}
+
+    userIds = sorted( (member.userId, member.datetime, member.CHVFound, member.hasCHV, member.hasUMLS, member.hasCHVMisspelled, member.comboScore) for member in data )
+    for (userId, _, CHVFound, hasCHV, UMLS, CHVMisspelled, comboScore) in userIds:
+        tempMap[userId].append([CHVFound,1 if hasCHV else 0, 1 if UMLS else 0, 1 if CHVMisspelled else 0, float(comboScore)])
+
+    for userId, queries in tempMap.items():
+        queryCounter = 0 
+        values = []
+        for query in queries:
+            queryCounter += 1
+            userIndex = userId + "_" + str(queryCounter).zfill(2)
+            
+            values.append(query)
+            size = len(values)
+            mapUserCHVFound[userIndex]   = sum([v[0] for v in values])/size
+            mapUserCHV[userIndex]        = sum([v[1] for v in values])/size
+            mapUserUMLS[userIndex]       = sum([v[2] for v in values])/size
+            mapUserMisspelled[userIndex] = sum([v[3] for v in values])/size
+            mapComboScore[userIndex]     = sum([v[4] for v in values])/size
+
+    return mapUserCHVFound, mapUserCHV, mapUserUMLS, mapUserMisspelled, mapComboScore
+ 
+
 def calculateMeanMeshDepthPerUser(data):
     mapUserMeanMeshDepth = dict()
     previousUser = str(-1)
@@ -188,12 +221,21 @@ def hasSemanticType(words, semanticSet):
 
 def calculateUsingSemantic(data, semanticType):
     mapUserSemantic = dict()
+    tempMapUserSemantic = dict() 
+    userIds = sorted( (member.userId, member.datetime, member.semanticTypes) for member in data )
+    
+    for (userId, _, st) in userIds: 
+        if userId not in tempMapUserSemantic:
+            tempMapUserSemantic[userId] = False
+            queryCounter = 1
+        else:
+            queryCounter += 1
+        
+        userIndex = userId + "_" + str(queryCounter).zfill(2)
 
-    userIds = sorted( (member.userId, member.semanticTypes) for member in data )
-    for (userId, st) in userIds:
-        if userId not in mapUserSemantic:
-            mapUserSemantic[userId] = False
-        mapUserSemantic[userId] = ( mapUserSemantic[userId] or hasSemanticType(st, semanticType) )
+        mapUserSemantic[userIndex] = ( tempMapUserSemantic[userId] or hasSemanticType(st, semanticType) )
+        tempMapUserSemantic[userId] = mapUserSemantic[userIndex]
+    
     return mapUserSemantic
 
 def calculateUsingAbbreviation(data):
@@ -257,44 +299,40 @@ def calculateMeanTimePerSession(data):
         #print "newSession => ", newSession, " sessions: ", numberOfSessions, "secs: ", sessionLength, " map => ", mapUserMeanTimePerSession[userIndex]
     return mapUserMeanTimePerSession
 
+def getBehavior(vOMS, subQueryE, subQueryS, subQueryRef, subQueryRep):
+    be, bs, bref, brep = 0 if subQueryE == 0 else 1, 0 if subQueryS == 0 else 1, 0 if subQueryRef == 0 else 1, 0 if subQueryRep == 0 else 1
+    indexVal =  int( str(be) + str(bs) + str(bref), 2) 
+    vOMS[indexVal] += 1
+    return (vOMS[4] > 0, vOMS[2] > 0, vOMS[1] > 0, vOMS[6] > 0, vOMS[5] > 0, vOMS[3] > 0, vOMS[7]>0)
+            
 def calculateUserBehavior(data):
-    mapUserBehavior = dict()
-    sessions = createSessions(data)
     
+    mapUserBehavior = dict()
+    tempMapUserBehavior = dict()
+
+    sessions = createSessions(data)
     for user, session in sessions.iteritems():
         vOMS = [0]*8
-        for subSession in session.values():
+        queryCounter = 0
+        subQueryE, subQueryS, subQueryRef, subQueryRep = 0, 0, 0, 0
 
-            modifiedSubSession = False
+        for subSession in session.values():
+            
             previousQuery = subSession[0]
-            subQueryE, subQueryS, subQueryRef, subQueryRep = 0, 0, 0, 0
+            queryCounter += 1
+            userIndex = user + "_" + str(queryCounter).zfill(2)
+            mapUserBehavior[userIndex] = getBehavior(vOMS, subQueryE, subQueryS, subQueryRef, subQueryRep)  
             
             for query in subSession[1:]:
+                queryCounter += 1
+                userIndex = user + "_" + str(queryCounter).zfill(2)
+
                 e, s, ref, _ = compareSets( set(previousQuery[1]), set(query[1]) )
                 subQueryE, subQueryS, subQueryRef, = subQueryE + e, subQueryS + s, subQueryRef + ref
-                
-                #print "Session === ", subSession, "\n"
-                #print "Q1  = ", set(previousQuery[1]), " Q2 = ", set(query[1])
-                #print " numberOfExpansions = ", numberOfExpansions, " numberOfShrinkage = ", numberOfShrinkage, " numberOfReformulations = ", numberOfReformulations, " numberOfRepetitions = ", numberOfRepetitions
-                #print 
-
-                # If a repetition occurs, we do not consider it as a modified session
-                if e > 0 or s > 0 or ref > 0:
-                    modifiedSubSession = True 
+                mapUserBehavior[userIndex] = getBehavior(vOMS, subQueryE, subQueryS, subQueryRef, subQueryRep)  
                 previousQuery = query
-                
-            if modifiedSubSession:
-                be, bs, bref, brep = 0 if subQueryE == 0 else 1, 0 if subQueryS == 0 else 1, 0 if subQueryRef == 0 else 1, 0 if subQueryRep == 0 else 1
-                indexVal =  int( str(be) + str(bs) + str(bref), 2) 
 
-                #print "INDEX = ", indexVal, " exp : ", be, " shr: ", bs, " ref:", bref
-                vOMS[indexVal] += 1
-            
-        #print "indice 0 => ", vOMS[0]
-        mapUserBehavior[user] = (vOMS[4] > 0, vOMS[2] > 0, vOMS[1] > 0, vOMS[6] > 0, vOMS[5] > 0, vOMS[3] > 0, vOMS[7]>0)
-        
     return mapUserBehavior
-
 
 def createDictOfUsers(data, label):
     userDict = defaultdict(list)
@@ -307,11 +345,14 @@ def createDictOfUsers(data, label):
     countingWordsPerQuery = calculateMeanWordsPerQuery(data)                    # Transformed 
     countingMeanTimePerSession = calculateMeanTimePerSession(data)              # Transformed
     countingUsingAbbreviation = calculateUsingAbbreviation(data)                # Transformed
-    #countingUsingSymptons = calculateUsingSemantic(data, symptomTypes())        # TODO
-    #countingUsingCause = calculateUsingSemantic(data, causeTypes())             # TODO
-    #countingUsingRemedy = calculateUsingSemantic(data, remedyTypes())           # TODO
-    #countingUsingNotMedical = calculateUsingSemantic(data, noMedicalTypes())    # TODO
-    #countingUserBehavior = calculateUserBehavior(data)                          # TODO
+    countingUsingSymptons = calculateUsingSemantic(data, symptomTypes())        # Transformed
+    countingUsingCause = calculateUsingSemantic(data, causeTypes())             # Transformed
+    countingUsingRemedy = calculateUsingSemantic(data, remedyTypes())           # Transformed
+    countingUsingNotMedical = calculateUsingSemantic(data, noMedicalTypes())    # Transformed
+    countingUserBehavior = calculateUserBehavior(data)                          # Transformed
+    
+    if formatVersion == "v5":
+        countingUserCHVFound, countingUserCHV, countingUserUMLS, countingUserMisspelled, countingUserComboScore = calculateCHV(data) # TODO
 
     users = sorted( (member.userId, member.datetime) for member in data )
     previousUser = -1
@@ -350,22 +391,32 @@ def createDictOfUsers(data, label):
         mwpq = countingWordsPerQuery[user]
         mtps = countingMeanTimePerSession[user]
         uab = countingUsingAbbreviation[user]
-        usy = 0 #countingUsingSymptons[user]
-        usc = 0 #countingUsingCause[user]
-        usrd = 0 #countingUsingRemedy[user]
-        usnm = 0 #countingUsingNotMedical[user]
-        expa, shri, refo, expshr, expref, shrref, expshrref = 0,0,0,0,0,0,0 #countingUserBehavior[user]
+        usy = countingUsingSymptons[user]
+        usc = countingUsingCause[user]
+        usrd = countingUsingRemedy[user]
+        usnm = countingUsingNotMedical[user]
+        expa, shri, refo, expshr, expref, shrref, expshrref = countingUserBehavior[user]
 
-        #list here? userDict[u] -> list
-        userDict[u].append( userClass(u, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc,\
+        if formatVersion == "v5":
+            CHVFound, CHV    = countingUserCHVFound[user], countingUserCHV[user]
+            UMLS, CHVMisspelled = countingUserUMLS[user], countingUserMisspelled[user]
+            comboScore = countingUserComboScore[user]
+
+            userDict[u].append(userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
+                                   expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref,\
+                                      chvf=CHVFound, chv=CHV, umls=UMLS, chvm=CHVMisspelled, combo=comboScore) )
+
+        else:
+            #list here? userDict[u] -> list
+            userDict[u].append( userClass(u, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc,\
                                    usrd=usrd, usnm=usnm,expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref) )
-        #print "User => ", user, label, queryCounter
+            #print "User => ", user, label, queryCounter
 
     return userDict
 
 def createFV(filename, label):
     print "min = ", minimalNumberOfQueries, " max = ", maximalNumberOfQueries
-    data = readMyFormat(filename) 
+    data = readMyFormat(filename, formatVersion) 
     data = preProcessData(data, removeStopWords)    # Sort the data by user and date
     data = keepUsersInsideLimiteOfQueires(data, minimalNumberOfQueries, maximalNumberOfQueries)
     
@@ -398,22 +449,22 @@ def mergeFVs(*fvs):
 
 
 def healthNotHealthUsers():
-    
-    honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.dataset.gz", 0)
-    aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed.v4.dataset.gz", 0)
-    goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.dataset.gz", 0)
-    tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.dataset.gz", 0)
+     
+    if not simpleTest:
+        honFV = createFV("dataSetsOfficials/hon/honEnglish." + formatVersion + ".dataset.gz", 0)
+        aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed4." + formatVersion + ".dataset.gz", 0)
+        goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".dataset.gz", 0)
+        tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".dataset.gz", 0)
+        notHealth = createFV("dataSetsOfficials/aolNotHealth/aolNotHealthPartial." + formatVersion + ".dataset.gz", 1)
 
-    notHealth = createFV("dataSetsOfficials/aolNotHealth/aolNotHealthPartial.v4.dataset.gz", 1)
-
-    # 10% of the dataset only
-    #honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.10.gz", 0)
-    #aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth.v4.10.gz", 0)
-    #goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.10.gz", 0)
-    #tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.10.gz", 0)
+    if simpleTest:
+        # 1% of the dataset only
+        honFV = createFV("dataSetsOfficials/hon/honEnglish." + formatVersion + ".1.dataset..gz", 0)
+        aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth." + formatVersion + ".1.dataset.gz", 0)
+        goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 0)
+        tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".1.dataset.gz", 0)
     
-    # 1% of the dataset only
-    #notHealth = createFV("dataSetsOfficials/aolNotHealth/aolNotHealthPartial.v4.1.gz", 1)
+        notHealth = createFV("dataSetsOfficials/aolNotHealth/aolNotHealthPartial."+ formatVersion + ".1.gz", 1)
 
     ### Merge Feature sets and transforme them into inputs
     healthUserFV = mergeFVs(honFV, aolHealthFV, goldMinerFV, tripFV)
@@ -437,17 +488,18 @@ def regularMedicalUsers():
     ### Load Datasets
     ##
     #
+    if not simpleTest:
+        honFV = createFV("dataSetsOfficials/hon/honEnglish." + formatVersion + ".dataset.gz", 0)
+        aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed4." + formatVersion + ".dataset.gz", 0)
+        goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".dataset.gz", 1)
+        tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".dataset.gz", 1)
     
-    #honFV = createFV("dataSetsOfficials/hon/honEnglish.v4.dataset.gz", 0)
-    #aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed.v4.dataset.gz", 0)
-    #goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner.v4.dataset.gz", 1)
-    #tripFV = createFV("dataSetsOfficials/trip/trip_mod.v4.dataset.gz", 1)
-    
-    # 10% of the dataset only
-    honFV = createFV("dataSetsOfficials/hon/olds/honEnglish.v4.10.dataset.gz", 0)
-    aolHealthFV = createFV("dataSetsOfficials/aolHealth/olds/aolHealthCompleteFixed4.v4.10.dataset.gz", 0)
-    goldMinerFV = createFV("dataSetsOfficials/goldminer/olds/goldMiner.v4.10.dataset.gz", 1)
-    tripFV = createFV("dataSetsOfficials/trip/olds/trip_mod.v4.10.dataset.gz", 1)
+    if simpleTest:
+        # 1 or 10% of the dataset only
+        honFV = createFV("dataSetsOfficials/hon/honEnglish."+ formatVersion + ".1.dataset.gz", 0)
+        aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed4." + formatVersion + ".1.dataset.gz", 0)
+        goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 1)
+        tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".1.dataset.gz", 1)
 
     ####
     ### Merge Feature sets and transforme them into inputs

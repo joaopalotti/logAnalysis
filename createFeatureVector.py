@@ -50,7 +50,7 @@ class userClass:
         self.comboScore = combo
 
     def toDict(self):
-        return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref, '15.CHVFound': self.chvf, '16.CHV':self.chv, '17.UMLS':self.umls, '18.CHVMisspelled':self.chvm, '19.ComboScore':self.comboScore}
+        return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions,'02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref, '15.CHVFound': self.chvf, '16.CHV':self.chv, '17.UMLS':self.umls, '18.CHVMisspelled':self.chvm, '19.ComboScore':self.comboScore}
         #return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical}
                 
 '''
@@ -267,7 +267,7 @@ def calculateCHV(data):
         mapUserMisspelled[user] = sum([v[3] for v in values])/size
         mapComboScore[user]     = sum([v[4] for v in values])/size
 
-    return mapUserCHVFound, mapUserCHV, mapUserUMLS, mapUserMisspelled    
+    return mapUserCHVFound, mapUserCHV, mapUserUMLS, mapUserMisspelled, mapComboScore
     
 def createDictOfUsers(data, label):
     userDict = dict()
@@ -287,7 +287,7 @@ def createDictOfUsers(data, label):
     countingUserBehavior = calculateUserBehavior(data)
 
     if formatVersion == "v5":
-        countingUserCHVFound, countingUserCHV, countingUserUMLS, countingUserMisspelled = calculateCHV(data)
+        countingUserCHVFound, countingUserCHV, countingUserUMLS, countingUserMisspelled, countingUserComboScore = calculateCHV(data)
 
     for user in users:
         if user not in countingNumberOfQueriesPerUser or \
@@ -324,9 +324,10 @@ def createDictOfUsers(data, label):
         if formatVersion == "v5":
             CHVFound, CHV    = countingUserCHVFound[user], countingUserCHV[user]
             UMLS, CHVMisspelled = countingUserUMLS[user], countingUserMisspelled[user]
+            comboScore = countingUserComboScore[user]
             userDict[user] = userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
                                    expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref,\
-                                      chvf=CHVFound, chv=CHV, umls=UMLS, chvm=CHVMisspelled)
+                                      chvf=CHVFound, chv=CHV, umls=UMLS, chvm=CHVMisspelled, combo=comboScore)
         else:
             userDict[user] = userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
                                    expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref)
@@ -370,19 +371,18 @@ def healthNotHealthUsers():
     
     if not simpleTest:
         honFV = createFV("dataSetsOfficials/hon/honEnglish." + formatVersion + ".dataset.gz", 0)
-        aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed." + formatVersion + ".dataset.gz", 0)
+        aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed4." + formatVersion + ".dataset.gz", 0)
         goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".dataset.gz", 0)
         tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".dataset.gz", 0)
         notHealth = createFV("dataSetsOfficials/aolNotHealth/aolNotHealthPartial." + formatVersion + ".dataset.gz", 1)
 
     if simpleTest:
-        # 10% of the dataset only
-        honFV = createFV("dataSetsOfficials/hon/honEnglish." + formatVersion + ".10.dataset..gz", 0)
-        aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth." + formatVersion + ".10.dataset.gz", 0)
-        goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".10.dataset.gz", 0)
-        tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".10.dataset.gz", 0)
-    
         # 1% of the dataset only
+        honFV = createFV("dataSetsOfficials/hon/honEnglish." + formatVersion + ".1.dataset..gz", 0)
+        aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth." + formatVersion + ".1.dataset.gz", 0)
+        goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 0)
+        tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".1.dataset.gz", 0)
+    
         notHealth = createFV("dataSetsOfficials/aolNotHealth/aolNotHealthPartial."+ formatVersion + ".1.gz", 1)
 
     ### Merge Feature sets and transforme them into inputs

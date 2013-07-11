@@ -35,8 +35,8 @@ def transformeInDict(userDict, n=-1, proportional=-1):
     if proportional > 0:
         n = int( int(proportional)/100.0 * len(userDict) )
 
-    for v, (key, user) in zip(range(len(p)), userDict.iteritems()):
-        if n >= 0 and p[v] >= n:
+    for v, (key, user) in zip(p, userDict.iteritems()):
+        if n >= 0 and v >= n:
             continue 
         udict = user.toDict()
         listOfDicts.append(udict)
@@ -154,7 +154,7 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
     #TODO: run a logistic regression to evaluate the features and decide which ones are the best ones
     
     y_ert = classify(ExtraTreesClassifier(random_state=0, compute_importances=True, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"]), \
-                     X, y, nCV, nJobs, tryToMeasureFeatureImportance=True)
+                     X, y, nCV, nJobs, tryToMeasureFeatureImportance=True, featureNames=vec.get_feature_names())
     print 20 * '=', " ERF  Results ", 20 * '='
     ertacc, ertsf1, ertwf1, ertmf1 = makeReport(X, y, y_ert, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
     

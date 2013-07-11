@@ -47,7 +47,7 @@ def makeReport(X, y, y_pred, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
 
     return acc, sf1, wf1, mf1,
 
-def classify(clf, X, y, CV, nJobs, tryToMeasureFeatureImportance=False):
+def classify(clf, X, y, CV, nJobs, tryToMeasureFeatureImportance=False, featureNames=None):
 
     print clf
     nSamples, nFeatures = X.shape
@@ -63,13 +63,13 @@ def classify(clf, X, y, CV, nJobs, tryToMeasureFeatureImportance=False):
     
     scores = cross_validation.cross_val_score(clf, X, y, cv=CV, n_jobs=nJobs) #, scoring="f1") 
     if tryToMeasureFeatureImportance:
-        measureFeatureImportance(clf)
+        measureFeatureImportance(clf, featureNames)
 
     print "Done"
     return y_pred
 
 #llq -> listOfListOfQueries
-def classifyIncremental(clf, X, listOfLists, y, CV, nJobs, tryToMeasureFeatureImportance=False):
+def classifyIncremental(clf, X, listOfLists, y, CV, nJobs, tryToMeasureFeatureImportance=False, featureNames=None):
     
     print clf
     nSamples, nFeatures = X.shape
@@ -90,13 +90,13 @@ def classifyIncremental(clf, X, listOfLists, y, CV, nJobs, tryToMeasureFeatureIm
 
     scores = cross_validation.cross_val_score(clf, X, y, cv=CV, n_jobs=nJobs) #, scoring="f1") 
     if tryToMeasureFeatureImportance:
-        measureFeatureImportance(clf)
+        measureFeatureImportance(clf, featureNames)
 
     print "Result size = ", len(results)
     print "Done"
     return results
 
-def measureFeatureImportance(classifier):
+def measureFeatureImportance(classifier, featureNames):
     
     import numpy as np
     importances = classifier.feature_importances_
@@ -107,7 +107,10 @@ def measureFeatureImportance(classifier):
     print "Feature ranking:"
 
     for f in xrange(len(indices)):
-        print "%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]])
+        if featureNames:
+            print "%d. feature %s (%f)" % (f + 1, featureNames[indices[f]], importances[indices[f]])
+        else:
+            print "%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]])
     
     # Plot the feature importances of the forest
     #import pylab as pl
