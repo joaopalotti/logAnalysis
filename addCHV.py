@@ -3,8 +3,13 @@ import sys, csv, re
 from readCSV import readMyFormat
 from auxiliarFunctions import tokenize
 
-usingScoop = True
+"""
+    Implementation decision:
+        1) If combo value for the CHV entry is -1, I decided to substitute it for the mean combo value of all entries.
+        2) When it is not found any CHV entry in the query, I assume that the combo value for that entry is the mean combo value (around 0.28)
+"""
 
+usingScoop = True
 if usingScoop:
     from scoop import futures
 
@@ -32,12 +37,21 @@ for member in data:
     query = tokenize(member.keywords)
     queries.append(query)
 
+sumCombo = 0.0
 with open(chvfile, "r") as csvfile:
     reader = csv.reader(csvfile, delimiter='\t')
     for row in reader:
         #print row
-        popularNames += [ CHV(text=tokenize(row[1]), isCHV=(row[5]=="yes"), isUMLS=(row[6]=="yes"), misspelled=(row[7]=="yes"),\
-                              combo=(float(row[12]) if row[11] != "\\N" else -1)) ]
+        combo = float(row[11]) if row[11] != "\\N" else -1
+        sumCombo += (combo if combo > 0 else 0)
+        popularNames += [ CHV(text=tokenize(row[1]), isCHV=(row[5]=="yes"), isUMLS=(row[6]=="yes"), misspelled=(row[7]=="yes"), combo=combo)]
+
+meanCombo = sumCombo / len(popularNames)
+#print "Sum combo = ", sumCombo
+#print "Mean combo value: ", meanCombo 
+for chv in popularNames:
+    if chv.comboScore == -1:
+        chv.comboScore = meanCombo
 
 #Two lists: Popular expression ["heart", "attack"] and query ["whatever", "it", "is"]
 def contains(pop, query):
@@ -104,10 +118,15 @@ if __name__ == "__main__":
         hasCHV = any( [f.isCHV for f in found] )
         hasUMLS = any( [f.isUMLS for f in found] )
         hasCHVMisspelled = any( [f.misspelled for f in found] )
-        meanComboScore = sum(f.comboScore for f in found if f.comboScore != -1) / (1.0 * len(member.keywords))
-        print found
-        print member.userId, member.keywords, CHVFound, hasCHV, hasUMLS, hasCHVMisspelled, meanComboScore
-        
+        if CHVFound == 0:
+            meanComboScore = meanCombo
+        else:
+            meanComboScore = sum(f.comboScore for f in found if f.comboScore != -1) / (1.0 * len(tokenize(member.keywords)))
+
+        #print found
+        #print member.userId, member.keywords, CHVFound, hasCHV, hasUMLS, hasCHVMisspelled, meanComboScore, len(tokenize(member.keywords))
+        #print "keywords = ", member.keywords
+        #print "Mean combo score = ", meanComboScore 
         mesh = ';'.join(member.mesh) if member.mesh else ''
         semanticTypes = ';'.join(member.semanticTypes) if member.semanticTypes else ''
 
