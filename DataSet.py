@@ -68,12 +68,15 @@ class DataSet(object):
         semanticTypes = ';'.join(self.semanticTypes) if self.semanticTypes else ''
 
         writer.writerow( [str(self.datetime), self.userId, self.keywords, self.previouskeywords, mesh, semanticTypes,\
-                            self.CHVFound, self.hasCHV, self.hasUMLS, self.hasCHVMisspelled])
+                            self.CHVFound, self.hasCHV, self.hasUMLS, self.hasCHVMisspelled, self.comboScore])
 
-    def __str__(self):
+    def vectorizeMe(self):
         mesh = ';'.join(self.mesh) if self.mesh else ''
         semanticTypes = ';'.join(self.semanticTypes) if self.semanticTypes else ''
         previous = self.previouskeywords if self.previouskeywords else ''
         
-        return ",".join([str(self.datetime), str(self.userId), self.keywords, previous, mesh, semanticTypes, str(self.CHVFound), str(self.hasCHV), str(self.hasUMLS), str(self.hasCHVMisspelled)]) 
+        return [str(self.datetime), str(self.userId), self.keywords, previous, mesh, semanticTypes, str(self.CHVFound), str(self.hasCHV), str(self.hasUMLS), str(self.hasCHVMisspelled), str(self.comboScore)] 
+        
+    def __str__(self):
+        return ",".join(self.vectorizeMe())
         

@@ -119,8 +119,8 @@ def readMyFormat(filename, version):
             print "Version4 --- (len(row) !=6) ERROR in this line: ", row
             continue
         
-        if version == "v5" and len(row) != 10:
-            print "Version5 --- (len(row) !=10) ERROR in this line: ", row
+        if version == "v5" and len(row) != 11:
+            print "Version5 --- (len(row) !=11) ERROR in this line: ", row
         
         #No keywords in this line, skip it
         if len(row[2]) == 0 or row[2] == None:
@@ -129,7 +129,7 @@ def readMyFormat(filename, version):
         if version == "v4":
             temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4], semanticTypes=row[5])
         elif version == "v5":
-            temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4], semanticTypes=row[5], CHVFound=row[6], hasCHV=row[7], hasUMLS=row[8], hasCHVMisspelled=row[9] )
+            temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4], semanticTypes=row[5], CHVFound=row[6], hasCHV=row[7], hasUMLS=row[8], hasCHVMisspelled=row[9], comboScore=row[10] )
 
         data.append(temp)
     return data

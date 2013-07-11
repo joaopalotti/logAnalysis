@@ -22,15 +22,12 @@ previousRow = data[0]
 lastGoodPreviousRow = 1
 
 if not areBadKeyWords(previousRow.keywords):
-    print "Primeira linha eh boa!"
     previousRow.previouskeywords = None
     previousRow.printMe(outFile)
 else:
-    print "primeira linha eh ruim!"
     while areBadKeyWords(previousRow.keywords):
         previousRow = data[lastGoodPreviousRow]
         lastGoodPreviousRow += 1    
-        print "testando linha ", lastGoodPreviousRow
     previousRow.previouskeywords = None
     previousRow.printMe(outFile)
 
@@ -40,9 +37,6 @@ for row in data[lastGoodPreviousRow:]:
     #No keywords in this line, skip it
     if areBadKeyWords(row.keywords):
         continue
-
-    print "Row = ", row.vectorizeMe()
-    print "Previous = ", previousRow.vectorizeMe()
 
     if checkSession(previousRow.vectorizeMe(), row.vectorizeMe(), idIndex=1, dateIndex=0, dateFormat='%Y-%m-%d %H:%M:%S'):
         row.previouskeywords = previousRow.keywords
@@ -54,5 +48,4 @@ for row in data[lastGoodPreviousRow:]:
     previousRow = row
 
 print ("Data transformed in %.2f seconds" % float(time() - start))
-
 

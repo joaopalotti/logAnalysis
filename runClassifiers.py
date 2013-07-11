@@ -17,7 +17,7 @@ from sklearn.metrics import f1_score, accuracy_score
 
 ### HOW TO USE:
 # python runClassifiers.py -h
-# python runClassifiers.pt --preprocessing=[normalize|scale|minmax|nothing] [forceBalance|-1] [proportional|-1] [minNumberOfQueries] [nseed]"
+# python runClassifiers.pt --preprocessing=[normalize|scale|minmax|nothing] -b [forceBalance|-1] -g [proportional|-1] -m [minNumberOfQueries] -s [nseed]"
 
 nJobs = 2
 nCV = 10
@@ -25,22 +25,23 @@ CSVM = 10000
 
 classifyParameters = {"KNN-K": 100, "ERT-n_estimators": 10, "SVM-cacheSize": 1000, "SVM-kernel": "linear", "SVM-C": CSVM} 
 
+
 def transformeInDict(userDict, n=-1, proportional=-1):
     listOfDicts = list()
     listOfLabels = list()
- 
+
     p = range(len(userDict))
     random.shuffle(p)
-    if proportional:
+    if proportional > 0:
         n = int( int(proportional)/100.0 * len(userDict) )
 
     for v, (key, user) in zip(range(len(p)), userDict.iteritems()):
         if n >= 0 and p[v] >= n:
             continue 
         udict = user.toDict()
-        #print user.label, udict
         listOfDicts.append(udict)
         listOfLabels.append(user.label)
+        #print user.label, udict
         #print udict  #### Check how this features are related with the features calculated by the random tree method
     return listOfDicts, listOfLabels
 
@@ -79,13 +80,9 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
         medicalUserFV = pickle.load(input)
     print "Loaded"
 
-    n = -1
-    if int(forceBalance) > 0:
-        n = int(forceBalance)
-
     print "Transforming datasets into Dictionaries..."
-    ld1, ll1 = transformeInDict(regularUserFV, n, proportional)
-    ld2, ll2 = transformeInDict(medicalUserFV, n, proportional)
+    ld1, ll1 = transformeInDict(regularUserFV, forceBalance, proportional)
+    ld2, ll2 = transformeInDict(medicalUserFV, forceBalance, proportional)
     print "Transformed"
     
     listOfDicts = ld1 + ld2
@@ -214,6 +211,9 @@ if __name__ == "__main__":
         print "This program does not receive parameters this way: use -h to see the options."
     
     print "Using preprocessing: ", opts.preProcessing
+    print "Using ", opts.minNumberOfQueries, "as the minimal number of queries"
+    print "Forcing Balance = ",opts.forceBalance
+    print "Proportional =",opts.proportional
 
     runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed)
 

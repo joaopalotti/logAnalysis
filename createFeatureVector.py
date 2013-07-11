@@ -13,13 +13,14 @@ acronymsSet = createAcronymSet()
 minimalNumberOfQueries = "Invalid number...please enter this parameter!"
 maximalNumberOfQueries = 100
 formatVersion = "v5"
+simpleTest = True
 
 ### HOW TO USE:
 #   python createFeatureVector.py minimalNumberOfQueries 
 
 class userClass:
     def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm, expa, shri, refo, expshr, expref, shrref, expshrref,\
-                chvf=0.0, chv=0.0, umls=0.0, chvm=0.0):
+                chvf=0.0, chv=0.0, umls=0.0, chvm=0.0, combo=0.0):
         self.id = id
         self.label = label
         self.numberOfQueries = nq
@@ -46,15 +47,12 @@ class userClass:
         self.chv = chv
         self.umls = umls
         self.chvm = chvm
+        self.comboScore = combo
 
     def toDict(self):
+        return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref, '15.CHVFound': self.chvf, '16.CHV':self.chv, '17.UMLS':self.umls, '18.CHVMisspelled':self.chvm, '19.ComboScore':self.comboScore}
         #return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical}
-        return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions, '02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref, '15.CHVFound': self.chvf, '16.CHV':self.chv, '17.UMLS':self.umls, '18.CHVMisspelled':self.chvm}
                 
-    #'14.didExpShr':self.expshr ,'15.didExpRef': self.expref ,'16.didShrRef': self.shrref ,'17.didExpShrRef': self.expshrref}
-        #TODO: should I consider different kinds of abbreviations?
-        #TODO: take a look at the mesh and decide if it is possible to separete levels or groups from their data (same for UMLS)
-
 '''
     Boolean feature.
 '''
@@ -249,21 +247,26 @@ def calculateUserBehavior(data):
 def calculateCHV(data):
 
     tempMap = defaultdict(list)
-    mapUserCHVFound, mapUserCHV, mapUserUMLS, mapUserMisspelled = {}, {}, {}, {}
+    mapUserCHVFound, mapUserCHV, mapUserUMLS, mapUserMisspelled, mapComboScore = {}, {}, {}, {}, {}
 
-    for item in [( member.userId, member.CHVFound, 1 if member.hasCHV == True else 0, 1 if member.hasUMLS == True else 0,\
-                                                                        1 if member.hasCHVMisspelled == True else 0) for member in data]:
-        tempMap[item[0]].append([item[1], item[2], item[3], item[4]])
+    for item in [( member.userId, member.CHVFound, \
+                  1 if member.hasCHV == True else 0, 
+                  1 if member.hasUMLS == True else 0,\
+                  1 if member.hasCHVMisspelled == True else 0,\
+                  float(member.comboScore)
+                 ) for member in data]:
+
+        tempMap[item[0]].append([item[1], item[2], item[3], item[4], item[5]])
     
     for user, values in tempMap.iteritems():
         #print user, values
         size = len(values)
-        mapUserCHVFound[user]   = sum([ v[0] for v in values])/size
-        mapUserCHV[user]        = sum([ v[1] for v in values])/size
-        mapUserUMLS[user]       = sum([ v[2] for v in values])/size
-        mapUserMisspelled[user] = sum([ v[3] for v in values])/size
+        mapUserCHVFound[user]   = sum([v[0] for v in values])/size
+        mapUserCHV[user]        = sum([v[1] for v in values])/size
+        mapUserUMLS[user]       = sum([v[2] for v in values])/size
+        mapUserMisspelled[user] = sum([v[3] for v in values])/size
+        mapComboScore[user]     = sum([v[4] for v in values])/size
 
-    #print mapUserMisspelled
     return mapUserCHVFound, mapUserCHV, mapUserUMLS, mapUserMisspelled    
     
 def createDictOfUsers(data, label):
@@ -282,6 +285,7 @@ def createDictOfUsers(data, label):
     countingUsingRemedy = calculateUsingSemantic(data, remedyTypes())
     countingUsingNotMedical = calculateUsingSemantic(data, noMedicalTypes())
     countingUserBehavior = calculateUserBehavior(data)
+
     if formatVersion == "v5":
         countingUserCHVFound, countingUserCHV, countingUserUMLS, countingUserMisspelled = calculateCHV(data)
 
@@ -364,21 +368,22 @@ def mergeFVs(*fvs):
 
 def healthNotHealthUsers():
     
-    honFV = createFV("dataSetsOfficials/hon/honEnglish." + formatVersion + ".dataset.gz", 0)
-    aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed." + formatVersion + ".dataset.gz", 0)
-    goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".dataset.gz", 0)
-    tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".dataset.gz", 0)
+    if not simpleTest:
+        honFV = createFV("dataSetsOfficials/hon/honEnglish." + formatVersion + ".dataset.gz", 0)
+        aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed." + formatVersion + ".dataset.gz", 0)
+        goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".dataset.gz", 0)
+        tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".dataset.gz", 0)
+        notHealth = createFV("dataSetsOfficials/aolNotHealth/aolNotHealthPartial." + formatVersion + ".dataset.gz", 1)
 
-    notHealth = createFV("dataSetsOfficials/aolNotHealth/aolNotHealthPartial." + formatVersion + ".dataset.gz", 1)
-
-    # 10% of the dataset only
-    #honFV = createFV("dataSetsOfficials/hon/honEnglish." + formatVersion + ".10.dataset..gz", 0)
-    #aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth." + formatVersion + ".10.dataset.gz", 0)
-    #goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".10.dataset.gz", 0)
-    #tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".10.dataset.gz", 0)
+    if simpleTest:
+        # 10% of the dataset only
+        honFV = createFV("dataSetsOfficials/hon/honEnglish." + formatVersion + ".10.dataset..gz", 0)
+        aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealth." + formatVersion + ".10.dataset.gz", 0)
+        goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".10.dataset.gz", 0)
+        tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".10.dataset.gz", 0)
     
-    # 1% of the dataset only
-    #notHealth = createFV("dataSetsOfficials/aolNotHealth/aolNotHealthPartial."+ formatVersion + ".1.gz", 1)
+        # 1% of the dataset only
+        notHealth = createFV("dataSetsOfficials/aolNotHealth/aolNotHealthPartial."+ formatVersion + ".1.gz", 1)
 
     ### Merge Feature sets and transforme them into inputs
     healthUserFV = mergeFVs(honFV, aolHealthFV, goldMinerFV, tripFV)
@@ -403,16 +408,18 @@ def regularMedicalUsers():
     ##
     #
     
-    #honFV = createFV("dataSetsOfficials/hon/honEnglish." + formatVersion + ".dataset.gz", 0)
-    #aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed." + formatVersion + ".dataset.gz", 0)
-    #goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".dataset.gz", 1)
-    #tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".dataset.gz", 1)
+    if not simpleTest:
+        honFV = createFV("dataSetsOfficials/hon/honEnglish." + formatVersion + ".dataset.gz", 0)
+        aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed4." + formatVersion + ".dataset.gz", 0)
+        goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".dataset.gz", 1)
+        tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".dataset.gz", 1)
     
-    # 10% of the dataset only
-    honFV = createFV("dataSetsOfficials/hon/honEnglish."+ formatVersion + ".1.dataset.gz", 0)
-    aolHealthFV = [] #createFV("dataSetsOfficials/aolHealth/aolHealth." + formatVersion + ".10.dataset.gz", 0)
-    goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 1)
-    tripFV = [] #createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".10.dataset.gz", 1)
+    if simpleTest:
+        # 1 or 10% of the dataset only
+        honFV = createFV("dataSetsOfficials/hon/honEnglish."+ formatVersion + ".1.dataset.gz", 0)
+        aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed4." + formatVersion + ".1.dataset.gz", 0)
+        goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 1)
+        tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".1.dataset.gz", 1)
 
     ####
     ### Merge Feature sets and transforme them into inputs

@@ -3,12 +3,13 @@ aolHealthSites.csv.gz                   ---- (518109)  All original queries cals
 aolHealth.dataset.gz                    ---- (518109)  The previous dataset just before the metamap. 
 aolHealth.v4.dataset.gz                 ---- (518106)  Dataset just after the metamap (maybe not sorted)
 aolHealthComplete.v4.dataset.gz         ---- (1815914) All queries classified as health
-aolHealthCompleteFixed.v4.dataset.gz    ---- (961688)  All queries classified as health minus queries containing "-" (961688)
-aolHealthCompleteFixed4.v4.dataset.gz   ---- (843138)  All queries classified as health minus (queries containing "-" or jobs or yahoo (see removeDash.py)
+aolHealthCompleteFixed.v4.dataset.gz    ---- (984444)  All queries classified as health minus queries containing "-" (961688)
+aolHealthCompleteFixed4.v4.dataset.gz   ---- (943138)  All queries classified as health minus (queries containing "-" or jobs or yahoo (see removeDash.py)
+aolHealthCompleteFixed.v5.dataset.gz    ---- (984444)  v5 dataset
+aolHealthCompleteFixed.v5.1.dataset.gz  ---- (9844)    1% of the v5 dataset
 olds/                                   ---- some files used to test
 
 aolNotHealth:
-
 aolNotHealth_complete.dataset.gz        ---- (35871458) All not health queries (before metamap)
 aolNotHealthFinal.v4.dataset.noDash.gz  ---- (34273101) All not health queries and without dash (after metamap)
 aolNotHealthAndNotClick.v4.dataset.gz   ---- (18924510) Not clickedURL (before metamap) 
