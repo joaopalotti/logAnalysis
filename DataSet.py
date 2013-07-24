@@ -57,7 +57,7 @@ class DataSet(object):
         self.hasCHV = (hasCHV == "True")
         self.hasUMLS = (hasUMLS == "True")
         self.hasCHVMisspelled = (hasCHVMisspelled == "True")
-        self.comboScore = comboScore
+        self.comboScore = float(comboScore)
 
     def printMe(self, out=sys.stdout):
         writer = csv.writer(out, delimiter=',', quoting=csv.QUOTE_ALL, quotechar ='"', escapechar='\\', doublequote=False)

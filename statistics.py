@@ -241,15 +241,16 @@ def calculateCHV(data):
     numberCHV = 0
     numberUMLS = 0
     numberCHVMisspelled = 0
+    comboScore = 0
 
     for member in data:
         countingCHVFound[member.CHVFound] += 1
-        numberCHV += 1 if member.hasCHV == True else 0
-        numberUMLS += 1 if member.hasUMLS == True else 0
-        numberCHVMisspelled += 1 if member.hasCHVMisspelled == True else 0
+        numberCHV += (1 if member.hasCHV == True else 0)
+        numberUMLS += (1 if member.hasUMLS == True else 0)
+        numberCHVMisspelled += (1 if member.hasCHVMisspelled == True else 0)
         comboScore += member.comboScore
 
-    #print Counter(countingCHVFound), numberCHV, numberUMLS, numberCHVMisspelled
+    print "CHV ---- ", Counter(countingCHVFound), numberCHV, numberUMLS, numberCHVMisspelled, comboScore/len(data)
     return Counter(countingCHVFound), numberCHV, numberUMLS, numberCHVMisspelled, comboScore/len(data)
 
 def calculateSemanticTypesPercentages(userSemanticType):

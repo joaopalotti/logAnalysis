@@ -1,3 +1,5 @@
+from __future__ import division
+
 #All the chaos goes here
 tableGeneralHeader = [["Dtst", "#Days", "#Users", "#Qrs", "mnWrdsPQry", "stdmnWrdsPQry", "medianWrdsPQry", "mnQrsPDay", "Sssions", "mnQrsPrSsion", "stdQrsPrSssion", "medianQrsPrSssion", "mTimePrSsion", "stdTimePrSssion", "medianTimePrSssion", "Users #NL", "Users %NL", "QueriesNL", "%QueriesNL", "%UsersReAccess", "%SssnsReAccess", "QueriesAcronym", "%QAcronym", "UsersAcronym", "%UsersAcronym", "UsersSemantics", "%UserSemantics"]]
 
@@ -66,7 +68,11 @@ def appendDiseaseByUserWeighte(diseaseByUserWeightedRow, dataName, countingDisea
     diseaseByUserWeightedRow.append( [ dataName,  100 * countingDiseaseWeightedByUser["C01"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C02"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C03"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C04"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C05"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C06"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C07"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C08"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C09"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C10"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C11"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C12"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C13"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C14"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C15"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C16"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C17"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C18"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C19"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C20"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C21"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C22"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C23"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C24"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C25"]/ numberOfUsers, 100 * countingDiseaseWeightedByUser["C26"]/ numberOfUsers ] )
 
 def appendCHV(CHVRow, dataName, countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, numberOfQueries, meanComboScore):
-    CHVRow.append( [dataName, sum(countingCHVFound.values())/numberOfQueries, numberCHV/numberOfQueries, numberUMLS/numberOfQueries, numberCHVMisspelled/numberOfQueries, meanComboScore])
+    totalCHVFound = 0
+    for k,v in countingCHVFound.iteritems():
+        totalCHVFound += (k*v)
+
+    CHVRow.append( [dataName, totalCHVFound/numberOfQueries, numberCHV/numberOfQueries, numberUMLS/numberOfQueries, numberCHVMisspelled/numberOfQueries, meanComboScore])
 
 def appendSemanticFocus(semanticFocusRow, dataName, vectorOfActionSequence, totalActions):
     semanticFocusRow.append( [ dataName, 100 * vectorOfActionSequence[0]/totalActions, 100 * vectorOfActionSequence[1]/totalActions, 100 * vectorOfActionSequence[2]/totalActions, 100 * vectorOfActionSequence[4]/totalActions, 100 * vectorOfActionSequence[3]/totalActions, 100 * vectorOfActionSequence[5]/totalActions, 100 * vectorOfActionSequence[6]/totalActions, 100 * vectorOfActionSequence[7]/totalActions ] )
