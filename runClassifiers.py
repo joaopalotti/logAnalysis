@@ -11,7 +11,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import ExtraTreesClassifier
 
 #My classes
-from classifiers import classify, makeReport
+from classifiers import classify, makeReport, plot_precision_recall
 from createFeatureVector import userClass
 from sklearn.metrics import f1_score, accuracy_score
 
@@ -153,35 +153,41 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
     print "Running classifiers..."
     #TODO: run a logistic regression to evaluate the features and decide which ones are the best ones
     
-    y_ert = classify(ExtraTreesClassifier(random_state=0, compute_importances=True, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"]), \
+    y_ert,ert_probas = classify(ExtraTreesClassifier(random_state=0, compute_importances=True, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"]), \
                      X, y, nCV, nJobs, tryToMeasureFeatureImportance=True, featureNames=vec.get_feature_names())
     print 20 * '=', " ERF  Results ", 20 * '='
     ertacc, ertsf1, ertwf1, ertmf1 = makeReport(X, y, y_ert, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
+    plot_precision_recall(y, ert_probas)
     
-    y_nb  = classify(GaussianNB(),\
+    y_nb, nb_probas  = classify(GaussianNB(),\
                      X, y, nCV, nJobs)
     print 20 * '=', " NB  Results ", 20 * '='
     nbacc, nbsf1, nbwf1, nbmf1 = makeReport(X, y, y_nb, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
+    plot_precision_recall(y, nb_probas)
     
-    y_knn = classify(KNeighborsClassifier(n_neighbors=classifyParameters["KNN-K"]),\
+    y_knn, knn_probas = classify(KNeighborsClassifier(n_neighbors=classifyParameters["KNN-K"]),\
                      X, y, nCV, nJobs)
     print 20 * '=', " KNN Results ", 20 * '='
     knnacc, knnsf1, knnwf1, knnmf1 = makeReport(X, y, y_knn, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
+    plot_precision_recall(y, knn_probas)
     
-    y_dt = classify(DecisionTreeClassifier(random_state=0, compute_importances=True),\
+    y_dt, dt_probas = classify(DecisionTreeClassifier(random_state=0, compute_importances=True),\
                     X, y, nCV, nJobs)
     print 20 * '=', " DT  Results ", 20 * '='
     dtacc, dtsf1, dtwf1, dtwmf1 = makeReport(X, y, y_dt, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
+    plot_precision_recall(y, dt_probas)
     
-    y_lg =  classify(LogisticRegression(),\
+    y_lg, lg_probas =  classify(LogisticRegression(),\
                      X, y, nCV, nJobs)
     print 20 * '=', " LogReg  Results ", 20 * '='
     lgacc, lgsf1, lgwf1, lgmf1 = makeReport(X, y, y_lg, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
+    plot_precision_recall(y, lg_probas)
     
-    y_svm = classify(SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"]),\
+    y_svm, svm_probas = classify(SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"]),\
                      X, y, nCV, nJobs)
     print 20 * '=', " SVM Results ", 20 * '='
     svmacc, svmsf1, svmwf1, svmmf1 = makeReport(X, y, y_svm, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
+    plot_precision_recall(y, svm_probas)
     
     print "Done"
 

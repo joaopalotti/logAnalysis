@@ -7,8 +7,12 @@ PATH_TO_DATASETS = "dataSetsOfficials/"
 
 if __name__ == "__main__":
 
-    #in50 = readMyFormat("in50", "v4")
-    #calculateMetrics([ [in50, "in50"] ] ) 
+    in50 = readMyFormat("in50", "v5")
+    in502 = readMyFormat("in50", "v5")
+    in503 = readMyFormat("in50", "v5")
+    in50 += in502
+    in50 += in503
+    calculateMetrics([ [in50, "in50"] ] ) 
     
     #in50 = readMyFormat("out.v5", "v5")
     #calculateMetrics([ [in50, "outv5"] ] ) 
@@ -35,14 +39,14 @@ if __name__ == "__main__":
     #calculateMetrics([ [khr, "khr4"]] ) 
 
     
-    goldMiner = readMyFormat(PATH_TO_DATASETS + "goldminer/goldMiner.v5.dataset.gz", "v5")
+    #goldMiner = readMyFormat(PATH_TO_DATASETS + "goldminer/goldMiner.v5.dataset.gz", "v5")
     #hon = readMyFormat(PATH_TO_DATASETS + "hon/honEnglish.v5.dataset.gz", "v5")
     #trip = readMyFormat(PATH_TO_DATASETS + "trip/trip_mod.v5.dataset.gz", "v5")
     #aolHealth = readMyFormat(PATH_TO_DATASETS + "aolHealth/aolHealthCompleteFixed.v5.dataset.gz", "v5")
     #aolNotHealth = readMyFormat(PATH_TO_DATASETS + "aolNotHealth/aolNotHealthAndNotClick.v4.dataset.gz", "v4")
     #calculateMetrics([ [aolHealth, "aolHealth"], [hon, "hon"], [trip, "trip"], [goldMiner, "goldminer"] ]) 
     #calculateMetrics([ [aolHealth, "aolHealth"], [hon, "hon"], [trip, "trip"], [goldMiner, "goldminer"], [aolNotHealth, "aolNotHealth" ] ]) 
-    calculateMetrics([ [goldMiner, "goldminer"] ]) 
+    #calculateMetrics([ [goldMiner, "goldminer"] ]) 
     
     
     #hon = readMyFormat("dataSetsOfficials/hon/olds/hon3")

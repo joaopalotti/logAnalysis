@@ -1,6 +1,6 @@
 #Report
 from sklearn import cross_validation
-from sklearn.metrics import classification_report, f1_score, accuracy_score
+from sklearn.metrics import classification_report, f1_score, accuracy_score, precision_recall_curve, auc
 #General
 from collections import Counter, defaultdict
 
@@ -47,6 +47,12 @@ def makeReport(X, y, y_pred, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
 
     return acc, sf1, wf1, mf1,
 
+def convertToSingleList(listOfLists):
+    result = []
+    for l in listOfLists:
+        result += list(l)
+    return result
+
 def classify(clf, X, y, CV, nJobs, tryToMeasureFeatureImportance=False, featureNames=None):
 
     print clf
@@ -55,18 +61,18 @@ def classify(clf, X, y, CV, nJobs, tryToMeasureFeatureImportance=False, featureN
     kFold = cross_validation.KFold(n=nSamples, n_folds=CV, indices=True)
 
     # Run classifier
-    lists = [clf.fit(X[train], y[train]).predict(X[test]) for train, test in kFold]
+    preds  = [clf.fit(X[train], y[train]).predict(X[test]) for train, test in kFold]
+    probas = [clf.fit(X[train], y[train]).predict_proba(X[test]) for train, test in kFold]
     
-    y_pred = []
-    for l in lists:
-        y_pred += list(l)
+    y_probas = convertToSingleList(probas)
+    y_pred = convertToSingleList(preds)
     
     scores = cross_validation.cross_val_score(clf, X, y, cv=CV, n_jobs=nJobs) #, scoring="f1") 
     if tryToMeasureFeatureImportance:
         measureFeatureImportance(clf, featureNames)
 
     print "Done"
-    return y_pred
+    return y_pred, y_probas
 
 #llq -> listOfListOfQueries
 def classifyIncremental(clf, X, listOfLists, y, CV, nJobs, tryToMeasureFeatureImportance=False, featureNames=None):
@@ -95,6 +101,27 @@ def classifyIncremental(clf, X, listOfLists, y, CV, nJobs, tryToMeasureFeatureIm
     print "Result size = ", len(results)
     print "Done"
     return results
+
+
+def plot_precision_recall(y, probas):
+    
+    probas1 = [p[1] for p in probas]
+    precision, recall, thresholds = precision_recall_curve(y, probas1)
+    area = auc(recall, precision)
+    
+    print "Area Under Curve: %0.2f" % area
+    print "thresholds = ", thresholds
+
+    import pylab as pl
+    pl.clf()
+    pl.plot(recall, precision, label='Precision-Recall curve')
+    pl.xlabel('Recall')
+    pl.ylabel('Precision')
+    pl.ylim([0.0, 1.05])
+    pl.xlim([0.0, 1.0])
+    pl.title('Precision-Recall example: AUC=%0.2f' % area)
+    pl.legend(loc="lower left")
+    pl.show()
 
 def measureFeatureImportance(classifier, featureNames):
     
