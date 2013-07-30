@@ -1,6 +1,7 @@
 
 #from nltk import word_tokenize, wordpunct_tokenize
 from nltk.tokenize.punkt import PunktWordTokenizer
+import copy
 
 PATH_TO_AUX_FILES = "auxFiles/"
 
@@ -36,14 +37,25 @@ def tokenize(keywordList):
     #return [ w.strip().lower() for w in keywordList.split(" ") if w.strip() ]
     #return [ w.strip().lower() for w in nltk.wordpunct_tokenize(keywordList) if w.strip() ]
     return [ w.strip().lower() for w in PunktWordTokenizer().tokenize(keywordList) if w.strip() ]
-    
-def tokenizeAllData(data):
-    
+
+def tokenizeAllDataOriginal(data):
     for member in data:
         member.keywords = tokenize(member.keywords)
         if member.previouskeywords:
             member.previouskeywords = tokenize(member.previouskeywords)
     return data
+
+def tokenizeAllData(data):
+    newData = []
+
+    for member in data:
+        newMember = copy.deepcopy(member)
+        newMember.keywords = tokenize(member.keywords)
+        if member.previouskeywords:
+            newMember.previouskeywords = tokenize(member.previouskeywords)
+        
+        newData.append(newMember)
+    return newData
 
 def filterStopWords(data):
     stopWords = set()
@@ -106,15 +118,15 @@ def compareSets(set1, set2):
         return 0,0,1,0
 
 def preProcessData(data, removeStopWords):
-    data = tokenizeAllData(data)
+    modifiedData = tokenizeAllData(data)
 
     if removeStopWords:
-        data = filterStopWords(data)
+        modifiedData = filterStopWords(modifiedData)
  
     #Sort Data by id/datetime, just to be sure
-    data = sorted(data, key= lambda member: (member.userId, member.datetime))
+    modifiedData = sorted(modifiedData, key= lambda member: (member.userId, member.datetime))
 
-    return data
+    return modifiedData
 
 #TODO: checkar isso aqui
 """

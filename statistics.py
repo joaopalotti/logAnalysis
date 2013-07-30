@@ -38,10 +38,10 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
     countingQueryRankingList = []
     
     for dataPair in dataList:
-        data, dataName = dataPair[0], dataPair[1]
+        originalData, dataName = dataPair[0], dataPair[1]
         print "Processing information for data: ", dataName
 
-        data = preProcessData(data, removeStopWords)
+        data = preProcessData(originalData, removeStopWords)
         
         '''
         It is important to run the session analyse first because it is going to eliminate users considered as robots (more than X queries in one unique session)
