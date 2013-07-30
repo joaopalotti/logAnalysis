@@ -9,7 +9,7 @@ from auxiliarFunctions import tokenize
         2) When it is not found any CHV entry in the query, I assume that the combo value for that entry is the mean combo value (around 0.28)
 """
 
-usingScoop = True
+usingScoop = False
 if usingScoop:
     from scoop import futures
 

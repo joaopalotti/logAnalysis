@@ -77,7 +77,7 @@ class DataSet(object):
         
     def __str__(self):
         vec = self.vectorizeMe()
-        vec[2] = " ".join(vec[2])
-        vec[3] = " ".join(vec[3])
+        vec[2] = "".join(vec[2])
+        vec[3] = "".join(vec[3])
         return ",".join(vec)
         

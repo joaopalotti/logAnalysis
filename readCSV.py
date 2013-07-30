@@ -95,9 +95,10 @@ def readKhresmoi(filename):
     return data
 
 
-def readMyFormat(filename, version):
+def readMyFormat(filename, version, verbose=True):
 
-    print ("Reading file: ", filename)
+    if verbose:
+        print ("Reading file: ", filename)
     start = time()
      
     data = []
@@ -117,6 +118,7 @@ def readMyFormat(filename, version):
         
         if version == "v5" and len(row) != 11:
             print "Version5 --- (len(row) !=11) ERROR in this line: ", row
+            continue
         
         #No keywords in this line, skip it
         if len(row[2]) == 0 or row[2] == None:
