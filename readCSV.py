@@ -22,14 +22,17 @@ def checkSession(previousRow, currentRow, timeBetweenInSeconds=60*30, dateFormat
                 return True
     return False
 
+def openZip(filename):
+    if filename.endswith(".gz"):
+        return gzip.open(filename, 'rb')
+    else:
+        return open(filename, 'rb')
+
 def readKhresmoiRank(filename):
     print ("Reading file: ", filename)
     data = []
-    if filename.endswith(".gz"):
-        csvfile = gzip.open(filename, 'rb')
-    else:
-        csvfile = open(filename, 'rb')
-
+    csvfile = openZip(filename)
+    
     reader = csv.reader(csvfile, delimiter=',', quotechar='"', escapechar="\\", doublequote=False)
     #ignore header, if necessary
     #reader.next()
@@ -62,10 +65,7 @@ def readKhresmoiRank(filename):
 def readKhresmoi(filename):
     print ("Reading file: ", filename)
     data = []
-    if filename.endswith(".gz"):
-        csvfile = gzip.open(filename, 'rb')
-    else:
-        csvfile = open(filename, 'rb')
+    csvfile = openZip(filename)
 
     reader = csv.reader(csvfile, delimiter=',', quotechar='"', escapechar="\\", doublequote=False)
     #ignore header, if necessary
@@ -101,11 +101,7 @@ def readMyFormat(filename, version):
     start = time()
      
     data = []
-    if filename.endswith(".gz"):
-        csvfile = gzip.open(filename, 'rb')
-    else:
-        csvfile = open(filename, 'rb')
-
+    csvfile = openZip(filename)
     reader = csv.reader(csvfile, delimiter=',', quotechar='"', escapechar="\\", doublequote=False)
     
     #Sort the data by user and datetime to construct sessions
@@ -140,11 +136,7 @@ def readGoldMiner(filename):
     start = time()
 
     data = []
-    if filename.endswith(".gz"):
-        csvfile = gzip.open(filename, 'rb')
-    else:
-        csvfile = open(filename, 'rb')
-    
+    csvfile = openZip(filename)
     reader = csv.reader(csvfile, delimiter='|', escapechar="\\", doublequote=False)
     
     #Header - skip it
@@ -185,12 +177,7 @@ def readHONDataSet(filename):
     start = time()
     
     data = []
-    if filename.endswith(".gz"):
-        csvfile = gzip.open(filename, 'rb')
-    
-    else:
-        csvfile = open(filename, 'rb')
-    
+    csvfile = openZip(filename)
     reader = csv.reader(csvfile, delimiter=',', quotechar="\"", escapechar='\\')
     
     #Sort the data by user and datetime to construct sessions
@@ -226,12 +213,7 @@ def readAolDataSet(filename):
     start = time()
 
     data = []
-    if filename.endswith(".gz"):
-        csvfile = gzip.open(filename, 'rb')
-    
-    else:
-        csvfile = open(filename, 'rb')
-    
+    csvfile = openZip(filename)
     reader = csv.reader(csvfile, delimiter='\t', quotechar='|')
     if not reader:
         return
@@ -265,13 +247,7 @@ def readTripDataSet(filename):
     start = time()
 
     data = []
-    
-    if filename.endswith(".gz"):
-        csvfile = gzip.open(filename, 'rb')
-    
-    else:
-        csvfile = open(filename, 'rb')
-
+    csvfile = openZip(filename)
     #There is no escapechar
     reader = csv.reader(csvfile, delimiter='\t', quotechar='|')
 

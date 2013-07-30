@@ -14,10 +14,8 @@ def makeIncrementalReport(X, y, listOfYs, accBaseline, sf1Baseline, wf1Baseline,
         a, f, wf, mf = a + [acc], f + [sf1], wf + [wf1], mf + [mf1]
     return a, f, wf, mf
 
-def makeReport(X, y, y_pred, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline):
+def makeReport(X, y, y_pred, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline, target_names=['Layman', 'Specialist']):
     # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html#sklearn.metrics.classification_report
-    
-    target_names = ['Layman', 'Specialist']
     
     acc = accuracy_score(y, y_pred)
     f1 = f1_score(y, y_pred, average=None)
