@@ -17,7 +17,9 @@ class latexPrinter:
         s += "\\usepackage[latin9]{inputenc}\n"
         s += "\\usepackage{babel}\n"
         s += "\\usepackage{booktabs}\n"
-
+        s += "\\usepackage{etex}\n"
+        s += "\\reserveinserts{18}\n"
+        s += "\\usepackage{morefloats}\n"
         s += "\\begin{document}\n"
         return s
 
