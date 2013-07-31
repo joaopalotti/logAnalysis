@@ -80,4 +80,6 @@ class DataSet(object):
         vec[2] = "".join(vec[2])
         vec[3] = "".join(vec[3])
         return ",".join(vec)
-        
+
+    def identical(self, otherDS):
+        return self.datetime == otherDS.datetime and self.userId == otherDS.userId and self.keywords == otherDS.keywords and self.previouskeywords == otherDS.previouskeywords and self.mesh == otherDS.mesh and self.semanticTypes == otherDS.semanticTypes and self.CHVFound == otherDS.CHVFound and self.hasCHV == otherDS.hasCHV and self.hasUMLS == otherDS.hasUMLS and self.hasCHVMisspelled == otherDS.hasCHVMisspelled and self.comboScore == otherDS.comboScore
