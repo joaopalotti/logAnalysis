@@ -37,7 +37,12 @@ def normalize(values, total):
     print "OUTPUT = ", vs
     return vs
 
-def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c','m'], PATH_TO_DATA="/home/palotti/Dropbox/tuwien/PhD/logs/logAnalysis/plots/", globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*", Ylabel='Percentage of Occurences', Xlabel='Mesh Depth', mapType=int, N=None, absolute=False, barPlot=True):
+def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c','m'], PATH_TO_DATA="/home/palotti/Dropbox/tuwien/PhD/logs/logAnalysis/plots/", globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*", Ylabel='Percentage of Occurences', Xlabel='Mesh Depth', mapType=int, N=None, absolute=False, plotType="cdf", legendLocation=1):
+
+    if absolute == True and plotType == "cdf":
+        print "Please, user ABSOLUTE = False"
+        sys.exit(0)
+
     #http://matplotlib.org/users/customizing.html
     mpl.rcParams['font.size'] = 16
     mpl.rcParams['figure.autolayout'] = True
@@ -123,35 +128,53 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
         elif name=="goldminer":
             name = "GoldMiner"
         
-        if barPlot:
+        if plotType == "bar":
             rects[name] = ax.bar(xs + sumWidth, data, width, color=c, label=name)
-        else:
+        elif plotType == "line": 
             rects[name] = ax.plot(xs, data, color=c, label=name)
+        elif plotType == "cdf": 
+            dx = .01
+            Y = np.array(data)
 
-        ax.legend( [rects[name]] , [name], loc=-1 )
-        
+            # Normalize the data to a proper PDF
+            Y /= (dx*Y).sum()
+
+            # Compute the CDF
+            CY = np.cumsum(Y*dx)
+
+            #rects[name] = ax.plot(xs, data, color=c, label=name)
+            rects[name] = ax.plot(xs, CY, color=c, label=name)
+
         print "Using color ", c, " for data ", name
         sumWidth += width
 
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[::1], labels[::1])
+    
+    #http://matplotlib.org/users/legend_guide.html
+    if plotType == "cdf":
+            legendLocation = 4
+    ax.legend(handles[::1], labels[::1], loc=legendLocation)
+
 
     ax.set_ylabel(Ylabel) #, fontsize=15, fontweight="bold")
     ax.set_xlabel(Xlabel) #, fontsize=15, fontweight="bold")
 
     lstString = str(N) + "\n or more" if not gettingAllData else str(N)
-    if barPlot:
+    if plotType == "bar":
         plt.xticks(xs + (sumWidth/2), map(str,range(1,N) + [lstString] ) )
-    else:
-        plt.xticks(xs, map(str,range(1,N) + [lstString]))
+        ax.set_xlim(0.75, N + 1.0)
 
-#plt.xticks(xs+width, ("1a","2b","3","4","5","6","7","8","9","10","11","12") )
+    elif plotType == "line":
+        plt.xticks(xs, map(str,range(1,N) + [lstString]))
+        ax.set_xlim(0.5, N + 0.5)
+
+    elif plotType == "cdf":
+        plt.xticks(xs, map(str,range(1,N) + [lstString]))
+        ax.set_xlim(1, N)
+
+    #plt.xticks(xs+width, ("1a","2b","3","4","5","6","7","8","9","10","11","12") )
     #print xs+width
 
-    if barPlot:
-        ax.set_xlim(0.75, N + 1.0)
-    else:
-        ax.set_xlim(0.5, N + 0.5)
     if not absolute:
         ax.set_ylim(0,1)
     else:

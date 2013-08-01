@@ -1,12 +1,25 @@
 
 #from nltk import word_tokenize, wordpunct_tokenize
 from nltk.tokenize.punkt import PunktWordTokenizer
+import numpy as np
 import copy
 
 PATH_TO_AUX_FILES = "auxFiles/"
 
 NLWords = ["would", "wouldn't", "wouldnt", "could", "couldn't", "couldnt", "should", "shouldn't", "shouldnt", "how", "when", "where", "which", "who", "whom", "can", "cannot", "why", "what", "we", "they", "i", "do", "does", "must", "ought", "whats", "wheres", "whos"]
 
+
+def generateStatsVector(values):
+    return npStatistics(values)
+
+class npStatistics:
+
+    def __init__(self, values):
+        self.min    = np.nanmin(values)
+        self.max    = np.nanmax(values)
+        self.mean   = np.mean(values)
+        self.median = np.median(values)
+        self.std    = np.std(values) 
 
 def createAcronymSet():
     acronymsSet = set()
