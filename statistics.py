@@ -38,10 +38,10 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
     countingQueryRankingList = []
     
     for dataPair in dataList:
-        data, dataName = dataPair[0], dataPair[1]
+        originalData, dataName = dataPair[0], dataPair[1]
         print "Processing information for data: ", dataName
 
-        data = preProcessData(data, removeStopWords)
+        data = preProcessData(originalData, removeStopWords)
         
         '''
         It is important to run the session analyse first because it is going to eliminate users considered as robots (more than X queries in one unique session)
@@ -62,7 +62,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
         semanticTypesCountedByUser, semanticTypesCountedByUserWeighted, setOfUsersWithSemantic = calculateSemanticTypesPercentages(userSemanticType)
         hasAcronym, countingAcronyms, usersUsingAcronyms = calculateAcronyms(data)
         numberOfUsers = calculateUsers(data)
-        npTerms, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord = calculateTerms(data)
+        npTerms, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord, npChars = calculateTerms(data)
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
         countingNL = calculateNLuse(data)
         countingQueriesPerUser = calculateQueriesPerUser(data)
@@ -84,7 +84,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
             print "Writing file ", dataName + ".result..."
             f.write("Metrics calculated:\n")
             printGeneralMetrics(f, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay)
-            printMetricsForTerms(f, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronymInQueries, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTermsNoStopWord, numberOfQueries)
+            printMetricsForTerms(f, npTerms, npChars, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronymInQueries, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTermsNoStopWord, numberOfQueries)
             printMetricsForQueries(f, greatestQuery, countingQueries, countingQueriesPerDay, meanQueriesPerDay)
             printMetricsForSessions(f, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime,\
                                     numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
@@ -110,7 +110,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
         numberOfMeshWeightedTerms = sum(countingMeshWeighted.values())
         numberOfMeshWeightedDiseases = sum(countingDiseaseWeighted.values())
 
-        appendGeneral(generalTableRow, dataName, lastDay, firstDay, numberOfUsers, numberOfQueries, npTerms, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession, npTime, countingNL, countingReAccess, hasAcronym, percentageAcronymInQueries, usersUsingAcronyms, setOfUsersWithSemantic)
+        appendGeneral(generalTableRow, dataName, lastDay, firstDay, numberOfUsers, numberOfQueries, npTerms, npChars, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession, npTime, countingNL, countingReAccess, hasAcronym, percentageAcronymInQueries, usersUsingAcronyms, setOfUsersWithSemantic)
         appendGeneralModified(generalModifiedRow, dataName, numberOfQueries, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions)
         appendGeneralMesh(generalMeshRow, dataName, hasMeshValues, numberOfQueries, numberOfMeshTerms, numberOfMeshDiseases, usersUsingMesh, numberOfUsers, mapUserMeanMeshDepth)
 
@@ -828,6 +828,9 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
     
     # Count the number of keywords used in each single query
     queryInNumbers = [ len( query ) for query in listOfQueries]
+    
+    # Count the size of the query in chars (excluding spaces)
+    queryInChars = [ sum(len(q) for q in query) for query in listOfQueries]
 
     indexGreatestQuery, _ = max(enumerate(queryInNumbers), key=operator.itemgetter(1))
     greatestQuery = listOfQueries[indexGreatestQuery]
@@ -881,8 +884,9 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
 
     # Calculate basic metrics
     npTerms = generateStatsVector(queryInNumbers)
-    
-    return npTerms, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord
+    npChars = generateStatsVector(queryInChars)    
+
+    return npTerms, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord, npChars
 
 
 def calculateQueriesPerUser(data):
@@ -913,7 +917,7 @@ def printGeneralMetrics(writer, numberOfUsers, numberOfQueries, numberOfSessions
     writer.write('{0:45} ==> {1:30}\n'.format("How may days? ", str((lastDay - firstDay).days)))
     writer.write("-" * 45 + "\n")
  
-def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronymInQueries, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTermsNoStopWord, numberOfQueries):
+def printMetricsForTerms(writer, npTerms, npChars, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronymInQueries, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTermsNoStopWord, numberOfQueries):
     
     writer.write("For TERMS:\n")
     writer.write("-" * 45 + "\n")
@@ -928,6 +932,12 @@ def printMetricsForTerms(writer, npTerms, countingTokens, coOccurrenceList, simp
     writer.write('{0:45} ==> {1:.3f}\n'.format('Mean number of Terms in a query', (npTerms.mean)))
     writer.write('{0:45} ==> {1:.3f}\n'.format('Median number of Terms in a query', (npTerms.median)))
     writer.write('{0:45} ==> {1:.3f}\n'.format('Std Deviation of Terms in a query', (npTerms.std)))
+    
+    writer.write('{0:45} ==> {1:.3f}\n'.format('Max. number of Chars in a query', (npChars.max)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format('Min. number of Chars in a query', (npChars.min)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format('Mean number of Chars in a query', (npChars.mean)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format('Median number of Chars in a query', (npChars.median)))
+    writer.write('{0:45} ==> {1:.3f}\n'.format('Std Deviation of Chars in a query', (npChars.std)))
     
     writer.write('{0:45} ==> {1:.3f}\n'.format('Percentage of Acronyms in queries', (percentageAcronymInQueries)))
     
