@@ -15,6 +15,9 @@ def areBadKeyWords(keywords, level=0):
     if level == 3:
         return keywords == None or len(keywords) == 0 or keywords in ['-', "yahoo", "yahoo.com", "www.mapquest.com", "map quest", "free download", "free downloads", "horoscopes", "jobs", "internet", "sex", "eva longoria", "y", "n", "a", "ask", "dogs", "buddy list", "penis", "names", "tattoos", "w", "baby names", "pottery barn", "shoes", "shoes", "cats", "my account", "hair styles", "horses", "89.com", "chat rooms", "oprah.com", "dogs", "hairstlyes"]
 
+    if level >= 4:
+        print "LEVEL DOESNT EXIST! Please use a level smaller than 4"
+        sys.exit(0)
 
 def readIn(filename, fileVersion, verbose=True): 
 
@@ -35,12 +38,12 @@ def checkSessionAndFilterContent(data, outFileName, filterLevel, verbose=True):
     lastGoodPreviousRow = 1
     outFile = open(outFileName, "w")
 
-    if not areBadKeyWords(previousRow.keywords):
+    if not areBadKeyWords(previousRow.keywords, filterLevel):
         previousRow.previouskeywords = None
         previousRow.printMe(outFile)
     
     else:
-        while areBadKeyWords(previousRow.keywords):
+        while areBadKeyWords(previousRow.keywords, filterLevel):
             removedLines += 1
             previousRow = data[lastGoodPreviousRow]
             lastGoodPreviousRow += 1    
@@ -51,7 +54,7 @@ def checkSessionAndFilterContent(data, outFileName, filterLevel, verbose=True):
         #print row, len(row)
             
         #No keywords in this line, skip it
-        if areBadKeyWords(row.keywords):
+        if areBadKeyWords(row.keywords, filterLevel):
             removedLines += 1
             continue
 
