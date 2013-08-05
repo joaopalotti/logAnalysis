@@ -36,6 +36,8 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
     countingMeshDepthList = []
     countingQueriesPerUserList = []
     countingQueryRankingList = []
+    countingQueryInNumbersList = []
+    countingQueryInCharsList = []
     
     for dataPair in dataList:
         originalData, dataName = dataPair[0], dataPair[1]
@@ -62,7 +64,12 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
         semanticTypesCountedByUser, semanticTypesCountedByUserWeighted, setOfUsersWithSemantic = calculateSemanticTypesPercentages(userSemanticType)
         hasAcronym, countingAcronyms, usersUsingAcronyms = calculateAcronyms(data)
         numberOfUsers = calculateUsers(data)
-        npTerms, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord, npChars = calculateTerms(data)
+        queryInNumbers, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries,\
+                tenMostCommonTermsNoStopWord, queryInChars = calculateTerms(data)
+        # Calculate basic metrics
+        npTerms = generateStatsVector(queryInNumbers)
+        npChars = generateStatsVector(queryInChars)    
+
         firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
         countingNL = calculateNLuse(data)
         countingQueriesPerUser = calculateQueriesPerUser(data)
@@ -103,6 +110,8 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
         countingMeshDepthList.append([dataName, countingMeshDepth])
         countingQueriesPerUserList.append( [dataName, countingQueriesPerUser] )
         countingQueryRankingList.append( [dataName, countingQueryRanking] )
+        countingQueryInNumbersList.append([dataName, queryInNumbers])
+        countingQueryInCharsList.append([dataName, queryInChars])
 
         #Data for tables
         numberOfMeshTerms = sum(countingMesh.values())
@@ -166,11 +175,11 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
         plotLogLogFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile, plottingInstalled)
         plotTimePerSession(myPlotter, countingTimePerSessionList, printValuesToFile, plottingInstalled)
         plotAcronymFrequency(myPlotter, countingAcronymsList, printValuesToFile, plottingInstalled)
-        plotSizeOfWords(myPlotter, dataList, removeStopWords, printValuesToFile, plottingInstalled)
-        plotSizeOfQueries(myPlotter, dataList, removeStopWords, printValuesToFile, plottingInstalled)
         plotMeshDepth(myPlotter, countingMeshDepthList, printValuesToFile, plottingInstalled)
         plotUsersByNumberOfQueries(myPlotter, countingQueriesPerUserList, printValuesToFile, plottingInstalled)
         plotQueryRanking(myPlotter, countingQueryRankingList, printValuesToFile, plottingInstalled)
+        plotSizeOfQueries(myPlotter, countingQueryInNumbersList, printValuesToFile, plottingInstalled)
+        plotSizeOfWords(myPlotter, countingQueryInCharsList, printValuesToFile, plottingInstalled)
 
     #Print latex tables:
     latexWriter = latexPrinter() 
@@ -883,11 +892,7 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
                 coOccurrenceList.append( [d1, d2, matrix[d1][d2], matrix[d1][d2]/numberOfQueries, matrix[d1][d2]/countingTokens[d1], matrix[d1][d2]/countingTokens[d2]] )
             simpleCoOccurrenceList.append( [d1, d2, matrix[d1][d2], matrix[d1][d2]/numberOfQueries, matrix[d1][d2]/countingTokens[d1], matrix[d1][d2]/countingTokens[d2]] )
 
-    # Calculate basic metrics
-    npTerms = generateStatsVector(queryInNumbers)
-    npChars = generateStatsVector(queryInChars)    
-
-    return npTerms, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord, npChars
+    return queryInNumbers, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord, queryInChars
 
 
 def calculateQueriesPerUser(data):
