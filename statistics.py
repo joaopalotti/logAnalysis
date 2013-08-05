@@ -3,7 +3,6 @@ from collections import defaultdict, Counter
 import operator
 from datetime import datetime
 
-from metrics import generateStatsVector
 from latexTools import latexPrinter
 from auxiliarFunctions import *
 from tables import *
@@ -17,8 +16,9 @@ SOME IMPORTANT NOTES:
 # GLOBAL VARIABLES:
 numberOfQueriesInASessionThreshold = 100
 removeOutliers=True
+plottingInstalled=False
 
-def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, plotGraphs=False):    
+def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, plotGraphs=True):    
     #everything related to tables are set aside in the tables.py
         
     """
@@ -159,18 +159,18 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
         from plotFunctions import *
 
         myPlotter = plotter() 
-        plotQueriesPerSession(myPlotter, countingQueriesPerSessionList, printValuesToFile)
-        plotFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile)
-        plotLogLogFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile)
-        plotFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile)
-        plotLogLogFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile)
-        plotTimePerSession(myPlotter, countingTimePerSessionList, printValuesToFile)
-        plotAcronymFrequency(myPlotter, countingAcronymsList, printValuesToFile)
-        plotSizeOfWords(myPlotter, dataList, printValuesToFile)
-        plotSizeOfQueries(myPlotter, dataList, printValuesToFile)
-        plotMeshDepth(myPlotter, countingMeshDepthList, printValuesToFile)
-        plotUsersByNumberOfQueries(myPlotter, countingQueriesPerUserList, printValuesToFile)
-        plotQueryRanking(myPlotter, countingQueryRankingList, printValuesToFile)
+        plotQueriesPerSession(myPlotter, countingQueriesPerSessionList, printValuesToFile, plottingInstalled)
+        plotFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile, plottingInstalled)
+        plotLogLogFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile, plottingInstalled)
+        plotFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile, plottingInstalled)
+        plotLogLogFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile, plottingInstalled)
+        plotTimePerSession(myPlotter, countingTimePerSessionList, printValuesToFile, plottingInstalled)
+        plotAcronymFrequency(myPlotter, countingAcronymsList, printValuesToFile, plottingInstalled)
+        plotSizeOfWords(myPlotter, dataList, printValuesToFile, plottingInstalled)
+        plotSizeOfQueries(myPlotter, dataList, printValuesToFile, plottingInstalled)
+        plotMeshDepth(myPlotter, countingMeshDepthList, printValuesToFile, plottingInstalled)
+        plotUsersByNumberOfQueries(myPlotter, countingQueriesPerUserList, printValuesToFile, plottingInstalled)
+        plotQueryRanking(myPlotter, countingQueryRankingList, printValuesToFile, plottingInstalled)
 
     #Print latex tables:
     latexWriter = latexPrinter() 
