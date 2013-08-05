@@ -1,19 +1,22 @@
 from __future__ import division
 from collections import Counter
 import math, sys
-from matplotlib.backends.backend_pdf import PdfPages
 
 # comment if you cannot install pylab
 from pylab import *
+from matplotlib.backends.backend_pdf import PdfPages
 
 PATH_TO_SAVE="plots/"
 
 class plotter:
-    def __init__(self):
-        self.pp = PdfPages(PATH_TO_SAVE + 'multipage.pdf')
+    def __init__(self, plottingInstalled=True):
+        self.plottingInstalled = plottingInstalled
+        if self.plottingInstalled:
+            self.pp = PdfPages(PATH_TO_SAVE + 'multipage.pdf')
     
     def __del__(self):
-        self.pp.close()
+        if self.plottingInstalled:
+            self.pp.close()
 
     def __finalPlot(self, x, y, label_, format_="o", saveName=None, showIt=True, closeIt=True, loglogFormat=False):
         
