@@ -48,7 +48,7 @@ with open(chvfile, "r") as csvfile:
 
 meanCombo = sumCombo / len(popularNames)
 #print "Sum combo = ", sumCombo
-#print "Mean combo value: ", meanCombo 
+print "Mean combo value: ", meanCombo 
 for chv in popularNames:
     if chv.comboScore == -1:
         chv.comboScore = meanCombo

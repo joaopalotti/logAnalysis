@@ -37,7 +37,7 @@ def normalize(values, total):
     print "OUTPUT = ", vs
     return vs
 
-def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c','m'], PATH_TO_DATA="/home/palotti/Dropbox/tuwien/PhD/logs/logAnalysis/plots/", globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*", Ylabel='Percentage of Occurences', Xlabel='Mesh Depth', mapType=int, N=None, absolute=False, plotType="cdf", legendLocation=1):
+def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c','m','k','y'], PATH_TO_DATA="/home/palotti/Dropbox/tuwien/PhD/logs/logAnalysis/plots/", globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*", Ylabel='Percentage of Occurences', Xlabel='Mesh Depth', mapType=int, N=None, absolute=False, plotType="cdf", legendLocation=1):
 
     if absolute == True and plotType == "cdf":
         print "Please, user ABSOLUTE = False"
@@ -108,7 +108,7 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
 
     cs = iter(colors)
 
-    keyorder = ['aolHealth', 'hon', 'trip', 'goldminer', 'aolNotHealth']
+    keyorder = ['aolHealth', 'hon', 'trip', 'goldminer', 'aolNotHealth', 'laypeople', 'experts']
     #allYs = sorted(allYs.items(), cmp=mySort)
     allYs = sorted(allYs.items(), key=lambda i:keyorder.index(i[0]))
     print allYs
@@ -151,10 +151,7 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
     handles, labels = ax.get_legend_handles_labels()
     
     #http://matplotlib.org/users/legend_guide.html
-    if plotType == "cdf":
-            legendLocation = 4
     ax.legend(handles[::1], labels[::1], loc=legendLocation)
-
 
     ax.set_ylabel(Ylabel) #, fontsize=15, fontweight="bold")
     ax.set_xlabel(Xlabel) #, fontsize=15, fontweight="bold")

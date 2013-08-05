@@ -1,3 +1,4 @@
+from auxiliarFunctions import preProcessData
 
 def plotQueryRanking(myPlotter, countingQueryRankingList, printValuesToFile, plottingInstalled=True):
     for countingQueryRankingPair in countingQueryRankingList[:-1]:
@@ -98,38 +99,49 @@ def plotFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile, plott
     dataName, countingTokens = countingTokensPair[0], countingTokensPair[1]
     myPlotter.plotFrequency(countingTokens.values(), "Term Repetition", label=dataName, saveName="termFreq", showIt=False, lastOne=True, printValuesToFile=printValuesToFile, plottingInstalled=plottingInstalled)
 
-def plotSizeOfQueries(myPlotter, dataList, printValuesToFile, plottingInstalled=True):
-    plotSizeOfQueriesAbsolute(myPlotter, dataList, printValuesToFile, plottingInstalled=plottingInstalled)
-    plotSizeOfQueriesRelative(myPlotter, dataList, printValuesToFile, plottingInstalled=plottingInstalled)
+def plotSizeOfQueries(myPlotter, dataList, removeStopWords, printValuesToFile, plottingInstalled=True):
+    plotSizeOfQueriesAbsolute(myPlotter, dataList, removeStopWords, printValuesToFile, plottingInstalled=plottingInstalled)
+    plotSizeOfQueriesRelative(myPlotter, dataList, removeStopWords, printValuesToFile, plottingInstalled=plottingInstalled)
 
-def plotSizeOfQueriesAbsolute(myPlotter, dataList, printValuesToFile, plottingInstalled=True):
+def plotSizeOfQueriesAbsolute(myPlotter, dataList, removeStopWords, printValuesToFile, plottingInstalled=True):
     queriesSize = []
     for dataItem in dataList[:-1]:
-        data, dataName = dataItem[0], dataItem[1]
+        originalData, dataName = dataItem[0], dataItem[1]
+        data = preProcessData(originalData, removeStopWords)
+        
         queriesSize = [ len(member.keywords) for member in data ] 
         myPlotter.plotFrequency(queriesSize, "Query Size", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="queriesSize", plottingInstalled=plottingInstalled)
 
-    data, dataName = dataList[-1][0], dataList[-1][1]
+    originalData, dataName = dataList[-1][0], dataList[-1][1]
+    data = preProcessData(originalData, removeStopWords)
     queriesSize = [ len(member.keywords) for member in data ] 
+    print "qsize ===> ", queriesSize
+    print [member.keywords for member in data]
     myPlotter.plotFrequency(queriesSize, "Query Size", label=dataName, saveName="queriesSize", showIt=False, lastOne=True, relative=False, printValuesToFile=printValuesToFile, plottingInstalled=plottingInstalled)
 
-def plotSizeOfQueriesRelative(myPlotter, dataList, printValuesToFile, plottingInstalled=True):
+def plotSizeOfQueriesRelative(myPlotter, dataList, removeStopWords, printValuesToFile, plottingInstalled=True):
 
     queriesSize = []
     for dataItem in dataList[:-1]:
-        data, dataName = dataItem[0], dataItem[1]
+        originalData, dataName = dataItem[0], dataItem[1]
+        data = preProcessData(originalData, removeStopWords)
+        
         queriesSize = [ len(member.keywords) for member in data ] 
         myPlotter.plotFrequency(queriesSize, "Query Size", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="queriesSizeRelative", plottingInstalled=plottingInstalled)
 
-    data, dataName = dataList[-1][0], dataList[-1][1]
+    originalData, dataName = dataList[-1][0], dataList[-1][1]
+    data = preProcessData(originalData, removeStopWords)
+
     queriesSize = [ len(member.keywords) for member in data ] 
     myPlotter.plotFrequency(queriesSize, "Query Size", label=dataName, saveName="queriesSizeRelative", showIt=False, lastOne=True, relative=True, printValuesToFile=printValuesToFile, plottingInstalled=plottingInstalled)
 
-def plotSizeOfWords(myPlotter, dataList, printValuesToFile, plottingInstalled=True):
+def plotSizeOfWords(myPlotter, dataList, removeStopWords, printValuesToFile, plottingInstalled=True):
     
     wordsSize = []
     for dataItem in dataList[:-1]:
-        data, dataName = dataItem[0], dataItem[1]
+        originalData, dataName = dataItem[0], dataItem[1]
+        data = preProcessData(originalData, removeStopWords)
+
         queriesSize = [ len(member.keywords) for member in data ] 
         wordsSize = [ len(word) for member in data for word in member.keywords]
         myPlotter.plotFrequency(wordsSize, "Word Size", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="wordSize", plottingInstalled=plottingInstalled)

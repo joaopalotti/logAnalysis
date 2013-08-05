@@ -166,8 +166,8 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
         plotLogLogFrequencyOfQueries(myPlotter, countingQueriesList, printValuesToFile, plottingInstalled)
         plotTimePerSession(myPlotter, countingTimePerSessionList, printValuesToFile, plottingInstalled)
         plotAcronymFrequency(myPlotter, countingAcronymsList, printValuesToFile, plottingInstalled)
-        plotSizeOfWords(myPlotter, dataList, printValuesToFile, plottingInstalled)
-        plotSizeOfQueries(myPlotter, dataList, printValuesToFile, plottingInstalled)
+        plotSizeOfWords(myPlotter, dataList, removeStopWords, printValuesToFile, plottingInstalled)
+        plotSizeOfQueries(myPlotter, dataList, removeStopWords, printValuesToFile, plottingInstalled)
         plotMeshDepth(myPlotter, countingMeshDepthList, printValuesToFile, plottingInstalled)
         plotUsersByNumberOfQueries(myPlotter, countingQueriesPerUserList, printValuesToFile, plottingInstalled)
         plotQueryRanking(myPlotter, countingQueryRankingList, printValuesToFile, plottingInstalled)
@@ -437,6 +437,7 @@ def calculateAcronyms(data):
 
     # Get the number of queries that have acronyms
     hasAcronym = [ member.keywords for member in data for word in member.keywords if word in acronymsSet]
+    
     # Get the most common ccronyms
     acronymList = [ word for member in data for word in member.keywords if word in acronymsSet]
     countingAcronyms = Counter(acronymList)

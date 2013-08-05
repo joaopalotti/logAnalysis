@@ -1,6 +1,6 @@
 import sys
 from runClassifiers import *
-from metrics import generateStatsVector
+from auxiliarFunctions import generateStatsVector
 from scipy import stats
 
 def compareValues(minIndex):
