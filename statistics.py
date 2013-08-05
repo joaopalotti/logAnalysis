@@ -158,7 +158,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
         from myPlot import plotter
         from plotFunctions import *
 
-        myPlotter = plotter() 
+        myPlotter = plotter(plottingInstalled) 
         plotQueriesPerSession(myPlotter, countingQueriesPerSessionList, printValuesToFile, plottingInstalled)
         plotFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile, plottingInstalled)
         plotLogLogFrequencyOfTerms(myPlotter, countingTokensList, printValuesToFile, plottingInstalled)
