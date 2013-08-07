@@ -2,7 +2,6 @@ import pickle, sys
 import random
 import numpy as np
 from optparse import OptionParser
-from collections import Counter
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
@@ -12,9 +11,8 @@ from sklearn.ensemble import ExtraTreesClassifier
 
 #My classes
 from classifiers import classify, makeReport, plot_precision_recall
-from auxClassifier import *
+from auxClassifier import preprocessing, shuffleData, vectorizeData, baselines
 from createFeatureVector import userClass
-from sklearn.metrics import f1_score, accuracy_score
 
 ### HOW TO USE:
 # python runClassifiers.py -h
@@ -95,23 +93,9 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
 
     print "Using %d regular users -- class %s" % (len(ld1), ll1[0])
     print "Using %d medical users -- class %s" % (len(ld2), ll2[0])
-     
-    accBaseline = accuracy_score(y, y_greatest)
-    print "Avg. ACC of the greatest dataset => %.3f" % (100.0 * accBaseline)
-
-    f1 = f1_score(y, y_greatest, average=None)
-    print "F1 Score --> ", (f1) , " size --> ", len(f1)
     
-    sf1Baseline = f1_score(y, y_greatest) # TODO: maybe? , pos_label=greatestClass)
-    print "Simple F1 -> %.3f" % (sf1Baseline)
+    accBaseline, sf1Baseline, mf1Baseline, wf1Baseline = baselines(y, y_greatest)
     
-    mf1Baseline = f1.mean()
-    print "Mean F1 -> %.3f" % (mf1Baseline)
-    
-    ns = Counter(y)
-    wf1Baseline = ( f1[0] * ns[0] + f1[1] * ns[1] ) / (ns[0] + ns[1])
-    print "Weighted F1 -> ", wf1Baseline
-
     print "Vectorizing dictionaries..."
     vec, X_noProcess = vectorizeData(listOfDicts) 
     print vec.get_feature_names()
