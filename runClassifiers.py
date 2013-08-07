@@ -118,7 +118,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     print "Vectorized"
    
     print "Preprocessing data"
-    preProcessing(X_noProcess, preProcessingMethod)
+    X = preProcessing(X_noProcess, preProcessingMethod)
     
     n_samples, n_features = X.shape
     ####
@@ -131,8 +131,6 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     # Shuffle samples
     print "Shuffled"
     
-    nCV = 5
-
     ####
     ### Run classifiers
     ##
