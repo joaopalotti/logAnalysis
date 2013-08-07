@@ -9,7 +9,7 @@ from auxiliarFunctions import tokenize
         2) When it is not found any CHV entry in the query, I assume that the combo value for that entry is the mean combo value (around 0.28)
 """
 
-usingScoop = False
+usingScoop = True
 if usingScoop:
     from scoop import futures
 
@@ -48,7 +48,7 @@ with open(chvfile, "r") as csvfile:
 
 meanCombo = sumCombo / len(popularNames)
 #print "Sum combo = ", sumCombo
-print "Mean combo value: ", meanCombo 
+#print "Mean combo value: ", meanCombo 
 for chv in popularNames:
     if chv.comboScore == -1:
         chv.comboScore = meanCombo
@@ -71,15 +71,19 @@ def contains(pop, query):
             return True
     return False
 
-def findAllContains(query):
+def findAllContains(numberAndQuery, total):
+    number, query = numberAndQuery
+    percentage = number/total
+    sys.stdout.write("\r%.3f" % percentage)
+    sys.stdout.flush()
     return [p for p in popularNames if contains(p.text, query)]
 
 if __name__ == "__main__":
     
     if usingScoop:
-        originalFound = list(futures.map(findAllContains, queries))
+        originalFound = list(futures.map(findAllContains, zip(range(1, 1 + len(queries)),queries), len(queries) * [len(queries)]  ))
     else:
-        originalFound = map(findAllContains, queries)
+        originalFound = map(findAllContains, zip(range(1, 1 + len(queries)), queries), len(queries) * [len(queries)])
 
     found = [ f for f in originalFound if len(f) > 0]
     #iprint found
@@ -108,8 +112,8 @@ if __name__ == "__main__":
 
 
     print "Term and frequency"
-    for pop, c in sorted(popCounter.items(), key=lambda t: t[1], reverse=True):
-        print pop,"->", c
+    #for pop, c in sorted(popCounter.items(), key=lambda t: t[1], reverse=True):
+    #    print pop,"->", c
     
     outf = open(outfilename, "w")
     writer = csv.writer(outf, delimiter=',', quoting=csv.QUOTE_ALL, quotechar ='"', escapechar='\\', doublequote=False)
