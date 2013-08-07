@@ -12,6 +12,7 @@ from sklearn.ensemble import ExtraTreesClassifier
 
 #My classes
 from classifiers import classify, makeReport, plot_precision_recall
+from auxClassifier import *
 from createFeatureVector import userClass
 from sklearn.metrics import f1_score, accuracy_score
 
@@ -46,7 +47,7 @@ def transformeInDict(userDict, n=-1, proportional=-1):
     return listOfDicts, listOfLabels
 
 
-def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, nseed):
+def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed):
    
     medicalUserDataSet = "medicalUser-%d.pk" % (minNumberOfQueries)
     regularUserDataSet = "regularUser-%d.pk" % (minNumberOfQueries)
@@ -112,39 +113,25 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
     print "Weighted F1 -> ", wf1Baseline
 
     print "Vectorizing dictionaries..."
-    from sklearn.feature_extraction import DictVectorizer
-    vec = DictVectorizer()
-    X_noProcess = vec.fit_transform(listOfDicts).toarray()
+    vec, X_noProcess = vectorizeData(listOfDicts) 
     print vec.get_feature_names()
     print "Vectorized"
-    
-    #TODO: normalize the data
-    # http://scikit-learn.org/stable/modules/preprocessing.html
-    from sklearn import preprocessing
-    if preProcessing == "scale":
-        X = preprocessing.scale(X_noProcess)
-    elif preProcessing == "minmax":
-        X = preprocessing.MinMaxScaler().fit_transform(X_noProcess)
-    elif preProcessing == "normalize":
-        X = preprocessing.normalize(X_noProcess, norm='l2')
-    elif preProcessing == "nothing":
-        X = X_noProcess
+   
+    print "Preprocessing data"
+    preProcessing(X_noProcess, preProcessingMethod)
     
     n_samples, n_features = X.shape
-    
     ####
     ### Shuffer samples  (TODO: Cross-validation)
     ##
     #
     
     print "Shuffling the data..."
+    shuffleData(X, y, nseed, n_samples)
     # Shuffle samples
-    p = range(n_samples) 
-    random.seed(nseed)
-    random.shuffle(p)
-    X, y = X[p], y[p]
-    nCV = 5
     print "Shuffled"
+    
+    nCV = 5
 
     ####
     ### Run classifiers
