@@ -27,17 +27,47 @@ def mySort(a, b):
         return 1
     return 0
     
+def readPairs(lines, mapType, roundX):
+    
+    pairsList = []
+    for line in lines:
+        pairs = map(mapType, line.strip().split(","))        
+        pairsList.append(pairs)
+    
+    if roundX:
+        newList = []
+
+        for (x,y) in pairsList:
+            x = round(x)
+            for i in range(0, int(y)):
+                newList.append(x)
+        from collections import Counter
+        pairsList = sorted(Counter(newList).items())
+   
+    #For values that are not avaiable, add them
+    lastX = pairsList[0][0]
+    newPairsList = [pairsList[0]]
+
+    for pair in pairsList[1:]:
+        if lastX + 1 != pair[0]:
+            for x in range(int(lastX)+1, int(pair[0])):
+                newPairsList.append( (x, 0) )
+
+        newPairsList.append(pair)
+        lastX = pair[0]
+
+    return newPairsList
 
 def normalize(values, total):
     vs = []
-    print "TOTAL = ", total
-    print "INPUT = ", values
+    #print "TOTAL = ", total
+    #print "INPUT = ", values
     for v in values:
-        vs.append( v / total )
-    print "OUTPUT = ", vs
+        vs.append(v / total)
+    #print "OUTPUT = ", vs
     return vs
 
-def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c','m','k','y'], PATH_TO_DATA="/home/palotti/Dropbox/tuwien/PhD/logs/logAnalysis/plots/", globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*", Ylabel='Percentage of Occurences', Xlabel='Mesh Depth', mapType=int, N=None, absolute=False, plotType="cdf", legendLocation=1):
+def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c','m','k','y'], PATH_TO_DATA="/home/palotti/Dropbox/tuwien/PhD/logs/logAnalysis/plots/", globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*", Ylabel='Percentage of Occurences', Xlabel='Mesh Depth', mapType=int, N=None, absolute=False, plotType="cdf", legendLocation=1, deltaXTicks=0, CDFMultiplier=100, XStartsFrom=1, roundX=False):
 
     if absolute == True and plotType == "cdf":
         print "Please, user ABSOLUTE = False"
@@ -76,8 +106,10 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
         with open(file,"r") as f:
             yacc = 0
 
-            for line in f.readlines():
-                x, y = map(mapType, line.strip().split(","))
+            lines = readPairs( f.readlines(), mapType, roundX)
+           
+            for line in lines:
+                x, y = line[0], line[1]
 
                 maxX = x if x > maxX else maxX
                 maxY = y if y > maxY else maxY
@@ -94,6 +126,7 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
         
         if not absolute:
             ys = normalize(ys, sumY)
+        
         allYs[dataName] = ys
         #print xs, ys
 
@@ -104,14 +137,14 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
 
     rects = {}
     sumWidth = 0 
-    xs = np.arange(1, N+1)
+    xs = np.arange(XStartsFrom, N+1)
 
     cs = iter(colors)
 
     keyorder = ['aolHealth', 'hon', 'trip', 'goldminer', 'aolNotHealth', 'laypeople', 'experts']
     #allYs = sorted(allYs.items(), cmp=mySort)
     allYs = sorted(allYs.items(), key=lambda i:keyorder.index(i[0]))
-    print allYs
+    #print allYs
 
     for name, data in allYs:
         c = cs.next()
@@ -123,14 +156,19 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
             name = "TRIP"
         elif name=="aolNotHealth":
             name = "AOL-NotHealth"
+        #    name = "Not Health"
         elif name=="aolHealth":
             name = "AOL-Health"
         elif name=="goldminer":
             name = "GoldMiner"
+        elif name=="experts":
+            name = "Experts"
+        elif name == "laypeople":
+            name = "Laypeople"
         
         if plotType == "bar":
             rects[name] = ax.bar(xs + sumWidth, data, width, color=c, label=name)
-        elif plotType == "line": 
+        elif plotType == "line":
             rects[name] = ax.plot(xs, data, color=c, label=name)
         elif plotType == "cdf": 
             dx = .01
@@ -140,9 +178,12 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
             Y /= (dx*Y).sum()
 
             # Compute the CDF
-            CY = np.cumsum(Y*dx)
+            CY = np.cumsum(Y*dx) * CDFMultiplier
 
             #rects[name] = ax.plot(xs, data, color=c, label=name)
+            print "LENS ----> x = %d, cy = %d, y = %d, data = %d" % (len(xs), len(CY), len(Y), len(data))
+            print xs
+            print CY
             rects[name] = ax.plot(xs, CY, color=c, label=name)
 
         print "Using color ", c, " for data ", name
@@ -166,14 +207,23 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
         ax.set_xlim(0.5, N + 0.5)
 
     elif plotType == "cdf":
-        plt.xticks(xs, map(str,range(1,N) + [lstString]))
-        ax.set_xlim(1, N)
+        if deltaXTicks > 0:
+            nxs = [1] + range(deltaXTicks, max(xs), deltaXTicks) + [max(xs)]
+            lxs = map(str, nxs[0:-1]) + [lstString]
+            plt.xticks(nxs, lxs)
+            ax.set_xlim(1, N)
+        else:
+            plt.xticks(xs, map(str,range(1,N) + [lstString]))
+            ax.set_xlim(1, N)
 
     #plt.xticks(xs+width, ("1a","2b","3","4","5","6","7","8","9","10","11","12") )
     #print xs+width
 
     if not absolute:
-        ax.set_ylim(0,1)
+        if plotType == 'cdf':
+            ax.set_ylim(0, 1 * CDFMultiplier)
+        else:
+            ax.set_ylim(0, 1)
     else:
         ax.set_ylim(0,maxY+0.5)
  

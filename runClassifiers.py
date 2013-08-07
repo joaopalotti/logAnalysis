@@ -2,7 +2,6 @@ import pickle, sys
 import random
 import numpy as np
 from optparse import OptionParser
-from collections import Counter
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
@@ -12,8 +11,8 @@ from sklearn.ensemble import ExtraTreesClassifier
 
 #My classes
 from classifiers import classify, makeReport, plot_precision_recall
+from auxClassifier import preprocessing, shuffleData, vectorizeData, baselines
 from createFeatureVector import userClass
-from sklearn.metrics import f1_score, accuracy_score
 
 ### HOW TO USE:
 # python runClassifiers.py -h
@@ -46,7 +45,7 @@ def transformeInDict(userDict, n=-1, proportional=-1):
     return listOfDicts, listOfLabels
 
 
-def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, nseed):
+def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed):
    
     medicalUserDataSet = "medicalUser-%d.pk" % (minNumberOfQueries)
     regularUserDataSet = "regularUser-%d.pk" % (minNumberOfQueries)
@@ -94,58 +93,28 @@ def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, n
 
     print "Using %d regular users -- class %s" % (len(ld1), ll1[0])
     print "Using %d medical users -- class %s" % (len(ld2), ll2[0])
-     
-    accBaseline = accuracy_score(y, y_greatest)
-    print "Avg. ACC of the greatest dataset => %.3f" % (100.0 * accBaseline)
-
-    f1 = f1_score(y, y_greatest, average=None)
-    print "F1 Score --> ", (f1) , " size --> ", len(f1)
     
-    sf1Baseline = f1_score(y, y_greatest) # TODO: maybe? , pos_label=greatestClass)
-    print "Simple F1 -> %.3f" % (sf1Baseline)
+    accBaseline, sf1Baseline, mf1Baseline, wf1Baseline = baselines(y, y_greatest)
     
-    mf1Baseline = f1.mean()
-    print "Mean F1 -> %.3f" % (mf1Baseline)
-    
-    ns = Counter(y)
-    wf1Baseline = ( f1[0] * ns[0] + f1[1] * ns[1] ) / (ns[0] + ns[1])
-    print "Weighted F1 -> ", wf1Baseline
-
     print "Vectorizing dictionaries..."
-    from sklearn.feature_extraction import DictVectorizer
-    vec = DictVectorizer()
-    X_noProcess = vec.fit_transform(listOfDicts).toarray()
+    vec, X_noProcess = vectorizeData(listOfDicts) 
     print vec.get_feature_names()
     print "Vectorized"
-    
-    #TODO: normalize the data
-    # http://scikit-learn.org/stable/modules/preprocessing.html
-    from sklearn import preprocessing
-    if preProcessing == "scale":
-        X = preprocessing.scale(X_noProcess)
-    elif preProcessing == "minmax":
-        X = preprocessing.MinMaxScaler().fit_transform(X_noProcess)
-    elif preProcessing == "normalize":
-        X = preprocessing.normalize(X_noProcess, norm='l2')
-    elif preProcessing == "nothing":
-        X = X_noProcess
+   
+    print "Preprocessing data"
+    X = preProcessing(X_noProcess, preProcessingMethod)
     
     n_samples, n_features = X.shape
-    
     ####
     ### Shuffer samples  (TODO: Cross-validation)
     ##
     #
     
     print "Shuffling the data..."
+    shuffleData(X, y, nseed, n_samples)
     # Shuffle samples
-    p = range(n_samples) 
-    random.seed(nseed)
-    random.shuffle(p)
-    X, y = X[p], y[p]
-    nCV = 5
     print "Shuffled"
-
+    
     ####
     ### Run classifiers
     ##
