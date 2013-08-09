@@ -14,11 +14,132 @@ SOME IMPORTANT NOTES:
 """
 
 # GLOBAL VARIABLES:
+usingScoop = True
 numberOfQueriesInASessionThreshold = 100
 removeOutliers=True
 plottingInstalled=False
+removeStopWords=False
+printValuesToFile=True
+plotGraphs=True
 
-def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, plotGraphs=True):    
+if usingScoop:
+    from scoop import futures
+
+def calculateMetrics(dataPair):
+
+    originalData, dataName = dataPair[0], dataPair[1]
+    print "Processing information for data: ", dataName
+
+    data = preProcessData(originalData, removeStopWords)
+    
+    '''
+    It is important to run the session analyse first because it is going to eliminate users considered as robots (more than X queries in one unique session)
+    X -> numberOfQueriesInASessionThreshold, but you may want to check it later
+    '''
+    
+    if removeOutliers:
+        outliersToRemove = removeOutliers( createSessions(data) )
+        newData = [member for member in data if member.userId not in outliersToRemove]
+        data = newData
+    
+    numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
+        numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
+        countingSemantics, countingPureSemanticTypes, vectorOfActionSequence,\
+        countingReAccess, idMaxQueriesInSession, vectorOfCicleSequence, countingFullSemanticTypes,\
+            userSemanticType, npSessions = calculateQueriesPerSession(data)
+    
+    semanticTypesCountedByUser, semanticTypesCountedByUserWeighted, setOfUsersWithSemantic = calculateSemanticTypesPercentages(userSemanticType)
+    hasAcronym, countingAcronyms, usersUsingAcronyms = calculateAcronyms(data)
+    numberOfUsers = calculateUsers(data)
+    queryInNumbers, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries,\
+            tenMostCommonTermsNoStopWord, queryInChars = calculateTerms(data)
+    # Calculate basic metrics
+    npTerms = generateStatsVector(queryInNumbers)
+    npChars = generateStatsVector(queryInChars)    
+
+    firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
+    countingNL = calculateNLuse(data)
+    countingQueriesPerUser = calculateQueriesPerUser(data)
+    countingQueryRanking = calculateQueryRanking(data)
+    usersMetrics = calculateMetricsForUsers(data)
+
+    numberOfQueries = sum(countingQueries.values())
+    percentageAcronymInQueries = 100.0 * len(hasAcronym) / numberOfQueries
+
+    hasMeshValues = 0
+    countingMesh, countingDisease, hasMeshValues, countingMeshDepth, usersUsingMesh, mapUserMeanMeshDepth, \
+            countingMeshByUser, countingDiseaseByUser, countingMeshWeightedByUser, countingDiseaseWeightedByUser,\
+            countingMeshWeighted, countingDiseaseWeighted = calculateMesh(data)
+    
+    countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, meanComboScore = calculateCHV(data)
+
+    # Print statistics
+    with open(dataName + ".result", "w") as f:
+        print "Writing file ", dataName + ".result..."
+        f.write("Metrics calculated:\n")
+        printGeneralMetrics(f, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay)
+        printMetricsForTerms(f, npTerms, npChars, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronymInQueries, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTermsNoStopWord, numberOfQueries)
+        printMetricsForQueries(f, greatestQuery, countingQueries, countingQueriesPerDay, meanQueriesPerDay)
+        printMetricsForSessions(f, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime,\
+                                numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
+                               countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers, idMaxQueriesInSession, npSessions)
+        printMeshClassificationMetrics(f, countingMesh, countingDisease, numberOfQueries, hasMeshValues, countingMeshDepth)
+        printSemantic(f, vectorOfActionSequence, vectorOfCicleSequence, countingFullSemanticTypes, numberOfQueries)
+        printOutliers(f, outliersToRemove)
+
+    
+    #Data for tables
+    numberOfMeshTerms = sum(countingMesh.values())
+    numberOfMeshDiseases = sum(countingDisease.values())
+    numberOfMeshWeightedTerms = sum(countingMeshWeighted.values())
+    numberOfMeshWeightedDiseases = sum(countingDiseaseWeighted.values())
+
+    appendGeneral(generalTableRow, dataName, lastDay, firstDay, numberOfUsers, numberOfQueries, npTerms, npChars, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession, npTime, countingNL, countingReAccess, hasAcronym, percentageAcronymInQueries, usersUsingAcronyms, setOfUsersWithSemantic)
+    appendGeneralModified(generalModifiedRow, dataName, numberOfQueries, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions)
+    appendGeneralMesh(generalMeshRow, dataName, hasMeshValues, numberOfQueries, numberOfMeshTerms, numberOfMeshDiseases, usersUsingMesh, numberOfUsers, mapUserMeanMeshDepth)
+
+    #To avoid division by zero
+    numberOfMeshTerms = numberOfMeshTerms if numberOfMeshTerms != 0 else 1
+    numberOfMeshDiseases = numberOfMeshDiseases if numberOfMeshDiseases != 0 else 1
+    numberOfMeshWeightedTerms = numberOfMeshWeightedTerms if numberOfMeshWeightedTerms != 0 else 1
+    numberOfMeshWeightedDiseases = numberOfMeshWeightedDiseases if numberOfMeshWeightedDiseases != 0 else 1
+    
+    appendMesh(meshTableRow, dataName, countingMesh, numberOfMeshTerms)
+    appendDisease(diseaseTableRow, dataName, countingDisease, numberOfMeshDiseases)
+    appendMeshWeighted(meshTableWeightedRow, dataName, countingMeshWeighted, numberOfMeshWeightedTerms)
+    appendDiseaseWeighted(diseaseTableWeightedRow, dataName, countingDiseaseWeighted, numberOfMeshWeightedDiseases)
+    appendMeshByUser(meshByUserRow, dataName, countingMeshByUser, numberOfUsers)
+    appendDiseaseByUser(diseaseByUserRow, dataName, countingDiseaseByUser, numberOfUsers)
+    appendMeshByUserWeighted(meshByUserWeightedRow, dataName, countingMeshWeightedByUser, numberOfUsers)
+    appendDiseaseByUserWeighte(diseaseByUserWeightedRow, dataName, countingDiseaseWeightedByUser, numberOfUsers)
+
+    # ["Dtst", "Nothing", "Symptom", "Cause", "Remedy", "SymptomCause", "SymptomRemedy", "CauseRemedy", "SymptomCauseRemedy"]
+    totalActions = sum(vectorOfActionSequence)
+    totalActions = 1/100 if totalActions == 0 else totalActions
+    print "Actions -> ", totalActions, " Queries -> ", numberOfQueries
+    appendSemanticFocus(semanticFocusRow, dataName, vectorOfActionSequence, totalActions)
+
+    #["Dtst","Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]
+    totalOfModifiedSessions = sum(vectorOfModifiedSessions)
+    totalOfModifiedSessions = 1/100 if totalOfModifiedSessions == 0 else totalOfModifiedSessions
+    appendModifiedSession( modifiedSessionRow, dataName, vectorOfModifiedSessions, totalOfModifiedSessions)
+    
+    totalCicleSequence = sum(vectorOfCicleSequence)
+    totalCicleSequence = 1/100 if totalCicleSequence == 0 else totalCicleSequence
+    appendCicleSequence(dataName, totalCicleSequence, numberOfSessions, vectorOfCicleSequence)
+
+    totalMeshDepth = sum(countingMeshDepth.values())
+    totalMeshDepth = 1/100 if totalMeshDepth == 0 else totalMeshDepth
+    
+    appendMeshDepth(meshDepthRow, dataName, totalMeshDepth, countingMeshDepth)
+    appendSemanticByUser(semanticByUserRow, dataName, semanticTypesCountedByUser, numberOfUsers)
+    appendSemanticByUserWeighted(semanticByUserWeightedRow, dataName, numberOfUsers, semanticTypesCountedByUserWeighted)
+    appendBooleanUse(booleanUseRow, dataName, booleanTerms, numberOfQueries)
+    appendCHV(CHVRow, dataName, countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, numberOfQueries, meanComboScore)
+    
+    return dataName, countingAcronyms, countingTimePerSession, countingTokens, countingQueries, countingQueriesPerSession, countingMesh, countingDisease, countingMeshDepth, countingQueriesPerUser, countingQueryRanking, queryInNumbers, queryInChars
+
+def calculateStatistics(dataList):    
     #everything related to tables are set aside in the tables.py
         
     """
@@ -31,137 +152,32 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
     countingQueriesPerSessionList = []
     countingMeshList = []
     countingDiseaseList = []
-    countingMeshWeightedList = []
-    countingDiseaseWeightedList = []
     countingMeshDepthList = []
     countingQueriesPerUserList = []
     countingQueryRankingList = []
     countingQueryInNumbersList = []
     countingQueryInCharsList = []
-    
-    for dataPair in dataList:
-        originalData, dataName = dataPair[0], dataPair[1]
-        print "Processing information for data: ", dataName
+   
 
-        data = preProcessData(originalData, removeStopWords)
+    #print "DATALIST ---> ", dataList
+    if usingScoop:
+        result =  futures.map(calculateMetrics, dataList)
+    else:
+        result = map(calculateMetrics, dataList)
+    for r in result:
+        countingAcronymsList.append([r[0],r[1]])
+        countingTimePerSessionList.append([r[0],r[2]])
+        countingTokensList.append([r[0],r[3]])
+        countingQueriesList.append([r[0],r[4]])
+        countingQueriesPerSessionList.append([r[0],r[5]])
+        countingMeshList.append([r[0],r[6]])
+        countingDiseaseList.append([r[0],r[7]])
+        countingMeshDepthList.append([r[0],r[8]])
+        countingQueriesPerUserList.append([r[0],r[9]])
+        countingQueryRankingList.append([r[0],r[10]])
+        countingQueryInNumbersList.append([r[0],r[11]])
+        countingQueryInCharsList.append([r[0],r[12]])
         
-        '''
-        It is important to run the session analyse first because it is going to eliminate users considered as robots (more than X queries in one unique session)
-        X -> numberOfQueriesInASessionThreshold, but you may want to check it later
-        '''
-        
-        if removeOutliers:
-            outliersToRemove = removeOutliers( createSessions(data) )
-            newData = [member for member in data if member.userId not in outliersToRemove]
-            data = newData
-        
-        numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
-            numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
-            countingSemantics, countingPureSemanticTypes, vectorOfActionSequence,\
-            countingReAccess, idMaxQueriesInSession, vectorOfCicleSequence, countingFullSemanticTypes,\
-                userSemanticType, npSessions = calculateQueriesPerSession(data)
-        
-        semanticTypesCountedByUser, semanticTypesCountedByUserWeighted, setOfUsersWithSemantic = calculateSemanticTypesPercentages(userSemanticType)
-        hasAcronym, countingAcronyms, usersUsingAcronyms = calculateAcronyms(data)
-        numberOfUsers = calculateUsers(data)
-        queryInNumbers, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries,\
-                tenMostCommonTermsNoStopWord, queryInChars = calculateTerms(data)
-        # Calculate basic metrics
-        npTerms = generateStatsVector(queryInNumbers)
-        npChars = generateStatsVector(queryInChars)    
-
-        firstDay, lastDay, countingSessionsPerDay, countingQueriesPerDay, meanSessionsPerDay, meanQueriesPerDay = calculateDates(data)
-        countingNL = calculateNLuse(data)
-        countingQueriesPerUser = calculateQueriesPerUser(data)
-        countingQueryRanking = calculateQueryRanking(data)
-        usersMetrics = calculateMetricsForUsers(data)
-
-        numberOfQueries = sum(countingQueries.values())
-        percentageAcronymInQueries = 100.0 * len(hasAcronym) / numberOfQueries
-
-        hasMeshValues = 0
-        countingMesh, countingDisease, hasMeshValues, countingMeshDepth, usersUsingMesh, mapUserMeanMeshDepth, \
-                countingMeshByUser, countingDiseaseByUser, countingMeshWeightedByUser, countingDiseaseWeightedByUser,\
-                countingMeshWeighted, countingDiseaseWeighted = calculateMesh(data)
-        
-        countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, meanComboScore = calculateCHV(data)
-
-        # Print statistics
-        with open(dataName + ".result", "w") as f:
-            print "Writing file ", dataName + ".result..."
-            f.write("Metrics calculated:\n")
-            printGeneralMetrics(f, numberOfUsers, numberOfQueries, numberOfSessions, firstDay, lastDay)
-            printMetricsForTerms(f, npTerms, npChars, countingTokens, coOccurrenceList, simpleCoOccurrenceList, percentageAcronymInQueries, countingAcronyms, countingNL, numberOfUsers, tenMostCommonTermsNoStopWord, numberOfQueries)
-            printMetricsForQueries(f, greatestQuery, countingQueries, countingQueriesPerDay, meanQueriesPerDay)
-            printMetricsForSessions(f, numberOfSessions, numberOfQueries, npNumQueriesInSession, npTime,\
-                                    numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
-                                   countingSessionsPerDay, meanSessionsPerDay, countingReAccess, numberOfUsers, idMaxQueriesInSession, npSessions)
-            printMeshClassificationMetrics(f, countingMesh, countingDisease, numberOfQueries, hasMeshValues, countingMeshDepth)
-            printSemantic(f, vectorOfActionSequence, vectorOfCicleSequence, countingFullSemanticTypes, numberOfQueries)
-            printOutliers(f, outliersToRemove)
-
-        countingAcronymsList.append([dataName, countingAcronyms])
-        countingTimePerSessionList.append( [ dataName , countingTimePerSession ])
-        countingTokensList.append( [dataName, countingTokens] )
-        countingQueriesList.append([dataName, countingQueries] )
-        countingQueriesPerSessionList.append([dataName, countingQueriesPerSession])
-        countingMeshList.append([dataName, countingMesh])
-        countingDiseaseList.append([dataName, countingDisease])
-        countingMeshDepthList.append([dataName, countingMeshDepth])
-        countingQueriesPerUserList.append( [dataName, countingQueriesPerUser] )
-        countingQueryRankingList.append( [dataName, countingQueryRanking] )
-        countingQueryInNumbersList.append([dataName, queryInNumbers])
-        countingQueryInCharsList.append([dataName, queryInChars])
-
-        #Data for tables
-        numberOfMeshTerms = sum(countingMesh.values())
-        numberOfMeshDiseases = sum(countingDisease.values())
-        numberOfMeshWeightedTerms = sum(countingMeshWeighted.values())
-        numberOfMeshWeightedDiseases = sum(countingDiseaseWeighted.values())
-
-        appendGeneral(generalTableRow, dataName, lastDay, firstDay, numberOfUsers, numberOfQueries, npTerms, npChars, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession, npTime, countingNL, countingReAccess, hasAcronym, percentageAcronymInQueries, usersUsingAcronyms, setOfUsersWithSemantic)
-        appendGeneralModified(generalModifiedRow, dataName, numberOfQueries, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions)
-        appendGeneralMesh(generalMeshRow, dataName, hasMeshValues, numberOfQueries, numberOfMeshTerms, numberOfMeshDiseases, usersUsingMesh, numberOfUsers, mapUserMeanMeshDepth)
-
-        #To avoid division by zero
-        numberOfMeshTerms = numberOfMeshTerms if numberOfMeshTerms != 0 else 1
-        numberOfMeshDiseases = numberOfMeshDiseases if numberOfMeshDiseases != 0 else 1
-        numberOfMeshWeightedTerms = numberOfMeshWeightedTerms if numberOfMeshWeightedTerms != 0 else 1
-        numberOfMeshWeightedDiseases = numberOfMeshWeightedDiseases if numberOfMeshWeightedDiseases != 0 else 1
-        
-        appendMesh(meshTableRow, dataName, countingMesh, numberOfMeshTerms)
-        appendDisease(diseaseTableRow, dataName, countingDisease, numberOfMeshDiseases)
-        appendMeshWeighted(meshTableWeightedRow, dataName, countingMeshWeighted, numberOfMeshWeightedTerms)
-        appendDiseaseWeighted(diseaseTableWeightedRow, dataName, countingDiseaseWeighted, numberOfMeshWeightedDiseases)
-        appendMeshByUser(meshByUserRow, dataName, countingMeshByUser, numberOfUsers)
-        appendDiseaseByUser(diseaseByUserRow, dataName, countingDiseaseByUser, numberOfUsers)
-        appendMeshByUserWeighted(meshByUserWeightedRow, dataName, countingMeshWeightedByUser, numberOfUsers)
-        appendDiseaseByUserWeighte(diseaseByUserWeightedRow, dataName, countingDiseaseWeightedByUser, numberOfUsers)
-
-        # ["Dtst", "Nothing", "Symptom", "Cause", "Remedy", "SymptomCause", "SymptomRemedy", "CauseRemedy", "SymptomCauseRemedy"]
-        totalActions = sum(vectorOfActionSequence)
-        totalActions = 1/100 if totalActions == 0 else totalActions
-        print "Actions -> ", totalActions, " Queries -> ", numberOfQueries
-        appendSemanticFocus(semanticFocusRow, dataName, vectorOfActionSequence, totalActions)
-
-        #["Dtst","Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]
-        totalOfModifiedSessions = sum(vectorOfModifiedSessions)
-        totalOfModifiedSessions = 1/100 if totalOfModifiedSessions == 0 else totalOfModifiedSessions
-        appendModifiedSession( modifiedSessionRow, dataName, vectorOfModifiedSessions, totalOfModifiedSessions)
-        
-        totalCicleSequence = sum(vectorOfCicleSequence)
-        totalCicleSequence = 1/100 if totalCicleSequence == 0 else totalCicleSequence
-        appendCicleSequence(dataName, totalCicleSequence, numberOfSessions, vectorOfCicleSequence)
-    
-        totalMeshDepth = sum(countingMeshDepth.values())
-        totalMeshDepth = 1/100 if totalMeshDepth == 0 else totalMeshDepth
-        
-        appendMeshDepth(meshDepthRow, dataName, totalMeshDepth, countingMeshDepth)
-        appendSemanticByUser(semanticByUserRow, dataName, semanticTypesCountedByUser, numberOfUsers)
-        appendSemanticByUserWeighted(semanticByUserWeightedRow, dataName, numberOfUsers, semanticTypesCountedByUserWeighted)
-        appendBooleanUse(booleanUseRow, dataName, booleanTerms, numberOfQueries)
-        appendCHV(CHVRow, dataName, countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, numberOfQueries, meanComboScore)
-
     # Plot graphics
     if plotGraphs:
         from myPlot import plotter
@@ -181,20 +197,20 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
         plotSizeOfQueries(myPlotter, countingQueryInNumbersList, printValuesToFile, plottingInstalled)
         plotSizeOfWords(myPlotter, countingQueryInCharsList, printValuesToFile, plottingInstalled)
 
-    #Print latex tables:
+       #Print latex tables:
     latexWriter = latexPrinter() 
     for l in generalTableRow: 
-        tableGeneralHeader.append( l )
+        tableGeneralHeader.append(l)
     for l in generalMeshRow:
         tableGeneralMeshHeader.append(l)
     for l in meshTableRow:
-        tableMeshHeader.append( l )
+        tableMeshHeader.append(l)
     for l in diseaseTableRow:
-        tableDiseasesHeader.append( l )
+        tableDiseasesHeader.append(l)
     for l in meshTableWeightedRow:
-        tableWeightedMeshHeader.append( l )
+        tableWeightedMeshHeader.append(l)
     for l in diseaseTableWeightedRow:
-        tableWeightedDiseasesHeader.append( l )
+        tableWeightedDiseasesHeader.append(l)
     for l in semanticFocusRow:
         tableSemanticFocusHeader.append(l)
     for l in modifiedSessionRow:
@@ -242,7 +258,7 @@ def calculateMetrics(dataList, removeStopWords=False, printValuesToFile=True, pl
     latexWriter.addTable(tableBooleanUseHeader, caption="Boolean usage", transpose=True)
     latexWriter.addTable(tableCHVHeader, caption="CHV usage", transpose=True)
 
-    print sum(countingMeshByUser.values()), sum(countingMeshWeightedByUser.values())
+    #print sum(countingMeshByUser.values()), sum(countingMeshWeightedByUser.values())
 
 def calculateCHV(data):
     

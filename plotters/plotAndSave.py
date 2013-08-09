@@ -18,13 +18,13 @@ if len(sys.argv) >= 2:
 #plotGraph(barwidth, saveName="qps.pdf", pp=pp, globString="queriesPerSession*.data", rebaseString="queriesPerSession(?P<base>\w*)", Ylabel="Percentage of Sessions", Xlabel="Session Length (queries)", mapType=int, N=10) 
 
 #plotQuerySize("qs.pdf", pp)
-#plotGraph(barwidth, saveName="qs.eps", pp=pp, ignoreString="Relative", globString="queriesSize*.data", rebaseString="queriesSize(?P<base>\w*)", Ylabel="Number of queries (%)", Xlabel="Terms per query", mapType=float, N=12, plotType="cdf", legendLocation=4, PATH_TO_DATA=PATH_TO_DATA) 
+plotGraph(barwidth, saveName="qs.eps", pp=pp, ignoreString="Relative", globString="queriesSize*.data", rebaseString="queriesSize(?P<base>\w*)", Ylabel="Number of queries (%)", Xlabel="Terms per query", mapType=float, N=12, plotType="cdf", legendLocation=4, PATH_TO_DATA=PATH_TO_DATA) 
 
-#plotGraph(barwidth, saveName="cpq.eps", pp=pp, ignoreString="Relative", globString="wordSize*.data", rebaseString="wordSize(?P<base>\w*)", Ylabel="Number of queries (%)", Xlabel="Characters per query", mapType=float, N=20, plotType="cdf", legendLocation=4, PATH_TO_DATA=PATH_TO_DATA, deltaXTicks=5) 
+plotGraph(barwidth, saveName="cpq.eps", pp=pp, ignoreString="Relative", globString="wordSize*.data", rebaseString="wordSize(?P<base>\w*)", Ylabel="Number of queries (%)", Xlabel="Characters per query", mapType=float, N=50, plotType="cdf", legendLocation=4, PATH_TO_DATA=PATH_TO_DATA, deltaXTicks=5) 
 
-#plotGraph(barwidth, saveName="time.eps", pp=pp, ignoreString="Relative", globString="timePerSession*.data", rebaseString="timePerSession(?P<base>\w*)", Ylabel="Number of Sessions (%)", Xlabel="Time Per Session (s)", mapType=float, roundX=True, N=3000, plotType="cdf", legendLocation=4, PATH_TO_DATA=PATH_TO_DATA, XStartsFrom=0, deltaXTicks = 500) 
+plotGraph(barwidth, saveName="time.eps", pp=pp, ignoreString="Relative", globString="timePerSession*.data", rebaseString="timePerSession(?P<base>\w*)", Ylabel="Number of Sessions (%)", Xlabel="Time Per Session (s)", mapType=float, roundX=True, N=3000, plotType="cdf", legendLocation=4, PATH_TO_DATA=PATH_TO_DATA, XStartsFrom=0, deltaXTicks = 500) 
 
-plotGraph(barwidth, saveName="qpsession.eps", pp=pp, ignoreString="Relative", globString="queriesPerSession*.data", rebaseString="queriesPerSession(?P<base>\w*)", Ylabel="Number of Sessions (%)", Xlabel="Queries Per Session (s)", mapType=float, N=30, plotType="cdf", legendLocation=4, PATH_TO_DATA=PATH_TO_DATA, deltaXTicks = 5) 
+plotGraph(barwidth, saveName="qpsession.eps", pp=pp, ignoreString="Relative", globString="queriesPerSession*.data", rebaseString="queriesPerSession(?P<base>\w*)", Ylabel="Number of Sessions (%)", Xlabel="Queries Per Session", mapType=float, N=30, plotType="cdf", legendLocation=4, PATH_TO_DATA=PATH_TO_DATA, deltaXTicks = 5) 
 
 #plotGraph(barwidth, saveName="qs.eps", pp=pp, ignoreString="Relative", globString="queriesSize*.data", rebaseString="queriesSize(?P<base>\w*)", Ylabel="Number of queries (%)", Xlabel="Terms per query", mapType=float, N=5, plotType="bar", legendLocation=1, PATH_TO_DATA=PATH_TO_DATA) 
 

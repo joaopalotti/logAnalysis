@@ -1,8 +1,8 @@
 
 #from nltk import word_tokenize, wordpunct_tokenize
-from nltk.tokenize.punkt import PunktWordTokenizer
 import numpy as np
 import copy
+from nltk.tokenize.punkt import PunktWordTokenizer
 
 PATH_TO_AUX_FILES = "auxFiles/"
 

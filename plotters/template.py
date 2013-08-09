@@ -184,7 +184,14 @@ def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r
             print "LENS ----> x = %d, cy = %d, y = %d, data = %d" % (len(xs), len(CY), len(Y), len(data))
             print xs
             print CY
-            rects[name] = ax.plot(xs, CY, color=c, label=name)
+            if name == "Experts" or name == "Laypeople":
+                rects[name] = ax.plot(xs, CY, color=c, label=name, linestyle="solid")
+            elif name == "AOL-Health" or name == "HON":
+                rects[name] = ax.plot(xs, CY, color=c, label=name, linestyle="dashed")
+            elif name == "GoldMiner" or name == "TRIP":
+                rects[name] = ax.plot(xs, CY, color=c, label=name, linestyle="dotted")
+            elif name == "AOL-NotHealth":
+                rects[name] = ax.plot(xs, CY, color=c, label=name, linestyle="dashdot")
 
         print "Using color ", c, " for data ", name
         sumWidth += width

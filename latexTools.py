@@ -34,7 +34,8 @@ class latexPrinter:
         #Check if all rows have the same size
         #assert( len(set([ len(r) for r in rows] )) == 1)
         self.document.write("\\begin{table}[ht]\n")
-        self.document.write("\\begin{center}\n")
+        #self.document.write("\\begin{center}\n")
+        self.document.write("\\hspace{-3cm}\n")
              
         if transpose:
             cols = 'c|' * len(rows)
@@ -69,7 +70,7 @@ class latexPrinter:
         self.document.write("\\end{tabular}\n")
         if caption:
             self.document.write("\\caption{" + caption + "}\n")
-        self.document.write("\\end{center}\n")
+        #self.document.write("\\end{center}\n")
         self.document.write("\\end{table}\n")
 
     def __escapeChars(self, s):
