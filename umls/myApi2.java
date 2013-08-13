@@ -526,19 +526,24 @@ public class myApi2 {
                     }
                     
                     String [] toWrite = new String [nextLine.length + processed.size() - 2];
-                    
+                   
+                    // in version 5, we need to write the umls in the positions 4 and 5 (starting the counting from 0)
                     int j = 0;
+
                     //Two last cols should be empty strings
-                    for(  ; j < nextLine.length - 2; j++){
+                    for(  ; j < 4; j++){
                         toWrite[j] = nextLine[j]; 
                     }
                     
                     for( int k = 0  ; k  < processed.size(); j++, k++){
-                        
                         System.out.println(" element ---> " + processed.get(k));
                         toWrite[j] = processed.get( k );
                     }
-
+                    
+                    for(  ; j < nextLine.length; j++){
+                        toWrite[j] = nextLine[j]; 
+                    }
+ 
                     writer.writeNext(toWrite, false);
                     writer.flush();
                     lineNumber++;
