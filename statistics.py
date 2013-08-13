@@ -14,7 +14,7 @@ SOME IMPORTANT NOTES:
 """
 
 # GLOBAL VARIABLES:
-usingScoop = True
+usingScoop = False
 numberOfQueriesInASessionThreshold = 100
 removeOutliers=True
 plottingInstalled=False

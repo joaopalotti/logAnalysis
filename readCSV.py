@@ -114,10 +114,12 @@ def readMyFormat(filename, version, verbose=True):
 
         if version == "v4" and len(row) != 6:
             print "Version4 --- (len(row) !=6) ERROR in this line: ", row
+            sys.exit(0)
             continue
         
         if version == "v5" and len(row) != 11:
             print "Version5 --- (len(row) !=11) ERROR in this line: ", row
+            sys.exit(0)
             continue
         
         #No keywords in this line, skip it

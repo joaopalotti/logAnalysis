@@ -3,8 +3,8 @@ from collections import Counter
 import math, sys
 
 # comment if you cannot install pylab
-from pylab import *
-from matplotlib.backends.backend_pdf import PdfPages
+#from pylab import *
+#from matplotlib.backends.backend_pdf import PdfPages
 
 PATH_TO_SAVE="plots/"
 
