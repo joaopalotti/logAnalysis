@@ -13,9 +13,10 @@ acronymsSet = createAcronymSet()
 minimalNumberOfQueries = "Invalid number...please enter this parameter!"
 maximalNumberOfQueries = 100
 formatVersion = "v5"
-simpleTest = True
+simpleTest = False
 pathToData = "../logAnalysisDataSets/"
-
+honAug = True
+aolClean = True
 
 ### HOW TO USE:
 #   python createFeatureVector.py minimalNumberOfQueries 
@@ -370,22 +371,30 @@ def mergeFVs(*fvs):
     return newDict
 
 def healthNotHealthUsers():
-    
-    if not simpleTest:
-        honFV = createFV(pathToData + "/hon/honEnglish." + formatVersion + ".dataset.gz", 0)
-        aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthCompleteFixed4." + formatVersion + ".dataset.gz", 0)
-        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".dataset.gz", 0)
-        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".dataset.gz", 0)
-        notHealth = createFV(pathToData + "/aolNotHealth/aolNotHealthPartial." + formatVersion + ".dataset.gz", 1)
-
     if simpleTest:
         # 1% of the dataset only
         honFV = createFV(pathToData + "/hon/honEnglish." + formatVersion + ".1.dataset..gz", 0)
         aolHealthFV = createFV(pathToData + "/aolHealth/aolHealth." + formatVersion + ".1.dataset.gz", 0)
         goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 0)
         tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".1.dataset.gz", 0)
-    
-        notHealth = createFV(pathToData + "/aolNotHealth/aolNotHealthPartial."+ formatVersion + ".1.gz", 1)
+        notHealth = createFV(pathToData + "/aolNotHealth/aolNotHealthFinal-noDash.v5."+ formatVersion + ".1.dataset.gz", 1)
+   
+    else:
+        if honAug:
+            honFV = createFV(pathToData + "/hon/honAugEnglish." + formatVersion + ".dataset.gz", 0)
+        else:
+            honFV = createFV(pathToData + "/hon/honEnglish." + formatVersion + ".dataset.gz", 0)
+
+        if aolClean:
+            aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthClean." + formatVersion + ".dataset.gz", 0)
+            notHealth = createFV(pathToData + "/aolNotHealth/aolNotHealthNoAnimal-noDash." + formatVersion + ".dataset.gz", 1)
+        else:
+            aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthCompleteFixed5." + formatVersion + ".dataset.gz", 0)
+            notHealth = createFV(pathToData + "/aolNotHealth/aolNotHealthFinal-noDash." + formatVersion + ".dataset.gz", 1)
+        
+        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".dataset.gz", 0)
+        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".dataset.gz", 0)
+
 
     ### Merge Feature sets and transforme them into inputs
     healthUserFV = mergeFVs(honFV, aolHealthFV, goldMinerFV, tripFV)
@@ -409,19 +418,30 @@ def regularMedicalUsers():
     ### Load Datasets
     ##
     #
-    
-    if not simpleTest:
-        honFV = createFV(pathToData + "/hon/honEnglish." + formatVersion + ".dataset.gz", 0)
-        aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthCompleteFixed4." + formatVersion + ".dataset.gz", 0)
+    if simpleTest:
+        # 1 or 10% of the dataset only
+        if honAug:
+            honFV = createFV(pathToData + "/hon/honAugEnglish."+ formatVersion + ".1.dataset.gz", 0)
+        else:
+            honFV = createFV(pathToData + "/hon/honEnglish."+ formatVersion + ".1.dataset.gz", 0)
+
+        aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthCompleteFixed5." + formatVersion + ".1.dataset.gz", 0)
+        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 1)
+        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".1.dataset.gz", 1)
+   
+    else:
+        if honAug:
+            honFV = createFV(pathToData + "/hon/honAugEnglish." + formatVersion + ".dataset.gz", 0)
+        else:
+            honFV = createFV(pathToData + "/hon/honEnglish." + formatVersion + ".dataset.gz", 0)
+
+        if aolClean:
+            aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthClean." + formatVersion + ".dataset.gz", 0)
+        else:
+            aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthCompleteFixed5." + formatVersion + ".dataset.gz", 0)
         goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".dataset.gz", 1)
         tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".dataset.gz", 1)
     
-    if simpleTest:
-        # 1 or 10% of the dataset only
-        honFV = createFV(pathToData + "/hon/honEnglish."+ formatVersion + ".1.dataset.gz", 0)
-        aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthCompleteFixed4." + formatVersion + ".1.dataset.gz", 0)
-        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 1)
-        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".1.dataset.gz", 1)
 
     ####
     ### Merge Feature sets and transforme them into inputs

@@ -12,7 +12,7 @@ testing = "" # "1."
 
 if __name__ == "__main__":
 
-    if toyExaple:
+    if toyExample:
         in50 = readMyFormat("in50", "v5")
         in502 = readMyFormat("in50", "v5")
         datasets =  [ [in50, "in50"], [in502, "in50-2"] ] 

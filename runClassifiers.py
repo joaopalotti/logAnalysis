@@ -55,7 +55,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
 
     print "using seed -> ", nseed
 
-    print preProcessing
+    print preProcessingMethod
     if forceBalance > 0:
         print "Forcing only %s examples for each dataset" % (forceBalance)
 
@@ -102,7 +102,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     print "Vectorized"
    
     print "Preprocessing data"
-    X = preProcessing(X_noProcess, preProcessingMethod)
+    X = preprocessing(X_noProcess, preProcessingMethod)
     
     n_samples, n_features = X.shape
     ####
