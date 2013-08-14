@@ -14,7 +14,6 @@ SOME IMPORTANT NOTES:
 """
 
 # GLOBAL VARIABLES:
-usingScoop = False
 numberOfQueriesInASessionThreshold = 100
 removeOutliers=True
 plottingInstalled=False
@@ -22,11 +21,9 @@ removeStopWords=False
 printValuesToFile=True
 plotGraphs=True
 
-if usingScoop:
-    from scoop import futures
 
 def calculateMetrics(dataPair):
-
+    
     originalData, dataName = dataPair[0], dataPair[1]
     print "Processing information for data: ", dataName
 
@@ -139,9 +136,12 @@ def calculateMetrics(dataPair):
     
     return dataName, countingAcronyms, countingTimePerSession, countingTokens, countingQueries, countingQueriesPerSession, countingMesh, countingDisease, countingMeshDepth, countingQueriesPerUser, countingQueryRanking, queryInNumbers, queryInChars
 
-def calculateStatistics(dataList):    
+def calculateStatistics(dataList, usingScoop):    
     #everything related to tables are set aside in the tables.py
-        
+    
+    if usingScoop:
+        from scoop import futures
+   
     """
         Expected a list of list of DataSet (TripData or AolData) objects
     """
