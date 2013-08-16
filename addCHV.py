@@ -19,7 +19,7 @@ outfilename = sys.argv[3]
 
 popularNames = []
 
-data = readMyFormat(v4datasetFile, "v4")
+data = readMyFormat(v4datasetFile, "v5")
 queries = []
 
 from collections import defaultdict

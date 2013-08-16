@@ -1,8 +1,8 @@
 
 ### This module was created to filter the non english chars from the health on the net data.
+import re,sys
 
-import re
-
+filename=sys.argv[1]
 
 def isAllAlpha(text):
     text = re.sub("[\w\s]","", text)
@@ -17,11 +17,8 @@ def onlyRomanChars(s):
         return False
 
 
-filename="dataSets/honAll.csv"
-
 with open(filename) as f:
     lines = f.readlines()
-
 
 for line in lines:
     if onlyRomanChars(line):

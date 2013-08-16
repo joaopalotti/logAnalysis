@@ -34,7 +34,12 @@ def createAcronymSet():
                 acronymsSet.add( (line.split(",", 1)[0].strip()).lower() )
    
     # Remove very common words from acronyms:
-    commonWordsSet = set(["and", "on", "map", "is", "car", "at", "san", "art", "from", "air", "la", "des", "en", "le", "les", "y", "e", "or", "vs", "help", "charge", "has", "l", "los", "non", "do", "las", "dr", "as", "be", "dos", "men", "con", "no", "who", "ppt", "us", "bad","all","msn","fish","pet","gas","camp","dvd","rv","ass","cat","god","sample","gift","sign","if","anna","was","don","cd","abc","t","s","ca","fl","va","inc","co","it","st","nc","top","ma","tips","soap","rice","stop","aid","mom","fast","his","cold","india","see","ten","rap","toe","add","bat","got","tee","bra","lab"])
+    commonWordsSet = set(["and", "on", "map", "is", "car", "at", "san", "art", "from", "air", "la", "des", "en", "le", "les", "y", "e", "or", "vs", "help", \
+                          "charge", "has", "l", "los", "non", "do", "las", "dr", "as", "be", "dos", "men", "con", "no", "who", "ppt", "us",\
+                          "bad","all","msn","fish","pet","gas","camp","dvd","rv","ass","cat","god","sample","gift","sign","if","anna","was","don","cd","abc","t",\
+                          "s","ca","fl","va","inc","co","it","st","nc","top","ma","tips","soap","rice","stop","aid","mom","fast","his","cold","india","see","ten",\
+                          "rap","toe","add","bat","got","tee","bra","lab","yo","im","so","mac","xp","tab","him","cobra","nice","prom","psp","cam","sam","cbs","jc",\
+                          "mr","hit","crest", "oz", "mid", "comp", "vin", "arm", "per","fe","gmc","aaa"])
     americanStates = set(["us", "al", "ak", "az", "ar","ca","co","ct","de","fl","ga","hi","ha","cl","cf","id","il","in","ia","ks","ka","ky","la","me","md","ma","mi","ms","mc","mn","mo","mt","ne","nb","nv","nh","nj","ny","nm","nc","nd","oh","ok","or","pa","ri","sc","sd","tx","tn","ut","vt","va","wa","wv",",wn","wi","wy","as","gu","mp","pr","vi","um","fm","mh","pw","aa","ae","ap","cm","cz","nb","pi","tt"])
     oneLetter=set(["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"])
     

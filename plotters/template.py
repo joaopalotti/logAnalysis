@@ -67,7 +67,7 @@ def normalize(values, total):
     #print "OUTPUT = ", vs
     return vs
 
-def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r','b','g','c','m','k','y'], PATH_TO_DATA="/home/palotti/Dropbox/tuwien/PhD/logs/logAnalysis/plots/", globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*", Ylabel='Percentage of Occurences', Xlabel='Mesh Depth', mapType=int, N=None, absolute=False, plotType="cdf", legendLocation=1, deltaXTicks=0, CDFMultiplier=100, XStartsFrom=1, roundX=False):
+def plotGraph(barwidth=20, saveName=None, pp=None, ignoreString=None, colors=['r','m','b','c','k','g','y'], PATH_TO_DATA="/home/palotti/Dropbox/tuwien/PhD/logs/logAnalysis/plots/", globString="meshDepth*.data", rebaseString="meshDepth(?P<base>\w*", Ylabel='Percentage of Occurences', Xlabel='Mesh Depth', mapType=int, N=None, absolute=False, plotType="cdf", legendLocation=1, deltaXTicks=0, CDFMultiplier=100, XStartsFrom=1, roundX=False):
 
     if absolute == True and plotType == "cdf":
         print "Please, user ABSOLUTE = False"
