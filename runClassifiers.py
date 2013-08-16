@@ -45,14 +45,16 @@ def transformeInDict(userDict, n=-1, proportional=-1):
     return listOfDicts, listOfLabels
 
 
-def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed):
+def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers):
    
-    medicalUserDataSet = "medicalUser-%d.pk" % (minNumberOfQueries)
-    regularUserDataSet = "regularUser-%d.pk" % (minNumberOfQueries)
+    if healthUsers:
+        positiveOutputFile = "healthUser-%d-%s.pk" % (minimalNumberOfQueries, explanation)
+        negativeOutputFile = "notHealthUser-%d-%s.pk" % (minimalNumberOfQueries, explanation)
+    else:
+        negativeOutputFile = "regularUser-%d-%s.pk" % (minimalNumberOfQueries, explanation)
+        positiveOutputFile = "medicalUser-%d-%s.pk" % (minimalNumberOfQueries, explanation)
     
-    healthUserDataSet = "healthUser-%d.pk"   % (minNumberOfQueries)
-    notHealthUserDataSet = "notHealthUser-%d.pk" % (minNumberOfQueries)
-
+    
     print "using seed -> ", nseed
 
     print preProcessingMethod
@@ -70,18 +72,16 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     ##
     #
     print "Loading the datasets..."
-    with open(regularUserDataSet, 'rb') as input:
-    #with open(notHealthUserDataSet, 'rb') as input:
-        regularUserFV = pickle.load(input)
+    with open(negativeOutputFile, 'rb') as input:
+        negativeUserFV = pickle.load(input)
     
-    with open(medicalUserDataSet, 'rb') as input:
-    #with open(healthUserDataSet, 'rb') as input:
-        medicalUserFV = pickle.load(input)
+    with open(positiveOutputFile, 'rb') as input:
+        positiveUserFV = pickle.load(input)
     print "Loaded"
 
     print "Transforming datasets into Dictionaries..."
-    ld1, ll1 = transformeInDict(regularUserFV, forceBalance, proportional)
-    ld2, ll2 = transformeInDict(medicalUserFV, forceBalance, proportional)
+    ld1, ll1 = transformeInDict(negativeUserFV, forceBalance, proportional)
+    ld2, ll2 = transformeInDict(positiveUserFV, forceBalance, proportional)
     print "Transformed"
     
     listOfDicts = ld1 + ld2
@@ -180,6 +180,8 @@ if __name__ == "__main__":
     op.add_option("--proportional", "-g", action="store", type="int", dest="proportional", help="Force proportion of the data to X%.", metavar="X", default=-1)
     op.add_option("--minNumberOfQueries", "-m", action="store", type="int", dest="minNumberOfQueries", help="Define the min. number of queries (X) necessary to use a user for classification.  [default: %default]", metavar="X", default=5)
     op.add_option("--nseed", "-s", action="store", type="int", dest="nseed", help="Seed used for random processing during classification.  [default: %default]", metavar="X", default=29)
+    op.add_option("--explanation", "-e", action="store", type="string", dest="explanation", help="Prefix to include in the created files", metavar="N", default="")
+    op.add_option("--healthUsers", "-u", action="store_true", dest="healthUsers", help="Use if you want to create a health/not health user feature file", default=False)
 
     (opts, args) = op.parse_args()
     if len(args) > 0:
@@ -190,5 +192,5 @@ if __name__ == "__main__":
     print "Forcing Balance = ",opts.forceBalance
     print "Proportional =",opts.proportional
 
-    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed)
+    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.explanation, opts.healthUsers)
 

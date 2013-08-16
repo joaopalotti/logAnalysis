@@ -1,6 +1,7 @@
 from __future__ import division
 from itertools import groupby
 from collections import Counter, defaultdict 
+from optparse import OptionParser
 import sys
 
 #My classes
@@ -10,8 +11,6 @@ from statistics import createSessions
 
 removeStopWords=False
 acronymsSet = createAcronymSet()
-minimalNumberOfQueries = "Invalid number...please enter this parameter!"
-maximalNumberOfQueries = 100
 formatVersion = "v5"
 simpleTest = False
 pathToData = "../logAnalysisDataSets/"
@@ -337,11 +336,11 @@ def createDictOfUsers(data, label):
 
     return userDict
 
-def createFV(filename, label):
-    print "min = ", minimalNumberOfQueries, " max = ", maximalNumberOfQueries
+def createFV(filename, label, minNumberOfQueries, maxNumberOfQueries):
+    print "min = ", minNumberOfQueries, " max = ", maxNumberOfQueries
     data = readMyFormat(filename, formatVersion) 
     data = preProcessData(data, removeStopWords)    # Sort the data by user and date
-    data = keepUsersInsideLimiteOfQueires(data, minimalNumberOfQueries, maximalNumberOfQueries)
+    data = keepUsersInsideLimiteOfQueires(data, minNumberOfQueries, maxNumberOfQueries)
     
     userDict = createDictOfUsers(data, label)
     
@@ -370,38 +369,38 @@ def mergeFVs(*fvs):
 
     return newDict
 
-def healthNotHealthUsers():
+def healthNotHealthUsers(minimalNumberOfQueries, maxNumberOfQueries):
     if simpleTest:
         # 1% of the dataset only
-        honFV = createFV(pathToData + "/hon/honEnglish." + formatVersion + ".1.dataset..gz", 0)
-        aolHealthFV = createFV(pathToData + "/aolHealth/aolHealth." + formatVersion + ".1.dataset.gz", 0)
-        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 0)
-        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".1.dataset.gz", 0)
-        notHealth = createFV(pathToData + "/aolNotHealth/aolNotHealthFinal-noDash.v5."+ formatVersion + ".1.dataset.gz", 1)
+        honFV = createFV(pathToData + "/hon/honEnglish." + formatVersion + ".1.dataset..gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+        aolHealthFV = createFV(pathToData + "/aolHealth/aolHealth." + formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+        notHealth = createFV(pathToData + "/aolNotHealth/aolNotHealthFinal-noDash.v5."+ formatVersion + ".1.dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
    
     else:
         if honAug:
-            honFV = createFV(pathToData + "/hon/honAugEnglish." + formatVersion + ".dataset.gz", 0)
+            honFV = createFV(pathToData + "/hon/honAugEnglish." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
         else:
-            honFV = createFV(pathToData + "/hon/honEnglish." + formatVersion + ".dataset.gz", 0)
+            honFV = createFV(pathToData + "/hon/honEnglish." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
 
         if aolClean:
-            aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthClean." + formatVersion + ".dataset.gz", 0)
-            notHealth = createFV(pathToData + "/aolNotHealth/aolNotHealthNoAnimal-noDash." + formatVersion + ".dataset.gz", 1)
+            aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthClean." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+            notHealth = createFV(pathToData + "/aolNotHealth/aolNotHealthNoAnimal-noDash." + formatVersion + ".dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
         else:
-            aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthCompleteFixed5." + formatVersion + ".dataset.gz", 0)
-            notHealth = createFV(pathToData + "/aolNotHealth/aolNotHealthFinal-noDash." + formatVersion + ".dataset.gz", 1)
+            aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthCompleteFixed5." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+            notHealth = createFV(pathToData + "/aolNotHealth/aolNotHealthFinal-noDash." + formatVersion + ".dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
         
-        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".dataset.gz", 0)
-        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".dataset.gz", 0)
+        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
 
 
     ### Merge Feature sets and transforme them into inputs
     healthUserFV = mergeFVs(honFV, aolHealthFV, goldMinerFV, tripFV)
     notHealthUserFV = notHealth
  
-    healthUserOutputFile = "healthUser-%d.pk" % (minimalNumberOfQueries)
-    notHealthUserOutputFile = "notHealthUser-%d.pk" % (minimalNumberOfQueries)
+    healthUserOutputFile = "healthUser-%d-%s.pk" % (minimalNumberOfQueries, explanation)
+    notHealthUserOutputFile = "notHealthUser-%d-%s.pk" % (minimalNumberOfQueries, explanation)
    
     ####### Save and Load the Features
     import pickle
@@ -413,7 +412,7 @@ def healthNotHealthUsers():
         pickle.dump(notHealthUserFV, output, pickle.HIGHEST_PROTOCOL)
         print "CREATED FILE: %s" % (notHealthUserOutputFile)
 
-def regularMedicalUsers():
+def regularMedicalUsers(minimalNumberOfQueries, maxNumberOfQueries, explanation):
     ####
     ### Load Datasets
     ##
@@ -421,26 +420,26 @@ def regularMedicalUsers():
     if simpleTest:
         # 1 or 10% of the dataset only
         if honAug:
-            honFV = createFV(pathToData + "/hon/honAugEnglish."+ formatVersion + ".1.dataset.gz", 0)
+            honFV = createFV(pathToData + "/hon/honAugEnglish."+ formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
         else:
-            honFV = createFV(pathToData + "/hon/honEnglish."+ formatVersion + ".1.dataset.gz", 0)
+            honFV = createFV(pathToData + "/hon/honEnglish."+ formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
 
-        aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthCompleteFixed5." + formatVersion + ".1.dataset.gz", 0)
-        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 1)
-        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".1.dataset.gz", 1)
+        aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthCompleteFixed5." + formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
+        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".1.dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
    
     else:
         if honAug:
-            honFV = createFV(pathToData + "/hon/honAugEnglish." + formatVersion + ".dataset.gz", 0)
+            honFV = createFV(pathToData + "/hon/honAugEnglish." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
         else:
-            honFV = createFV(pathToData + "/hon/honEnglish." + formatVersion + ".dataset.gz", 0)
+            honFV = createFV(pathToData + "/hon/honEnglish." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
 
         if aolClean:
-            aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthClean." + formatVersion + ".dataset.gz", 0)
+            aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthClean." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
         else:
-            aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthCompleteFixed5." + formatVersion + ".dataset.gz", 0)
-        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".dataset.gz", 1)
-        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".dataset.gz", 1)
+            aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthCompleteFixed5." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
+        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
     
 
     ####
@@ -452,8 +451,8 @@ def regularMedicalUsers():
     regularUserFV = honFV
     medicalUserFV = goldMinerFV
 
-    regularUserOutputFile = "regularUser-%d.pk" % (minimalNumberOfQueries)
-    medicalUserOutputFile = "medicalUser-%d.pk" % (minimalNumberOfQueries)
+    regularUserOutputFile = "regularUser-%d-%s.pk" % (minimalNumberOfQueries, explanation)
+    medicalUserOutputFile = "medicalUser-%d-%s.pk" % (minimalNumberOfQueries, explanation)
 
     ####### Save and Load the Features
     import pickle
@@ -467,6 +466,20 @@ def regularMedicalUsers():
     
 if __name__ == "__main__":
 
-    minimalNumberOfQueries = int(sys.argv[1])
-    regularMedicalUsers()
-    #healthNotHealthUsers()
+    op = OptionParser(version="%prog 1")
+    
+    op.add_option("--minNumberOfQueries", "-m", action="store", type="int", dest="minNumberOfQueries", help="Define the min. number of queries (X) necessary to use a user for classification.  [default: %default]", metavar="X", default=5)
+    op.add_option("--maxNumberOfQueries", "-M", action="store", type="int", dest="maxNumberOfQueries", help="Define the max. number of queries (X) necessary to use\
+                  a user for classification.  [default: %default]", metavar="X", default=100)
+    op.add_option("--explanation", "-e", action="store", type="string", dest="explanation", help="Prefix to include in the created files", metavar="N", default="")
+    op.add_option("--healthUsers", "-u", action="store_true", dest="healthUsers", help="Use if you want to create a health/not health user feature file", default=False)
+
+    (opts, args) = op.parse_args()
+    if len(args) > 0:
+        print "This program does not receive parameters this way: use -h to see the options."
+
+    if opts.healthUsers:
+        healthNotHealthUsers(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation)
+    else:
+        regularMedicalUsers(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation)
+
