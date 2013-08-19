@@ -2,7 +2,8 @@ import csv
 from DataSet import DataSet
 from datetime import datetime
 from time import time
-import gzip, sys
+import sys
+from auxiliarFunctions import openZip
 
 '''check if two rows belong to the same user and during the same session (defined by default as a 30 min time'''
 def checkSession(previousRow, currentRow, timeBetweenInSeconds=60*30, dateFormat='%Y-%m-%d %H:%M:%S', idIndex=0, dateIndex=2, usingTimestamp=False):
@@ -22,11 +23,6 @@ def checkSession(previousRow, currentRow, timeBetweenInSeconds=60*30, dateFormat
                 return True
     return False
 
-def openZip(filename):
-    if filename.endswith(".gz"):
-        return gzip.open(filename, 'rb')
-    else:
-        return open(filename, 'rb')
 
 def readKhresmoiRank(filename):
     print ("Reading file: ", filename)

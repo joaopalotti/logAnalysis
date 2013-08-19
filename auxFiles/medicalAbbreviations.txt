@@ -1461,8 +1461,7 @@ prn,
 PRN,as necessary (from Latin pro re nata) (if used in chronic pain control, sometimes disparagingly termed "pain relief nil"), as needed
 Prog,   prognosis
 PROM,   premature rupture of membranes
-PRP,panretinal photocoagulation
-progressive,rubella panencephalitis
+PRP,panretinal photocoagulation progressive,rubella panencephalitis
 PRV,polycythemia rubra vera (see polycythemia vera)
 PSA,prostate-specific antigen
 PSC,Primary sclerosing cholangitis

@@ -1,13 +1,18 @@
 
 #from nltk import word_tokenize, wordpunct_tokenize
 import numpy as np
-import copy
+import copy, gzip
 from nltk.tokenize.punkt import PunktWordTokenizer
 
 PATH_TO_AUX_FILES = "auxFiles/"
 
 NLWords = ["would", "wouldn't", "wouldnt", "could", "couldn't", "couldnt", "should", "shouldn't", "shouldnt", "how", "when", "where", "which", "who", "whom", "can", "cannot", "why", "what", "we", "they", "i", "do", "does", "must", "ought", "whats", "wheres", "whos"]
 
+def openZip(filename):
+    if filename.endswith(".gz"):
+        return gzip.open(filename, 'rb')
+    else:
+        return open(filename, 'rb')
 
 def generateStatsVector(values):
     return npStatistics(values)
@@ -21,17 +26,30 @@ class npStatistics:
         self.median = np.median(values)
         self.std    = np.std(values) 
 
-def createAcronymSet():
+def createAcronymSet(usingAdamAbbreviations):
     acronymsSet = set()
     #http://en.wikipedia.org/wiki/List_of_acronyms_for_diseases_and_disorders
     #http://en.wikipedia.org/wiki/List_of_abbreviations_for_medical_organisations_and_personnel
     #http://en.wikipedia.org/wiki/Acronyms_in_healthcare
     #http://en.wikipedia.org/wiki/List_of_medical_abbreviations -- From A to Z
 
-    for filename in [ "diseasesAcronyms.txt", "healthCareAcronyms.txt", "organizationAcronyms.txt", "medicalAbbreviations.txt" ]:
-        with open(PATH_TO_AUX_FILES + filename,"r") as f:
-            for line in f.readlines():
-                acronymsSet.add( (line.split(",", 1)[0].strip()).lower() )
+    # or http://arrowsmith.psych.uic.edu/arrowsmith_uic/adam.html
+    if usingAdamAbbreviations:
+        threshold = 100
+        adam = openZip(PATH_TO_AUX_FILES + "adam_database.gz")
+        for line in adam.readlines():
+            if line.startswith("#"):
+                continue
+            else:
+                fields = line.strip().split("\t")
+                if int(fields[4]) >= 100:
+                    acronymsSet.add(fields[0].lower())
+    
+    else:
+        for filename in [ "diseasesAcronyms.txt", "healthCareAcronyms.txt", "organizationAcronyms.txt", "medicalAbbreviations.txt" ]:
+            with open(PATH_TO_AUX_FILES + filename,"r") as f:
+                for line in f.readlines():
+                    acronymsSet.add( (line.split(",", 1)[0].strip()).lower() )
    
     # Remove very common words from acronyms:
     commonWordsSet = set(["and", "on", "map", "is", "car", "at", "san", "art", "from", "air", "la", "des", "en", "le", "les", "y", "e", "or", "vs", "help", \
@@ -47,6 +65,7 @@ def createAcronymSet():
     acronymsSet -= americanStates
     acronymsSet -= oneLetter
 
+    print "Using %d acronyms" % (len(acronymsSet))
     #for a in acronymsSet:
     #    print a
     return acronymsSet

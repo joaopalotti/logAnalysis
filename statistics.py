@@ -20,7 +20,7 @@ plottingInstalled=False
 removeStopWords=False
 printValuesToFile=True
 plotGraphs=True
-
+usingAdamAbbreviations=True
 
 def calculateMetrics(dataPair):
     
@@ -458,7 +458,7 @@ def calculateDates(data):
 
 def calculateAcronyms(data):
     
-    acronymsSet = createAcronymSet()
+    acronymsSet = createAcronymSet(usingAdamAbbreviations)
 
     # Get the number of queries that have acronyms
     hasAcronym = [ member.keywords for member in data for word in member.keywords if word in acronymsSet]
@@ -470,7 +470,7 @@ def calculateAcronyms(data):
     #Get the set of users using acronyms
     usersUsingAcronyms = set([member.userId for member in data for word in member.keywords if word in acronymsSet])
 
-    #print "users usingscronyms : ", usersUsingAcronyms
+    #print "Users usingscronyms : ", usersUsingAcronyms
     #print "HAS ACRONYM: ", hasAcronym
     #print "counting : ", countingAcronyms
 
