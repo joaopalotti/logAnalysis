@@ -46,6 +46,9 @@ def createAcronymSet():
     acronymsSet -= commonWordsSet
     acronymsSet -= americanStates
     acronymsSet -= oneLetter
+
+    #for a in acronymsSet:
+    #    print a
     return acronymsSet
 
     

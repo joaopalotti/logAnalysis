@@ -16,7 +16,7 @@ if __name__ == "__main__":
         in50 = readMyFormat("in50", "v5")
         in502 = readMyFormat("in50", "v5")
         datasets =  [ [in50, "in50"], [in502, "in50-2"] ] 
-        calculateStatistics(datasets)
+        calculateStatistics(datasets, usingScoop)
         sys.exit(0)
 
     goldMiner = readMyFormat(PATH_TO_DATASETS + "goldminer/goldMiner.v5." + testing + "dataset.gz", "v5")
