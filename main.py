@@ -6,9 +6,15 @@ PATH_TO_DATASETS = "../logAnalysisDataSets/"
 usingScoop = False
 cikm = False
 usingAugHON = True
-testingAOLNotHealth = True
 toyExample = False
 testing = "" # "1."
+
+aolNotHealthOption = 4
+# 0) NOT using it
+# 1) aolNotHealthFinal-noDash 
+# 2) aolHealthNoAnimal-noDash-clicked
+# 3) aolNotHealthODP
+# 4) aolNotHealthODPNoScience
 
 if __name__ == "__main__":
 
@@ -26,20 +32,26 @@ if __name__ == "__main__":
         hon = readMyFormat(PATH_TO_DATASETS + "hon/honEnglish.v5." + testing + "dataset.gz", "v5")
 
     trip = readMyFormat(PATH_TO_DATASETS + "trip/trip.v5." + testing + "dataset.gz", "v5")
-    
+         
+    if aolNotHealthOption > 0:
+        if aolNotHealthOption == 1:
+            aolNotHealth = readMyFormat(PATH_TO_DATASETS + "aolNotHealth/aolNotHealthFinal-noDash.v5." + testing + "dataset.gz", "v5")
+        elif aolNotHealthOption == 2:
+            aolNotHealth = readMyFormat(PATH_TO_DATASETS + "aolNotHealth/aolNotHealthNoAnimal-noDash-clicked.v5." + testing + "dataset.gz", "v5")
+        elif aolNotHealthOption == 3:
+            aolNotHealth = readMyFormat(PATH_TO_DATASETS + "aolNotHealth/aolNotHealthODP.v5." + testing + "dataset.gz", "v5")
+        elif aolNotHealthOption == 4:
+            aolNotHealth = readMyFormat(PATH_TO_DATASETS + "aolNotHealth/aolNotHealthODPNoScience.v5." + testing + "dataset.gz", "v5")
+   
     if cikm:
         aolHealth = readMyFormat(PATH_TO_DATASETS + "aolHealth/aolHealthCompleteFixed5.v5."+ testing + "dataset.gz", "v5")
-        if testingAOLNotHealth:
-            aolNotHealth = readMyFormat(PATH_TO_DATASETS + "aolNotHealth/aolNotHealthFinal-noDash.v5." + testing + "dataset.gz", "v5")
     else:
         aolHealth = readMyFormat(PATH_TO_DATASETS + "aolHealth/aolHealthClean.v5."+ testing + "dataset.gz", "v5")
-        if testingAOLNotHealth:
-            aolNotHealth = readMyFormat(PATH_TO_DATASETS + "aolNotHealth/aolNotHealthNoAnimal-noDash.v5." + testing + "dataset.gz", "v5")
 
     laypeople = hon + aolHealth
     experts = trip + goldMiner
 
-    if testingAOLNotHealth:
+    if aolNotHealthOption > 0:
         datasets =  [ [aolNotHealth, "aolNotHealth"], [aolHealth, "aolHealth"], [hon, "hon"], [laypeople, "laypeople"], [trip, "trip"], [goldMiner, "goldminer"], [experts, "experts" ] ]
     else:
         datasets =  [ [aolHealth, "aolHealth"], [hon, "hon"], [laypeople, "laypeople"], [trip, "trip"], [goldMiner, "goldminer"], [experts, "experts" ] ]
