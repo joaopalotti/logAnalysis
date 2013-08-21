@@ -49,7 +49,7 @@ def calculateMetrics(dataPair):
     hasAcronym, countingAcronyms, usersUsingAcronyms = calculateAcronyms(data)
     numberOfUsers = calculateUsers(data)
     queryInNumbers, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries,\
-            tenMostCommonTermsNoStopWord, queryInChars = calculateTerms(data)
+            tenMostCommonTermsNoStopWord, queryInChars, usersUsingBools = calculateTerms(data)
     # Calculate basic metrics
     npTerms = generateStatsVector(queryInNumbers)
     npChars = generateStatsVector(queryInChars)    
@@ -132,7 +132,7 @@ def calculateMetrics(dataPair):
     appendMeshDepth(meshDepthRow, dataName, totalMeshDepth, countingMeshDepth)
     appendSemanticByUser(semanticByUserRow, dataName, semanticTypesCountedByUser, numberOfUsers)
     appendSemanticByUserWeighted(semanticByUserWeightedRow, dataName, numberOfUsers, semanticTypesCountedByUserWeighted)
-    appendBooleanUse(booleanUseRow, dataName, booleanTerms, numberOfQueries)
+    appendBooleanUse(booleanUseRow, dataName, booleanTerms, numberOfQueries, usersUsingBools, numberOfUsers)
     appendCHV(CHVRow, dataName, countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, numberOfQueries, meanComboScore)
     
     return dataName, countingAcronyms, countingTimePerSession, countingTokens, countingQueries, countingQueriesPerSession, countingMesh, countingDisease, countingMeshDepth, countingQueriesPerUser, countingQueryRanking, queryInNumbers, queryInChars
@@ -827,12 +827,15 @@ def calculateSemanticTypes(sessions):
     #print userSemantic
     return countingSemantics, countingPureSemanticTypes, vectorOfActionSequence, vectorOfCicleSequence, userSemantic
 
-def countBooleanTerms(listOfQueries):
+def countBooleanTerms(data):
 
+    listOfQueries = [ (member.keywords, member.userId) for member in data ]
     booleanTerms = {'or':0, 'and':0, 'not':0, 'any':0}
     operators = ['or', 'and', 'not']
+    usersUsingBools = defaultdict(bool)
     
-    for query in listOfQueries:
+    for (query, user) in listOfQueries:
+        
         anybool = False
         for op in operators:
             if op in query:
@@ -840,7 +843,9 @@ def countBooleanTerms(listOfQueries):
                 anybool = True
         if anybool:
             booleanTerms['any'] += 1
-    return booleanTerms            
+            usersUsingBools[user] = True
+
+    return booleanTerms, len(usersUsingBools)
         
 def calculateTerms(data, coOccurrenceThreshold=0.6):
     """
@@ -867,7 +872,7 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
 
     #print queryInNumbers
     #print greatestQuery, len(greatestQuery)
-    booleanTerms = countBooleanTerms(listOfQueries)
+    booleanTerms, usersUsingBools = countBooleanTerms(data)
 
     # Transform the query into a list of simple tokens and count them
     tokens = [ t.lower() for sublist in listOfQueries for t in sublist]
@@ -912,7 +917,7 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
                 coOccurrenceList.append( [d1, d2, matrix[d1][d2], matrix[d1][d2]/numberOfQueries, matrix[d1][d2]/countingTokens[d1], matrix[d1][d2]/countingTokens[d2]] )
             simpleCoOccurrenceList.append( [d1, d2, matrix[d1][d2], matrix[d1][d2]/numberOfQueries, matrix[d1][d2]/countingTokens[d1], matrix[d1][d2]/countingTokens[d2]] )
 
-    return queryInNumbers, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord, queryInChars
+    return queryInNumbers, booleanTerms, countingTokens, coOccurrenceList, simpleCoOccurrenceList, greatestQuery, countingQueries, tenMostCommonTermsNoStopWord, queryInChars, usersUsingBools
 
 
 def calculateQueriesPerUser(data):
