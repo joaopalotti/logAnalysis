@@ -27,6 +27,7 @@ class npStatistics:
         self.std    = np.std(values) 
 
 def createAcronymSet(usingAdamAbbreviations):
+
     acronymsSet = set()
     #http://en.wikipedia.org/wiki/List_of_acronyms_for_diseases_and_disorders
     #http://en.wikipedia.org/wiki/List_of_abbreviations_for_medical_organisations_and_personnel
@@ -34,6 +35,7 @@ def createAcronymSet(usingAdamAbbreviations):
     #http://en.wikipedia.org/wiki/List_of_medical_abbreviations -- From A to Z
 
     # or http://arrowsmith.psych.uic.edu/arrowsmith_uic/adam.html
+    totalExistingAcronyms = 0
     if usingAdamAbbreviations:
         threshold = 100
         adam = openZip(PATH_TO_AUX_FILES + "adam_database.gz")
@@ -41,6 +43,7 @@ def createAcronymSet(usingAdamAbbreviations):
             if line.startswith("#"):
                 continue
             else:
+                totalExistingAcronyms += 1
                 fields = line.strip().split("\t")
                 if int(fields[4]) >= 100:
                     acronymsSet.add(fields[0].lower())
@@ -49,7 +52,11 @@ def createAcronymSet(usingAdamAbbreviations):
             with open(PATH_TO_AUX_FILES + filename,"r") as f:
                 for line in f.readlines():
                     acronymsSet.add( (line.split(",", 1)[0].strip()).lower() )
-   
+                    totalExistingAcronyms += 1
+
+    print "Original size of acronyms list: ", totalExistingAcronyms
+    print "After first cut: %d, %.3f" % (len(acronymsSet), 100.0 * len(acronymsSet) / totalExistingAcronyms)
+
     # Remove very common words from acronyms:
     commonWordsSet = set(["and", "on", "map", "is", "car", "at", "san", "art", "from", "air", "la", "des", "en", "le", "les", "y", "e", "or", "vs", "help", "charge", "has", "l", "los", "non", "do", "las", "dr", "as", "be", "dos", "men", "con", "no", "who", "ppt", "us", "bad","all","msn","fish","pet","gas","camp","dvd","rv","ass","cat","god","sample","gift","sign","if","anna","was","don","cd","abc","t", "s","ca","fl","va","inc","co","it","st","nc","top","ma","tips","soap","rice","stop","aid","mom","fast","his","cold","india","see","ten", "rap","toe","add","bat","got","tee","bra","lab","yo","im","so","mac","xp","tab","him","cobra","nice","prom","psp","cam","sam","cbs","jc", "mr","hit","crest", "oz", "mid", "comp", "vin", "arm", "per","fe","gmc","aaa"])
     americanStates = set(["us", "al", "ak", "az", "ar","ca","co","ct","de","fl","ga","hi","ha","cl","cf","id","il","in","ia","ks","ka","ky","la","me","md","ma","mi","ms","mc","mn","mo","mt","ne","nb","nv","nh","nj","ny","nm","nc","nd","oh","ok","or","pa","ri","sc","sd","tx","tn","ut","vt","va","wa","wv",",wn","wi","wy","as","gu","mp","pr","vi","um","fm","mh","pw","aa","ae","ap","cm","cz","nb","pi","tt"])
@@ -61,6 +68,7 @@ def createAcronymSet(usingAdamAbbreviations):
     acronymsSet -= oneLetter
     acronymsSet -= adamCommonWords
 
+    print "After second cut: %d, %.3f" % (len(acronymsSet), 100.0 * len(acronymsSet) / totalExistingAcronyms)
     print "Using %d acronyms" % (len(acronymsSet))
     #for a in acronymsSet:
     #    print a
