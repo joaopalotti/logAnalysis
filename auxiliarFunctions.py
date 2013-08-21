@@ -59,7 +59,7 @@ def createAcronymSet(usingAdamAbbreviations):
                           "mr","hit","crest", "oz", "mid", "comp", "vin", "arm", "per","fe","gmc","aaa"])
     americanStates = set(["us", "al", "ak", "az", "ar","ca","co","ct","de","fl","ga","hi","ha","cl","cf","id","il","in","ia","ks","ka","ky","la","me","md","ma","mi","ms","mc","mn","mo","mt","ne","nb","nv","nh","nj","ny","nm","nc","nd","oh","ok","or","pa","ri","sc","sd","tx","tn","ut","vt","va","wa","wv",",wn","wi","wy","as","gu","mp","pr","vi","um","fm","mh","pw","aa","ae","ap","cm","cz","nb","pi","tt"])
     oneLetter=set(["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"])
-    adamCommonWords = set(["maps","com","www","star","bed","nyc","an","go","ice","not","chat","page","dc","pc","tea","cast","age","spa","sims","flash","net","dish","arms","ex","uk","hut","sky","dot","cart","he","egg","da","cape","net","hp","am","sams"])
+    adamCommonWords = set(["maps","com","www","star","bed","nyc","an","go","ice","not","chat","page","dc","pc","tea","cast","age","spa","sims","flash","net","dish","arms","ex","uk","hut","sky","dot","cart","he","egg","da","cape","net","hp","am","sams", "can","irs","act","she","its","put","raw","gm","ed","3d"])
     
     acronymsSet -= commonWordsSet
     acronymsSet -= americanStates
