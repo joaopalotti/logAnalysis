@@ -462,7 +462,7 @@ def calculateAcronyms(data):
 
     # Get the number of queries that have acronyms
     hasAcronym = [ member.keywords for member in data for word in member.keywords if word in acronymsSet]
-
+    
     # Get the most common ccronyms
     acronymList = [ word for member in data for word in member.keywords if word in acronymsSet]
     countingAcronyms = Counter(acronymList)
