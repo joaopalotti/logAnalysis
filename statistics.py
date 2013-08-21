@@ -90,8 +90,9 @@ def calculateMetrics(dataPair):
     numberOfMeshDiseases = sum(countingDisease.values())
     numberOfMeshWeightedTerms = sum(countingMeshWeighted.values())
     numberOfMeshWeightedDiseases = sum(countingDiseaseWeighted.values())
+    uniqueQueries = len(countingQueries)
 
-    appendGeneral(generalTableRow, dataName, lastDay, firstDay, numberOfUsers, numberOfQueries, npTerms, npChars, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession, npTime, countingNL, countingReAccess, hasAcronym, percentageAcronymInQueries, usersUsingAcronyms, setOfUsersWithSemantic)
+    appendGeneral(generalTableRow, dataName, lastDay, firstDay, numberOfUsers, numberOfQueries, npTerms, npChars, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession, npTime, countingNL, countingReAccess, hasAcronym, percentageAcronymInQueries, usersUsingAcronyms, setOfUsersWithSemantic, uniqueQueries)
     appendGeneralModified(generalModifiedRow, dataName, numberOfQueries, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions)
     appendGeneralMesh(generalMeshRow, dataName, hasMeshValues, numberOfQueries, numberOfMeshTerms, numberOfMeshDiseases, usersUsingMesh, numberOfUsers, mapUserMeanMeshDepth)
 
@@ -648,7 +649,6 @@ def calculateReAccessInDifferentSessions(sessions):
     
     for userId, session in sessions.iteritems():
         
-        uniqueQueries = {}
         pastQueries = set()
 
         for subSession in session.values():
