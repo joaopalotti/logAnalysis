@@ -10,13 +10,14 @@ from auxiliarFunctions import NLWords, preProcessData, createAcronymSet, symptom
 from statistics import createSessions
 
 removeStopWords=False
-acronymsSet = createAcronymSet()
 formatVersion = "v5"
 simpleTest = False
 pathToData = "../logAnalysisDataSets/"
 honAug = True
 aolClean = True
+usingAdam = True
 
+acronymsSet = createAcronymSet(usingAdam)
 ### HOW TO USE:
 #   python createFeatureVector.py minimalNumberOfQueries 
 
