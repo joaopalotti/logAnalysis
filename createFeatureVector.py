@@ -22,21 +22,31 @@ acronymsSet = createAcronymSet(usingAdam)
 #   python createFeatureVector.py minimalNumberOfQueries 
 
 class userClass:
-    def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm, expa, shri, refo, expshr, expref, shrref, expshrref,\
+    def __init__(self, id, label, nc, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm, expa, shri, refo, expshr, expref, shrref, expshrref,\
                 chvf=0.0, chv=0.0, umls=0.0, chvm=0.0, combo=0.0):
         self.id = id
         self.label = label
+        self.numberOfChars = nc
         self.numberOfQueries = nq
         self.numberOfSessions = ns
         self.meanMeshDepth = mmd
         self.usingNL = unl
         self.meanWordsPerQuery = mwpq
         self.meanTimePerSession = mtps
-        self.usingAbbreviation = uab
-        self.usingSymptons = usy
-        self.usingCause = usc
-        self.usingRemedy = usrd
-        self.usingNotMedical = usnm
+
+        self.usingNL = True if unl > 0 else False
+        self.meanNL = unl / nq
+        self.usingAbbreviation = True if uab > 0 else False
+        self.meanAbbreviation = uab / nq
+
+        self.usingSymptons = True if usy > 0 else False
+        self.meanSymptons = usy
+        self.usingCause = True if usc > 0 else False
+        self.meanCause = usc
+        self.usingRemedy = True if usrd > 0 else False
+        self.meanRemedy = usrd
+        self.usingNotMedical = True if usnm > 0 else False
+        self.meanNotMedical = usnm
 
         self.expansion = expa
         self.shrinkage = shri
@@ -54,29 +64,26 @@ class userClass:
 
     def toDict(self):
         #return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions,'02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref, '15.CHVFound': self.chvf, '16.CHV':self.chv, '17.UMLS':self.umls, '18.CHVMisspelled':self.chvm, '19.ComboScore':self.comboScore}
-        return {'00.queriesPerSession':self.numberOfQueries/self.numberOfSessions,'02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref}
-        #return {'02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref}
         
+        return {'00.queriesPerSession':self.numberOfQueries/self.numberOfSessions, '01.charsPerQueries':self.numberOfChars/self.numberOfQueries,'02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref, '15.meanNL':self.meanNL, '16.meanAbb':self.meanAbbreviation, '17.meanSymp':self.meanSymptons, '18.meanCause':self.meanCause, '19.meanRemedy':self.meanRemedy, '20.meanNotMedical':self.meanNotMedical}
+        #return {'02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref}
 
 
 '''
     Boolean feature.
 '''
 def calculateNLPerUser(data):
-    mapUserNL = dict()
+    mapUserNL = defaultdict(int)
     
     userIds = sorted( (member.userId, member.keywords) for member in data )
     
     for (userId, keywords) in userIds:
-        if userId not in mapUserNL:
-            mapUserNL[userId] = False
-        mapUserNL[userId] = ( mapUserNL[userId] or hasNLword(keywords) )
+        mapUserNL[userId] += ( 1 if hasNLword(keywords) else 0 )
 
     #print "mapUserNL ---> ", mapUserNL
     return mapUserNL
 
 def hasNLword(words):
-
     #print ( [ w for w in words if w.lower() in NLWords ] )
     return any( [ w for w in words if w.lower() in NLWords ] )
     
@@ -96,6 +103,16 @@ def calculateMeanMeshDepthPerUser(data):
         mapUserMeanMeshDepth[userId] = sum( [ len(m.split(".")) for m in mesh ] ) / len(mesh)
 
     return mapUserMeanMeshDepth
+
+def calculateNumberOfCharsPerUser(data):
+    mapUserChars = defaultdict(int)
+    userWords = [ (member.userId, member.keywords) for member in data ]
+    queryInChars = [(userId, sum(len(q) for q in query)) for (userId, query) in userWords]
+
+    for (userId, lenght) in queryInChars:
+        mapUserChars[userId] += lenght
+
+    return mapUserChars
 
 def calculateNumberOfQueriesPerUser(data):
     userIds = sorted( [member.userId for member in data ] ) 
@@ -137,24 +154,20 @@ def hasSemanticType(words, semanticSet):
     return any( [ w for w in words if w.lower() in semanticSet] )
 
 def calculateUsingSemantic(data, semanticType):
-    mapUserSemantic = dict()
+    mapUserSemantic = defaultdict(int)
 
     userIds = sorted( (member.userId, member.semanticTypes) for member in data )
     for (userId, st) in userIds:
-        if userId not in mapUserSemantic:
-            mapUserSemantic[userId] = False
-        mapUserSemantic[userId] = ( mapUserSemantic[userId] or hasSemanticType(st, semanticType) )
+        mapUserSemantic[userId] += (1 if hasSemanticType(st, semanticType) else 0)
     return mapUserSemantic
 
 def calculateUsingAbbreviation(data):
-    mapUserAbb = dict()
+    mapUserAbb = defaultdict(int)
     
     userIds = sorted( (member.userId, member.keywords) for member in data )
     
     for (userId, keywords) in userIds:
-        if userId not in mapUserAbb:
-            mapUserAbb[userId] = False
-        mapUserAbb[userId] = ( mapUserAbb[userId] or hasAbbreviation(keywords) )
+        mapUserAbb[userId] += (1 if hasAbbreviation(keywords) else 0)
 
     #print "mapUserAbb ---> ", mapUserAbb
     return mapUserAbb
@@ -280,6 +293,7 @@ def createDictOfUsers(data, label):
 
     users = set( (member.userId for member in data) )
     countingNumberOfQueriesPerUser = calculateNumberOfQueriesPerUser(data)
+    countingNumberOfCharsPerUser = calculateNumberOfCharsPerUser(data)
     countingNumberOfSessionsPerUser = calculateNumberOfSessionsPerUser(data)
     countingMeanMeshDepthPerUser = calculateMeanMeshDepthPerUser(data)
     countingNLPerUser = calculateNLPerUser(data)
@@ -314,28 +328,31 @@ def createDictOfUsers(data, label):
             #sys.exit(0)
             continue
 
+        nc = countingNumberOfCharsPerUser[user]
         nq = countingNumberOfQueriesPerUser[user]
         ns = countingNumberOfSessionsPerUser[user]
         mmd = 0.0 if user not in countingMeanMeshDepthPerUser else countingMeanMeshDepthPerUser[user]
-        unl = countingNLPerUser[user]
         mwpq = countingWordsPerQuery[user]
         mtps = countingMeanTimePerSession[user]
         uab = countingUsingAbbreviation[user]
+        unl = countingNLPerUser[user]
+
         usy = countingUsingSymptons[user]
         usc = countingUsingCause[user]
         usrd = countingUsingRemedy[user]
         usnm = countingUsingNotMedical[user]
+        
         expa, shri, refo, expshr, expref, shrref, expshrref = countingUserBehavior[user]
         
         if formatVersion == "v5":
             CHVFound, CHV    = countingUserCHVFound[user], countingUserCHV[user]
             UMLS, CHVMisspelled = countingUserUMLS[user], countingUserMisspelled[user]
             comboScore = countingUserComboScore[user]
-            userDict[user] = userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
+            userDict[user] = userClass(user, label, nc=nc, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
                                    expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref,\
                                       chvf=CHVFound, chv=CHV, umls=UMLS, chvm=CHVMisspelled, combo=comboScore)
         else:
-            userDict[user] = userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
+            userDict[user] = userClass(user, label, nc=nc, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
                                    expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref)
 
     return userDict
@@ -468,6 +485,9 @@ def regularMedicalUsers(minimalNumberOfQueries, maxNumberOfQueries, explanation)
         pickle.dump(medicalUserFV, output, pickle.HIGHEST_PROTOCOL)
         print "CREATED FILE: %s" % (medicalUserOutputFile)
     
+def testing(minNumberOfQueries, maxNumberOfQueries, explanation):
+    testFile = createFV( "in50", 0, minNumberOfQueries, maxNumberOfQueries)
+
 if __name__ == "__main__":
 
     op = OptionParser(version="%prog 1")
@@ -477,10 +497,15 @@ if __name__ == "__main__":
                   a user for classification.  [default: %default]", metavar="X", default=100)
     op.add_option("--explanation", "-e", action="store", type="string", dest="explanation", help="Prefix to include in the created files", metavar="N", default="")
     op.add_option("--healthUsers", "-u", action="store_true", dest="healthUsers", help="Use if you want to create a health/not health user feature file", default=False)
+    op.add_option("--testingOnly", "-t", action="store_true", dest="testingOnly", help="Just to test some new feature", default=False)
 
     (opts, args) = op.parse_args()
     if len(args) > 0:
         print "This program does not receive parameters this way: use -h to see the options."
+    
+    if opts.testingOnly:
+        testing(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation)
+        sys.exit(0)
 
     if opts.healthUsers:
         healthNotHealthUsers(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation)

@@ -10,15 +10,15 @@ def baselines(y, y_greatest):
     print "F1 Score --> ", f1, " size --> ", len(f1)
 
     sf1Baseline = f1_score(y, y_greatest) # TODO: maybe? , pos_label=greatestClass)
-    print "Simple F1 -> %.3f" % (sf1Baseline)
+    print "Simple F1 -> %.3f" % (100.0 * sf1Baseline)
 
     mf1Baseline = f1.mean()
-    print "Mean F1 -> %.3f" % (mf1Baseline)
+    print "Mean F1 -> %.3f" % (100.0 * mf1Baseline)
 
     from collections import Counter
     ns = Counter(y)
     wf1Baseline = ( f1[0] * ns[0] + f1[1] * ns[1] ) / (ns[0] + ns[1])
-    print "Weighted F1 -> %.3f" % (wf1Baseline)
+    print "Weighted F1 -> %.3f" % (100.0 * wf1Baseline)
 
     return accBaseline, sf1Baseline, mf1Baseline, wf1Baseline 
 

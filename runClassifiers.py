@@ -24,6 +24,8 @@ CSVM = 10000
 
 classifyParameters = {"KNN-K": 100, "ERT-n_estimators": 10, "SVM-cacheSize": 1000, "SVM-kernel": "linear", "SVM-C": CSVM} 
 
+usingGrid = True
+gridETC = [{'criterion': ['gini','entropy'], 'max_features': ["auto", None, "log2"]}]
 
 def transformeInDict(userDict, n=-1, proportional=-1):
     listOfDicts = list()
@@ -43,7 +45,6 @@ def transformeInDict(userDict, n=-1, proportional=-1):
         #print user.label, udict
         #print udict  #### Check how this features are related with the features calculated by the random tree method
     return listOfDicts, listOfLabels
-
 
 def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers):
    
@@ -123,8 +124,9 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     print "Running classifiers..."
     #TODO: run a logistic regression to evaluate the features and decide which ones are the best ones
     
-    y_ert,ert_probas = classify(ExtraTreesClassifier(random_state=0, compute_importances=True, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"]), \
-                     X, y, nCV, nJobs, tryToMeasureFeatureImportance=True, featureNames=vec.get_feature_names())
+    clf = ExtraTreesClassifier(random_state=0, compute_importances=True, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"])
+    y_ert,ert_probas = classify(clf, X, y, nCV, nJobs, tryToMeasureFeatureImportance=True, featureNames=vec.get_feature_names(), useGridSearch=usingGrid, gridParameters=gridETC)
+
     print 20 * '=', " ERF  Results ", 20 * '='
     ertacc, ertsf1, ertwf1, ertmf1 = makeReport(X, y, y_ert, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
     #plot_precision_recall(y, ert_probas)

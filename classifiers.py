@@ -1,6 +1,8 @@
 #Report
 from sklearn import cross_validation
 from sklearn.metrics import classification_report, f1_score, accuracy_score, precision_recall_curve, auc
+# Searching parameters
+from sklearn.grid_search import GridSearchCV
 #General
 from collections import Counter, defaultdict
 
@@ -51,21 +53,37 @@ def convertToSingleList(listOfLists):
         result += list(l)
     return result
 
-def classify(clf, X, y, CV, nJobs, tryToMeasureFeatureImportance=False, featureNames=None):
+def classify(clf, X, y, CV, nJobs, tryToMeasureFeatureImportance=False, featureNames=None, useGridSearch=False, gridParameters=None, gridScore="precision"):
 
     print clf
+    if useGridSearch:
+        print "Using grid search"
+        clf = GridSearchCV(clf, gridParameters, cv=CV, scoring=gridScore)
+
     nSamples, nFeatures = X.shape
 
     kFold = cross_validation.KFold(n=nSamples, n_folds=CV, indices=True)
 
+    probas = []
+    preds = []
     # Run classifier
-    preds  = [clf.fit(X[train], y[train]).predict(X[test]) for train, test in kFold]
-    probas = [clf.fit(X[train], y[train]).predict_proba(X[test]) for train, test in kFold]
-    
+    for train, test in kFold:
+        preds.append( clf.fit(X[train], y[train]).predict(X[test]) )
+        probas.append( clf.fit(X[train], y[train]).predict_proba(X[test]) )
+        print("Best parameters set found on development set:")
+        print()
+        print(clf.best_estimator_)
+        print()
+        print("Grid scores on development set:")
+        print()
+        for params, mean_score, scores in clf.grid_scores_:
+            print("%0.3f (+/-%0.03f) for %r" % (mean_score, scores.std() / 2, params))
+        print()
+
     y_probas = convertToSingleList(probas)
     y_pred = convertToSingleList(preds)
     
-    scores = cross_validation.cross_val_score(clf, X, y, cv=CV, n_jobs=nJobs) #, scoring="f1") 
+    #scores = cross_validation.cross_val_score(clf, X, y, cv=CV, n_jobs=nJobs) #, scoring="f1") 
     if tryToMeasureFeatureImportance:
         measureFeatureImportance(clf, featureNames)
 
