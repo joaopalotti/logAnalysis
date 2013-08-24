@@ -4,7 +4,6 @@ from __future__ import division
 import glob
 import numpy as np
 import matplotlib.pyplot as plt
-import pylab as P
 import re
 import matplotlib as mpl
 

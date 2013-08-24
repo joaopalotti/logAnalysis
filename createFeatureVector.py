@@ -2,7 +2,7 @@ from __future__ import division
 from itertools import groupby
 from collections import Counter, defaultdict 
 from optparse import OptionParser
-import sys
+import sys, pickle
 
 #My classes
 from readCSV import readMyFormat
@@ -424,7 +424,6 @@ def healthNotHealthUsers(minimalNumberOfQueries, maxNumberOfQueries):
     notHealthUserOutputFile = "notHealthUser-%d-%s.pk" % (minimalNumberOfQueries, explanation)
    
     ####### Save and Load the Features
-    import pickle
     with open(healthUserOutputFile, 'wb') as output:
         pickle.dump(healthUserFV, output, pickle.HIGHEST_PROTOCOL)
         print "CREATED FILE: %s" % (healthUserOutputFile)
@@ -486,7 +485,19 @@ def regularMedicalUsers(minimalNumberOfQueries, maxNumberOfQueries, explanation)
         print "CREATED FILE: %s" % (medicalUserOutputFile)
     
 def testing(minNumberOfQueries, maxNumberOfQueries, explanation):
-    testFile = createFV( "in50", 0, minNumberOfQueries, maxNumberOfQueries)
+    testA, testB = {},{}
+    for i in range(0,10):
+        testA_ = createFV( "in50", 0, minNumberOfQueries, maxNumberOfQueries)
+        testB_ = createFV( "in50", 1, minNumberOfQueries, maxNumberOfQueries)
+        testA = mergeFVs(testA, testA_)
+        testB = mergeFVs(testB, testB_)
+    
+    with open("regularUser-5-test.pk", 'wb') as output:
+        pickle.dump(testA, output, pickle.HIGHEST_PROTOCOL)
+    
+    with open("medicalUser-5-test.pk", 'wb') as output:
+        pickle.dump(testB, output, pickle.HIGHEST_PROTOCOL)
+
 
 if __name__ == "__main__":
 

@@ -1,6 +1,6 @@
 #Report
 from sklearn import cross_validation
-from sklearn.metrics import classification_report, f1_score, accuracy_score, precision_recall_curve, auc
+from sklearn.metrics import classification_report, f1_score, accuracy_score, precision_recall_curve, auc, roc_curve
 # Searching parameters
 from sklearn.grid_search import GridSearchCV
 #General
@@ -70,15 +70,16 @@ def classify(clf, X, y, CV, nJobs, tryToMeasureFeatureImportance=False, featureN
     for train, test in kFold:
         preds.append( clf.fit(X[train], y[train]).predict(X[test]) )
         probas.append( clf.fit(X[train], y[train]).predict_proba(X[test]) )
-        print("Best parameters set found on development set:")
-        print()
-        print(clf.best_estimator_)
-        print()
-        print("Grid scores on development set:")
-        print()
-        for params, mean_score, scores in clf.grid_scores_:
-            print("%0.3f (+/-%0.03f) for %r" % (mean_score, scores.std() / 2, params))
-        print()
+        if useGridSearch:
+            print("Best parameters set found on development set:")
+            print()
+            print(clf.best_estimator_)
+            print()
+            print("Grid scores on development set:")
+            print()
+            for params, mean_score, scores in clf.grid_scores_:
+                print("%0.3f (+/-%0.03f) for %r" % (mean_score, scores.std() / 2, params))
+            print()
 
     y_probas = convertToSingleList(probas)
     y_pred = convertToSingleList(preds)
@@ -118,26 +119,53 @@ def classifyIncremental(clf, X, listOfLists, y, CV, nJobs, tryToMeasureFeatureIm
     print "Done"
     return results
 
-
-def plot_precision_recall(y, probas):
+def plotGraph(precRecallDict, fileName, xlabel, ylabel, generatePickle=True, hasPlotLibs=False):
+    if generatePickle:
+        import pickle
+        with open(fileName + ".pk", 'wb') as output:
+            pickle.dump(precRecallDict, output, pickle.HIGHEST_PROTOCOL)
     
+    if not hasPlotLibs:
+        return
+
+    import matplotlib.pylab as plt
+    
+    for title, yx in precRecallDict.items():
+        plt.plot(yx[1], yx[0], label=title)
+
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.ylim([0.0, 1.05])
+    plt.xlim([0.0, 1.0])
+    plt.legend()
+
+    if fileName:
+        plt.savefig(fileName + ".eps", papertype="a4", orientation="portrait")
+    else:
+        plt.show()
+    
+    plt.close()
+
+def getPrecisionRecall(y, probas):
+
     probas1 = [p[1] for p in probas]
+    
     precision, recall, thresholds = precision_recall_curve(y, probas1)
     area = auc(recall, precision)
-    
     print "Area Under Curve: %0.2f" % area
     print "thresholds = ", thresholds
+    return (precision, recall)
+   
+def getROC(y, probas):
+    
+    probas1 = [p[1] for p in probas]
+    
+    fpr, tpr, thresholdsROC = roc_curve(y, probas1)
+    roc_auc = auc(fpr, tpr)
+    print("Area under the ROC curve : %f" % roc_auc)
+    print "thresholdsROC = ", thresholdsROC
 
-    import pylab as pl
-    pl.clf()
-    pl.plot(recall, precision, label='Precision-Recall curve')
-    pl.xlabel('Recall')
-    pl.ylabel('Precision')
-    pl.ylim([0.0, 1.05])
-    pl.xlim([0.0, 1.0])
-    pl.title('Precision-Recall example: AUC=%0.2f' % area)
-    pl.legend(loc="lower left")
-    pl.show()
+    return (tpr, fpr)
 
 def measureFeatureImportance(classifier, featureNames):
     
@@ -154,13 +182,3 @@ def measureFeatureImportance(classifier, featureNames):
             print "%d. feature %s (%f)" % (f + 1, featureNames[indices[f]], importances[indices[f]])
         else:
             print "%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]])
-    
-    # Plot the feature importances of the forest
-    #import pylab as pl
-    #pl.figure()
-    #pl.title("Feature importances")
-    #pl.bar(xrange(len(indices)), importances[indices],
-    #          color="r", yerr=std[indices], align="center")
-    #pl.xticks(xrange(len(indices)), indices)
-    #pl.xlim([-1, len(indices)])
-    #pl.show()
