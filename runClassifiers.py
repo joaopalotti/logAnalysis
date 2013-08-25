@@ -8,24 +8,26 @@ from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.dummy import DummyClassifier
 
 #My classes
-from classifiers import classify, makeReport, plotGraph, getPrecisionRecall, getROC
-from auxClassifier import preprocessing, shuffleData, vectorizeData, baselines
+from classifiers import classify, makeReport, plotGraph, getPrecisionRecall, getROC, parallelClassify, getCurves
+from auxClassifier import preprocessing, shuffleData, vectorizeData, calculateBaselines
 from createFeatureVector import userClass
 
 ### HOW TO USE:
 # python runClassifiers.py -h
 # python runClassifiers.pt --preprocessing=[normalize|scale|minmax|nothing] -b [forceBalance|-1] -g [proportional|-1] -m [minNumberOfQueries] -s [nseed]"
 
-nJobs = 2
 nCV = 10
 CSVM = 10000
 
 classifyParameters = {"KNN-K": 100, "ERT-n_estimators": 10, "SVM-cacheSize": 1000, "SVM-kernel": "linear", "SVM-C": CSVM} 
 
 gridETC = [{'criterion': ['gini','entropy'], 'max_features': ["auto", None, "log2"]}]
-
+gridKNN = [{'n_neighbors': [5,10,15,20,50], 'algorithm': ["auto", "kd_tree"]}]
+gridSVM = [{'C': [1,100000,10000000], 'kernel': ["linear", "rbf","poly"]},\
+           {'C': [1,100000,10000000], 'kernel': ["poly"], 'degree':[3,5,10]}]
 
 def transformeInDict(userDict, n=-1, proportional=-1):
     listOfDicts = list()
@@ -46,7 +48,7 @@ def transformeInDict(userDict, n=-1, proportional=-1):
         #print udict  #### Check how this features are related with the features calculated by the random tree method
     return listOfDicts, listOfLabels
 
-def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers, gridSearch, generatePickle, hasPlotLibs):
+def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers, gridSearch, generatePickle, hasPlotLibs, paralled, nJobs):
    
     if healthUsers:
         positiveOutputFile = "healthUser-%d-%s.pk" % (minNumberOfQueries, explanation)
@@ -96,7 +98,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     print "Using %d regular users -- class %s" % (len(ld1), ll1[0])
     print "Using %d medical users -- class %s" % (len(ld2), ll2[0])
     
-    accBaseline, sf1Baseline, mf1Baseline, wf1Baseline = baselines(y, y_greatest)
+    baselines = calculateBaselines(y, y_greatest)
     
     print "Vectorizing dictionaries..."
     vec, X_noProcess = vectorizeData(listOfDicts) 
@@ -121,64 +123,67 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     ### Run classifiers
     ##
     #
+    precRecall, roc = {}, {}
+    clfrs = []
+
     print "Running classifiers..."
     
-    clf = ExtraTreesClassifier(random_state=0, compute_importances=True, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"])
-    y_ert,ert_probas = classify(clf, X, y, nCV, nJobs, tryToMeasureFeatureImportance=True, featureNames=vec.get_feature_names(), useGridSearch=gridSearch, gridParameters=gridETC)
-    precRecall, roc = {}, {}
+    dmfc = DummyClassifier(strategy='most_frequent')
+    clfrs.append( (dmfc, "DummyMostFrequent", X, y, nCV, nJobs, baselines) )
+    # ================================================================
+    dsc = DummyClassifier(strategy='stratified')
+    clfrs.append( (dsc, "DummyStratified", X, y, nCV, nJobs, baselines) )
+    # ================================================================
+    duc = DummyClassifier(strategy='uniform')
+    clfrs.append( (duc, "DummyUniform", X, y, nCV, nJobs, baselines) )
+    # ================================================================
+    nbc = GaussianNB()
+    clfrs.append( (nbc, "Naive Bayes", X, y, nCV, nJobs, baselines) )
+    # ================================================================
+    knnc = KNeighborsClassifier(n_neighbors=classifyParameters["KNN-K"])
+    clfrs.append( (knnc, "KNN", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridKNN}) )
+    # ================================================================
+    lrc = LogisticRegression()
+    clfrs.append( (lrc, "Logistic Regression", X, y, nCV, nJobs, baselines) )
+    # ================================================================
+    dtc = DecisionTreeClassifier()
+    clfrs.append( (dtc, "Decision Tree", X, y, nCV, nJobs, baselines) )
+    # ================================================================
+    svmc = SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"], probability=True)
+    clfrs.append( (svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}) )
+    # ================================================================
+    etc = ExtraTreesClassifier(random_state=0, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"])
+    clfrs.append( (etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(),\
+        "useGridSearch":gridSearch, "gridParameters":gridETC}) )
+    
+    results = []
+    if paralled:
+        from scoop import futures
+        results = futures.map(parallelClassify,clfrs)
+    else:
+        results.append(classify(dmfc, "DummyMostFrequent", X, y, nCV, nJobs, baselines))
+        results.append(classify(dsc, "DummyStratified", X, y, nCV, nJobs, baselines))
+        results.append(classify(duc, "DummyUniform", X, y, nCV, nJobs, baselines))
+        results.append(classify(nbc, "Naive Bayes", X, y, nCV, nJobs, baselines))
+        results.append(classify(knnc, "KNN", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridKNN}))
+        results.append(classify(knnc, "Logistic Regression", X, y, nCV, nJobs, baselines))
+        results.append(classify(dtc, "Decision Tree", X, y, nCV, nJobs, baselines))
+        results.append(classify(svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}))
+        results.append(classify(etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC}))
 
-    print 20 * '=', " ERF  Results ", 20 * '='
-    ertacc, ertsf1, ertwf1, ertmf1 = makeReport(X, y, y_ert, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
-    precRecall["Random Forest"] = getPrecisionRecall(y, ert_probas)
-    roc["Random Forest"] = getROC(y, ert_probas)
-    
-    y_nb, nb_probas  = classify(GaussianNB(), X, y, nCV, nJobs)
-    print 20 * '=', " NB  Results ", 20 * '='
-    nbacc, nbsf1, nbwf1, nbmf1 = makeReport(X, y, y_nb, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
-    precRecall["Naive Bayes"] = getPrecisionRecall(y, nb_probas)
-    roc["Naive Bayes"] = getROC(y, nb_probas)
-    
-    y_knn, knn_probas = classify(KNeighborsClassifier(n_neighbors=classifyParameters["KNN-K"]),\
-                     X, y, nCV, nJobs)
-    print 20 * '=', " KNN Results ", 20 * '='
-    knnacc, knnsf1, knnwf1, knnmf1 = makeReport(X, y, y_knn, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
-    precRecall["KNN"] = getPrecisionRecall(y, knn_probas)
-    roc["KNN"] = getROC(y, knn_probas)
-    
-    y_dt, dt_probas = classify(DecisionTreeClassifier(random_state=0, compute_importances=True),\
-                    X, y, nCV, nJobs)
-    print 20 * '=', " DT  Results ", 20 * '='
-    dtacc, dtsf1, dtwf1, dtwmf1 = makeReport(X, y, y_dt, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
-    precRecall["Decision Tree"] = getPrecisionRecall(y, dt_probas)
-    roc["Decision Tree"] = getROC(y, dt_probas)
-    
-    y_lg, lg_probas =  classify(LogisticRegression(), X, y, nCV, nJobs)
-    print 20 * '=', " LogReg  Results ", 20 * '='
-    lgacc, lgsf1, lgwf1, lgmf1 = makeReport(X, y, y_lg, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
-    precRecall["Logistic Regression"] = getPrecisionRecall(y, lg_probas)
-    roc["Logistic Regression"] = getROC(y, lg_probas)
-    
-    y_svm, svm_probas = classify(SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"], probability=True), X, y, nCV, nJobs)
-    print 20 * '=', " SVM Results ", 20 * '='
-    svmacc, svmsf1, svmwf1, svmmf1 = makeReport(X, y, y_svm, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
-    precRecall["SVM"] = getPrecisionRecall(y, svm_probas)
-    roc["SVM"] = getROC(y, svm_probas)
-    
+
+    precRecall, roc = getCurves(results)
+    roc["Random Classifier"] = ([0,1],[0,1])
+
     plotGraph(precRecall, fileName="precisionAndRecall", xlabel="Recall", ylabel="Precision", generatePickle=generatePickle, hasPlotLibs=hasPlotLibs)
     plotGraph(roc, fileName="ROC", xlabel="False Positive Rate", ylabel="True Positive Rate", generatePickle=generatePickle, hasPlotLibs=hasPlotLibs)
-    print "Done"
+    
+    for r in results:
+        label = r[0]
+        resultMetrics = r[1]
+        print "%s, %.3f, %.3f, %.3f, %.3f" % (label, 100.0*resultMetrics.acc, 100.0*resultMetrics.sf1, 100.0*resultMetrics.mf1, 100.0*resultMetrics.wf1)
 
-    return ( accBaseline, sf1Baseline, mf1Baseline, wf1Baseline, ertacc, ertsf1, ertwf1, nbacc, nbsf1, nbwf1, knnacc, knnsf1, knnwf1, dtacc, dtsf1, dtwf1, lgacc, lgsf1, lgwf1, svmacc, svmsf1, svmwf1)  
-    #import pylab as pl
-    #pl.clf()
-    #pl.plot(recall, precision, label='Precision-Recall curve')
-    #pl.xlabel('Recall')
-    #pl.ylabel('Precision')
-    #pl.ylim([0.0, 1.05])
-    #pl.xlim([0.0, 1.0])
-    #pl.title('Precision-Recall example: AUC=%0.2f' % area)
-    #pl.legend(loc="lower left")
-    #pl.show()
+    print "Done"
 
 if __name__ == "__main__":
     
@@ -187,12 +192,14 @@ if __name__ == "__main__":
     op.add_option("--forceBalance", "-b", action="store", type="int", dest="forceBalance", help="Force balance keeping only X instances of each class.", metavar="X", default=-1)
     op.add_option("--proportional", "-q", action="store", type="int", dest="proportional", help="Force proportion of the data to X%.", metavar="X", default=-1)
     op.add_option("--minNumberOfQueries", "-m", action="store", type="int", dest="minNumberOfQueries", help="Define the min. number of queries (X) necessary to use a user for classification.  [default: %default]", metavar="X", default=5)
-    op.add_option("--nseed", "-s", action="store", type="int", dest="nseed", help="Seed used for random processing during classification.  [default: %default]", metavar="X", default=29)
+    op.add_option("--nseed", "-n", action="store", type="int", dest="nseed", help="Seed used for random processing during classification.  [default: %default]", metavar="X", default=29)
     op.add_option("--explanation", "-e", action="store", type="string", dest="explanation", help="Prefix to include in the created files", metavar="TEXT", default="")
     op.add_option("--healthUsers", "-u", action="store_true", dest="healthUsers", help="Use if you want to create a health/not health user feature file", default=False)
     op.add_option("--gridSearch", "-g", action="store_true", dest="gridSearch", help="Use if you want to use grid search to find the best hyperparameters", default=False)
     op.add_option("--hasPlotLibs", "-c", action="store_true", dest="hasPlotLibs", help="Use if you want to plot Precision Vs Recall and ROC curves", default=False)
     op.add_option("--ignorePickle", "-i", action="store_true", dest="ignorePickle", help="Don't Generate Pickle of plots", default=False)
+    op.add_option("--useScoop", "-s", action="store_true", dest="useScoop", help="Use Scoop to run classifier in parallel", default=False)
+    op.add_option("--njobs", "-j", action="store", type="int", dest="njobs", help="Number of parallel jobs to run.", metavar="X", default=2)
 
     (opts, args) = op.parse_args()
     if len(args) > 0:
@@ -205,6 +212,8 @@ if __name__ == "__main__":
     print "using grid search =", opts.gridSearch
     print "Has plot libs = ", opts.hasPlotLibs
     print "Generating Pickle = ", not opts.ignorePickle
+    print "Running in parallel =", opts.useScoop
+    print "Njobs = ", opts.njobs
 
-    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.explanation, opts.healthUsers, opts.gridSearch, not opts.ignorePickle, opts.hasPlotLibs)
+    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.explanation, opts.healthUsers, opts.gridSearch, not opts.ignorePickle, opts.hasPlotLibs, opts.useScoop, opts.njobs)
 

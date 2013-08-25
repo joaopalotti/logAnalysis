@@ -5,6 +5,7 @@ from sklearn.metrics import classification_report, f1_score, accuracy_score, pre
 from sklearn.grid_search import GridSearchCV
 #General
 from collections import Counter, defaultdict
+from auxClassifier import ResultMetrics
 
 def makeIncrementalReport(X, y, listOfYs, accBaseline, sf1Baseline, wf1Baseline, mf1Baseline):
     a, f, wf, mf = [], [], [], []
@@ -16,7 +17,7 @@ def makeIncrementalReport(X, y, listOfYs, accBaseline, sf1Baseline, wf1Baseline,
         a, f, wf, mf = a + [acc], f + [sf1], wf + [wf1], mf + [mf1]
     return a, f, wf, mf
 
-def makeReport(X, y, y_pred, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline, target_names=['Layman', 'Specialist']):
+def makeReport(X, y, y_pred, baselines, target_names=['Layman', 'Specialist']):
     # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html#sklearn.metrics.classification_report
     
     acc = accuracy_score(y, y_pred)
@@ -34,18 +35,18 @@ def makeReport(X, y, y_pred, accBaseline, sf1Baseline, mf1Baseline, wf1Baseline,
     print "F1 Scores (no average) --> ", (f1)
     
     print "sf1 -> ", sf1
-    print "GAIN --> %0.2f%% " % (100.0 * (sf1 - sf1Baseline) / sf1Baseline)
+    print "GAIN --> %0.2f%% " % (100.0 * (sf1 - baselines.sf1) / baselines.sf1)
     
     print "mf1 -> ", mf1
-    print "GAIN --> %0.2f%% " % (100.0 * (mf1 - mf1Baseline) / mf1Baseline)
+    print "GAIN --> %0.2f%% " % (100.0 * (mf1 - baselines.mf1) / baselines.mf1)
     
     print "wf1 -> ", wf1
-    print "GAIN --> %0.2f%% " % (100.0 * (wf1 - wf1Baseline) / wf1Baseline)
+    print "GAIN --> %0.2f%% " % (100.0 * (wf1 - baselines.wf1) / baselines.wf1)
     
     print "ACC Score --> ", (acc)
-    print "GAIN --> %0.2f%% " % (100.0 * (acc - accBaseline) / accBaseline)
+    print "GAIN --> %0.2f%% " % (100.0 * (acc - baselines.acc) / baselines.acc)
 
-    return acc, sf1, wf1, mf1,
+    return ResultMetrics(acc, sf1, mf1, wf1)
 
 def convertToSingleList(listOfLists):
     result = []
@@ -53,12 +54,25 @@ def convertToSingleList(listOfLists):
         result += list(l)
     return result
 
-def classify(clf, X, y, CV, nJobs, tryToMeasureFeatureImportance=False, featureNames=None, useGridSearch=False, gridParameters=None, gridScore="precision"):
+def runClassifier(clf, X, y, CV, nJobs, others={}):
 
+    tryToMeasureFeatureImportance = False if "tryToMeasureFeatureImportance" not in others else others["tryToMeasureFeatureImportance"]
+    featureNames = None if "featureNames" not in others else others["featureNames"]
+    useGridSearch= False if "useGridSearch" not in others else others["useGridSearch"]
+    gridParameters= None if "gridParameters" not in others else others["gridParameters"]
+    gridScore= "f1" if "gridScore" not in others else others["gridScore"]
+   
+    if tryToMeasureFeatureImportance and useGridSearch:
+        print "Using Grid search and feature importance at the same time is not a good idea"
+        print "Disabling feature importance"
+        tryToMeasureFeatureImportance = False
+
+    print "OTHERS ==> ", others
     print clf
+    originalClf = clf
     if useGridSearch:
         print "Using grid search"
-        clf = GridSearchCV(clf, gridParameters, cv=CV, scoring=gridScore)
+        clf = GridSearchCV(clf, gridParameters, cv=CV, scoring=gridScore, n_jobs=nJobs)
 
     nSamples, nFeatures = X.shape
 
@@ -86,10 +100,27 @@ def classify(clf, X, y, CV, nJobs, tryToMeasureFeatureImportance=False, featureN
     
     #scores = cross_validation.cross_val_score(clf, X, y, cv=CV, n_jobs=nJobs) #, scoring="f1") 
     if tryToMeasureFeatureImportance:
-        measureFeatureImportance(clf, featureNames)
+        measureFeatureImportance(originalClf, featureNames)
 
     print "Done"
     return y_pred, y_probas
+
+def classify(clf, label, X, y, nCV, nJobs, baselines, options={}):
+    print "Running ", label
+    y_ ,probas_ = runClassifier(clf, X, y, nCV, nJobs, options)
+    resultMetrics = makeReport(X, y, y_, baselines)
+    precRecall = getPrecisionRecall(y, probas_)
+    roc = getROC(y, probas_)
+    return (label, resultMetrics, precRecall, roc)
+
+def parallelClassify(pars):
+    
+    print "SIZE = ", len(pars)
+    if len(pars) > 6:
+        print "FOUND THE DICTIONARY HERE"
+        return classify(pars[0], pars[1], pars[2], pars[3], pars[4], pars[5], pars[6], pars[7])
+    else:
+        return classify(pars[0], pars[1], pars[2], pars[3], pars[4], pars[5], pars[6], {})
 
 #llq -> listOfListOfQueries
 def classifyIncremental(clf, X, listOfLists, y, CV, nJobs, tryToMeasureFeatureImportance=False, featureNames=None):
@@ -137,10 +168,13 @@ def plotGraph(precRecallDict, fileName, xlabel, ylabel, generatePickle=True, has
     plt.ylabel(ylabel)
     plt.ylim([0.0, 1.05])
     plt.xlim([0.0, 1.0])
-    plt.legend()
+    #plt.legend(loc=2)
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05), ncol=3, fancybox=True, shadow=True)
+    #plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    #plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=5)
 
     if fileName:
-        plt.savefig(fileName + ".eps", papertype="a4", orientation="portrait")
+        plt.savefig(fileName + ".eps" , papertype="a4", orientation="portrait")
     else:
         plt.show()
     
@@ -166,6 +200,13 @@ def getROC(y, probas):
     print "thresholdsROC = ", thresholdsROC
 
     return (tpr, fpr)
+
+def getCurves(results):
+    precRecall, roc = {}, {}
+    for r in results:
+        precRecall[ r[0] ] = r[2]
+        roc[ r[0] ] = r[3]
+    return precRecall, roc
 
 def measureFeatureImportance(classifier, featureNames):
     

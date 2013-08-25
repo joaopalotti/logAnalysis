@@ -1,6 +1,12 @@
 
+class ResultMetrics:
+    def __init__(self, acc, sf1, mf1, wf1):
+        self.acc = acc
+        self.sf1 = sf1
+        self.mf1 = mf1
+        self.wf1 = wf1
 
-def baselines(y, y_greatest):
+def calculateBaselines(y, y_greatest):
     from sklearn.metrics import f1_score, accuracy_score
 
     accBaseline = accuracy_score(y, y_greatest)
@@ -20,7 +26,7 @@ def baselines(y, y_greatest):
     wf1Baseline = ( f1[0] * ns[0] + f1[1] * ns[1] ) / (ns[0] + ns[1])
     print "Weighted F1 -> %.3f" % (100.0 * wf1Baseline)
 
-    return accBaseline, sf1Baseline, mf1Baseline, wf1Baseline 
+    return ResultMetrics(accBaseline, sf1Baseline, mf1Baseline, wf1Baseline)
 
 
 def preprocessing(X_noProcess, method):

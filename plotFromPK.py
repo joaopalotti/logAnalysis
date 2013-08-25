@@ -8,6 +8,6 @@ with open("ROC.pk", 'rb') as input:
 with open("precisionAndRecall.pk", 'rb') as input:
     precisionAndRecall = pickle.load(input)
 
-plotGraph(roc, fileName="ROC", xlabel="Recall", ylabel="Precision", generatePickle=False, hasPlotLibs=True)
+plotGraph(roc, fileName="ROC", xlabel="False Positive Rate", ylabel="True Positive Rate", generatePickle=False, hasPlotLibs=True)
 plotGraph(precisionAndRecall, fileName="precisionAndRecall", xlabel="Recall", ylabel="Precision", generatePickle=False, hasPlotLibs=True)
 
