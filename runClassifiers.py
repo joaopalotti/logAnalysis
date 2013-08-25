@@ -120,7 +120,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     #
     
     print "Shuffling the data..."
-    X, Y = shuffleData(X, y, nseed, n_samples)
+    X, y = shuffleData(X, y, nseed, n_samples)
     # Shuffle samples
     print "Shuffled"
     
