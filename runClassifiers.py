@@ -26,9 +26,13 @@ SVMMaxIter=10000
 classifyParameters = {"KNN-K": 100, "ERT-n_estimators": 10, "SVM-cacheSize": 1000, "SVM-kernel": "linear", "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter} 
 
 gridETC = [{'criterion': ['gini','entropy'], 'max_features': ["auto", None, "log2"]}]
-gridKNN = [{'n_neighbors': [5,10,15,20,50], 'algorithm': ["auto", "kd_tree"]}]
+gridKNN = [{'n_neighbors': [1,2,3,4,5,10,15,20,50,100], 'algorithm': ["auto", "kd_tree"]}]
 gridSVM = [{'C': [1,100000,10000000], 'kernel': ["linear", "rbf","poly"]},\
-           {'C': [1,100000,10000000], 'kernel': ["poly"], 'degree':[3,5,10]}]
+           {'C': [1,100000,10000000], 'kernel': ["poly"], 'degree':[3,5,10]},\
+           {'kernel': ['rbf'], 'gamma': [1e-3, 1e-4], 'C': [1, 1000, 1000000]}]
+gridLR = [{'C': [1,1000,10000,10000000], 'penalty': ["l1", "l2"]}]
+gridDT = [{'criterion': ["gini","entropy"], 'max_features': ["auto", None, "log2"]}]
+
 
 def transformeInDict(userDict, n=-1, proportional=-1):
     listOfDicts = list()
@@ -154,8 +158,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     clfrs.append( (svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}) )
     # ================================================================
     etc = ExtraTreesClassifier(random_state=0, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"])
-    clfrs.append( (etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(),\
-        "useGridSearch":gridSearch, "gridParameters":gridETC}) )
+    clfrs.append( (etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC}) )
     
     results = []
     if paralled:
@@ -167,8 +170,8 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
         results.append(classify(duc, "DummyUniform", X, y, nCV, nJobs, baselines))
         results.append(classify(nbc, "Naive Bayes", X, y, nCV, nJobs, baselines))
         results.append(classify(knnc, "KNN", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridKNN}))
-        results.append(classify(knnc, "Logistic Regression", X, y, nCV, nJobs, baselines))
-        results.append(classify(dtc, "Decision Tree", X, y, nCV, nJobs, baselines))
+        results.append(classify(lrc, "Logistic Regression", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridLR}))
+        results.append(classify(dtc, "Decision Tree", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridDT}))
         results.append(classify(svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}))
         results.append(classify(etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC}))
 
