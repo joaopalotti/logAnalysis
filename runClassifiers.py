@@ -149,10 +149,10 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     clfrs.append( (knnc, "KNN", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridKNN}) )
     # ================================================================
     lrc = LogisticRegression()
-    clfrs.append( (lrc, "Logistic Regression", X, y, nCV, nJobs, baselines) )
+    clfrs.append( (lrc, "Logistic Regression", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridLR}) )
     # ================================================================
     dtc = DecisionTreeClassifier()
-    clfrs.append( (dtc, "Decision Tree", X, y, nCV, nJobs, baselines) )
+    clfrs.append( (dtc, "Decision Tree", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridDT}) )
     # ================================================================
     svmc = SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"], max_iter=classifyParameters["SVM-maxIter"], probability=True)
     clfrs.append( (svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}) )
