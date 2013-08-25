@@ -21,8 +21,9 @@ from createFeatureVector import userClass
 
 nCV = 10
 CSVM = 10000
+SVMMaxIter=10000
 
-classifyParameters = {"KNN-K": 100, "ERT-n_estimators": 10, "SVM-cacheSize": 1000, "SVM-kernel": "linear", "SVM-C": CSVM} 
+classifyParameters = {"KNN-K": 100, "ERT-n_estimators": 10, "SVM-cacheSize": 1000, "SVM-kernel": "linear", "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter} 
 
 gridETC = [{'criterion': ['gini','entropy'], 'max_features': ["auto", None, "log2"]}]
 gridKNN = [{'n_neighbors': [5,10,15,20,50], 'algorithm': ["auto", "kd_tree"]}]
@@ -149,7 +150,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     dtc = DecisionTreeClassifier()
     clfrs.append( (dtc, "Decision Tree", X, y, nCV, nJobs, baselines) )
     # ================================================================
-    svmc = SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"], probability=True)
+    svmc = SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"], max_iter=classifyParameters["SVM-maxIter"], probability=True)
     clfrs.append( (svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}) )
     # ================================================================
     etc = ExtraTreesClassifier(random_state=0, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"])
