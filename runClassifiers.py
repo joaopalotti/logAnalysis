@@ -167,7 +167,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
         results.append(classify(duc, "DummyUniform", X, y, nCV, nJobs, baselines))
         results.append(classify(nbc, "Naive Bayes", X, y, nCV, nJobs, baselines))
         results.append(classify(knnc, "KNN", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridKNN}))
-        results.append(classify(knnc, "Logistic Regression", X, y, nCV, nJobs, baselines))
+        results.append(classify(lrc, "Logistic Regression", X, y, nCV, nJobs, baselines))
         results.append(classify(dtc, "Decision Tree", X, y, nCV, nJobs, baselines))
         results.append(classify(svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}))
         results.append(classify(etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC}))
