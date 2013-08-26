@@ -20,16 +20,14 @@ from createFeatureVector import userClass
 # python runClassifiers.pt --preprocessing=[normalize|scale|minmax|nothing] -b [forceBalance|-1] -g [proportional|-1] -m [minNumberOfQueries] -s [nseed]"
 
 nCV = 10
-CSVM = 10000
+CSVM = 1000000
 SVMMaxIter=10000
 
-classifyParameters = {"KNN-K": 100, "ERT-n_estimators": 10, "SVM-cacheSize": 1000, "SVM-kernel": "linear", "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter} 
+classifyParameters = {"KNN-K": 100, "ERT-n_estimators": 10, "SVM-cacheSize": 10000, "SVM-kernel": "rbf", "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter, "SVM-gamma":0.001, "LR-C":1000} 
 
 gridETC = [{'criterion': ['gini','entropy'], 'max_features': ["auto", None, "log2"]}]
 gridKNN = [{'n_neighbors': [1,2,3,4,5,10,15,20,50,100], 'algorithm': ["auto", "kd_tree"]}]
-gridSVM = [{'C': [1,100000,10000000], 'kernel': ["linear", "rbf","poly"]},\
-           {'C': [1,100000,10000000], 'kernel': ["poly"], 'degree':[3,5,10]},\
-           {'kernel': ['rbf'], 'gamma': [1e-3, 1e-4], 'C': [1, 1000, 1000000]}]
+gridSVM = [{'kernel': ['rbf'], 'gamma': [0, 1e-3, 1e-4], 'C': [1, 1000, 1000000]}]
 gridLR = [{'C': [1,1000,10000,10000000], 'penalty': ["l1", "l2"]}]
 gridDT = [{'criterion': ["gini","entropy"], 'max_features': ["auto", None, "log2"]}]
 
@@ -154,7 +152,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
         clfrs.append( (knnc, "KNN", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridKNN}) )
     # ================================================================
     if "lrc" in listOfClassifiers:
-        lrc = LogisticRegression()
+        lrc = LogisticRegression(C=classifyParameters["LR-C"])
         clfrs.append( (lrc, "Logistic Regression", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridLR}) )
     # ================================================================
     if "dtc" in listOfClassifiers:
@@ -162,7 +160,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
         clfrs.append( (dtc, "Decision Tree", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridDT}) )
     # ================================================================
     if "svmc" in listOfClassifiers:
-        svmc = SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"], max_iter=classifyParameters["SVM-maxIter"], probability=True)
+        svmc = SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"], max_iter=classifyParameters["SVM-maxIter"], probability=True, gamma=classifyParameters["SVM-gamma"])
         clfrs.append( (svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}) )
     # ================================================================
     if "etc" in listOfClassifiers:

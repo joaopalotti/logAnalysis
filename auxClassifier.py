@@ -33,7 +33,7 @@ def preprocessing(X_noProcess, method):
     # http://scikit-learn.org/stable/modules/preprocessing.html
     from sklearn import preprocessing
     if method == "standard":
-        X = preprocessing.StandardScaler(X_noProcess)
+        X = preprocessing.StandardScaler().fit_transforme(X_noProcess)
     elif method == "scale":
         X = preprocessing.scale(X_noProcess)
     elif method == "minmax":
@@ -44,6 +44,8 @@ def preprocessing(X_noProcess, method):
         X = X_noProcess
     else:
         print "INVALID PROCESSING METHOD!"
+        from sys import exit
+        exit(0)
     return X
 
 def shuffleData(X, y, nSeed, nSamples):
