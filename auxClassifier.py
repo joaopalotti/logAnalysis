@@ -32,7 +32,9 @@ def calculateBaselines(y, y_greatest):
 def preprocessing(X_noProcess, method):
     # http://scikit-learn.org/stable/modules/preprocessing.html
     from sklearn import preprocessing
-    if method == "scale":
+    if method == "standard":
+        X = preprocessing.StandardScaler(X_noProcess)
+    elif method == "scale":
         X = preprocessing.scale(X_noProcess)
     elif method == "minmax":
         X = preprocessing.MinMaxScaler().fit_transform(X_noProcess)
@@ -40,6 +42,8 @@ def preprocessing(X_noProcess, method):
         X = preprocessing.normalize(X_noProcess, norm='l2')
     elif method == "nothing":
         X = X_noProcess
+    else:
+        print "INVALID PROCESSING METHOD!"
     return X
 
 def shuffleData(X, y, nSeed, nSamples):
