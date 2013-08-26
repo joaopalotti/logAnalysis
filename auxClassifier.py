@@ -42,6 +42,10 @@ def preprocessing(X_noProcess, method):
         X = preprocessing.normalize(X_noProcess, norm='l2')
     elif method == "nothing":
         X = X_noProcess
+    else:
+        print "INVALID PROCESSING METHOD!"
+        from sys import exit
+        exit(0)
     return X
 
 def shuffleData(X, y, nSeed, nSamples):

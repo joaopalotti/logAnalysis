@@ -20,21 +20,19 @@ from createFeatureVector import userClass
 # python runClassifiers.pt --preprocessing=[normalize|scale|minmax|nothing] -b [forceBalance|-1] -g [proportional|-1] -m [minNumberOfQueries] -s [nseed]"
 
 nCV = 10
-CSVM = 10000
+CSVM = 1000000
 SVMMaxIter=10000
 
-classifyParameters = {"KNN-K": 100, "ERT-n_estimators": 10, "SVM-cacheSize": 1000, "SVM-kernel": "linear", "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter} 
+classifyParameters = {"KNN-K": 100, "ERT-n_estimators": 10, "SVM-cacheSize": 10000, "SVM-kernel": "rbf", "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter, "SVM-gamma":0.001, "LR-C":1000} 
 
 gridETC = [{'criterion': ['gini','entropy'], 'max_features': ["auto", None, "log2"]}]
 gridKNN = [{'n_neighbors': [1,2,3,4,5,10,15,20,50,100], 'algorithm': ["auto", "kd_tree"]}]
-gridSVM = [{'C': [1,100000,10000000], 'kernel': ["linear", "rbf","poly"]},\
-           {'C': [1,100000,10000000], 'kernel': ["poly"], 'degree':[3,5,10]},\
-           {'kernel': ['rbf'], 'gamma': [1e-3, 1e-4], 'C': [1, 1000, 1000000]}]
+gridSVM = [{'kernel': ['rbf'], 'gamma': [0, 1e-3, 1e-4], 'C': [1, 1000, 1000000]}]
 gridLR = [{'C': [1,1000,10000,10000000], 'penalty': ["l1", "l2"]}]
 gridDT = [{'criterion': ["gini","entropy"], 'max_features': ["auto", None, "log2"]}]
 
 
-def transformeInDict(userDict, n=-1, proportional=-1):
+def transformeInDict(userDict, n=-1, proportional=-1, dataVersion=None):
     listOfDicts = list()
     listOfLabels = list()
 
@@ -46,14 +44,14 @@ def transformeInDict(userDict, n=-1, proportional=-1):
     for v, (key, user) in zip(p, userDict.iteritems()):
         if n >= 0 and v >= n:
             continue 
-        udict = user.toDict()
+        udict = user.toDict(dataVersion)
         listOfDicts.append(udict)
         listOfLabels.append(user.label)
         #print user.label, udict
         #print udict  #### Check how this features are related with the features calculated by the random tree method
     return listOfDicts, listOfLabels
 
-def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers, gridSearch, generatePickle, hasPlotLibs, paralled, nJobs):
+def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers, gridSearch, generatePickle, hasPlotLibs, paralled, nJobs, listOfClassifiers, dataVersion):
    
     if healthUsers:
         positiveOutputFile = "healthUser-%d-%s.pk" % (minNumberOfQueries, explanation)
@@ -89,8 +87,8 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     print "Loaded"
 
     print "Transforming datasets into Dictionaries..."
-    ld1, ll1 = transformeInDict(negativeUserFV, forceBalance, proportional)
-    ld2, ll2 = transformeInDict(positiveUserFV, forceBalance, proportional)
+    ld1, ll1 = transformeInDict(negativeUserFV, forceBalance, proportional, dataVersion)
+    ld2, ll2 = transformeInDict(positiveUserFV, forceBalance, proportional, dataVersion)
     print "Transformed"
     
     listOfDicts = ld1 + ld2
@@ -133,47 +131,65 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
 
     print "Running classifiers..."
     
-    dmfc = DummyClassifier(strategy='most_frequent')
-    clfrs.append( (dmfc, "DummyMostFrequent", X, y, nCV, nJobs, baselines) )
+    if "dmfc" in listOfClassifiers:
+        dmfc = DummyClassifier(strategy='most_frequent')
+        clfrs.append( (dmfc, "DummyMostFrequent", X, y, nCV, nJobs, baselines) )
     # ================================================================
-    dsc = DummyClassifier(strategy='stratified')
-    clfrs.append( (dsc, "DummyStratified", X, y, nCV, nJobs, baselines) )
+    if "dsc" in listOfClassifiers:
+        dsc = DummyClassifier(strategy='stratified')
+        clfrs.append( (dsc, "DummyStratified", X, y, nCV, nJobs, baselines) )
     # ================================================================
-    duc = DummyClassifier(strategy='uniform')
-    clfrs.append( (duc, "DummyUniform", X, y, nCV, nJobs, baselines) )
+    if "duc" in listOfClassifiers:
+        duc = DummyClassifier(strategy='uniform')
+        clfrs.append( (duc, "DummyUniform", X, y, nCV, nJobs, baselines) )
     # ================================================================
-    nbc = GaussianNB()
-    clfrs.append( (nbc, "Naive Bayes", X, y, nCV, nJobs, baselines) )
+    if "nbc" in listOfClassifiers:
+        nbc = GaussianNB()
+        clfrs.append( (nbc, "Naive Bayes", X, y, nCV, nJobs, baselines) )
     # ================================================================
-    knnc = KNeighborsClassifier(n_neighbors=classifyParameters["KNN-K"])
-    clfrs.append( (knnc, "KNN", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridKNN}) )
+    if "knnc" in listOfClassifiers:
+        knnc = KNeighborsClassifier(n_neighbors=classifyParameters["KNN-K"])
+        clfrs.append( (knnc, "KNN", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridKNN}) )
     # ================================================================
-    lrc = LogisticRegression()
-    clfrs.append( (lrc, "Logistic Regression", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridLR}) )
+    if "lrc" in listOfClassifiers:
+        lrc = LogisticRegression(C=classifyParameters["LR-C"])
+        clfrs.append( (lrc, "Logistic Regression", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridLR}) )
     # ================================================================
-    dtc = DecisionTreeClassifier()
-    clfrs.append( (dtc, "Decision Tree", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridDT}) )
+    if "dtc" in listOfClassifiers:
+        dtc = DecisionTreeClassifier()
+        clfrs.append( (dtc, "Decision Tree", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridDT}) )
     # ================================================================
-    svmc = SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"], max_iter=classifyParameters["SVM-maxIter"], probability=True)
-    clfrs.append( (svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}) )
+    if "svmc" in listOfClassifiers:
+        svmc = SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"], max_iter=classifyParameters["SVM-maxIter"], probability=True, gamma=classifyParameters["SVM-gamma"])
+        clfrs.append( (svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}) )
     # ================================================================
-    etc = ExtraTreesClassifier(random_state=0, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"])
-    clfrs.append( (etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC}) )
+    if "etc" in listOfClassifiers:
+        etc = ExtraTreesClassifier(random_state=0, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"])
+        clfrs.append( (etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC}) )
     
     results = []
     if paralled:
         from scoop import futures
         results = futures.map(parallelClassify,clfrs)
     else:
-        results.append(classify(dmfc, "DummyMostFrequent", X, y, nCV, nJobs, baselines))
-        results.append(classify(dsc, "DummyStratified", X, y, nCV, nJobs, baselines))
-        results.append(classify(duc, "DummyUniform", X, y, nCV, nJobs, baselines))
-        results.append(classify(nbc, "Naive Bayes", X, y, nCV, nJobs, baselines))
-        results.append(classify(knnc, "KNN", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridKNN}))
-        results.append(classify(lrc, "Logistic Regression", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridLR}))
-        results.append(classify(dtc, "Decision Tree", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridDT}))
-        results.append(classify(svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}))
-        results.append(classify(etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC}))
+        if "dmfc" in listOfClassifiers:
+            results.append(classify(dmfc, "DummyMostFrequent", X, y, nCV, nJobs, baselines))
+        if "dsc" in listOfClassifiers:
+            results.append(classify(dsc, "DummyStratified", X, y, nCV, nJobs, baselines))
+        if "duc" in listOfClassifiers:
+            results.append(classify(duc, "DummyUniform", X, y, nCV, nJobs, baselines))
+        if "nbc" in listOfClassifiers:
+            results.append(classify(nbc, "Naive Bayes", X, y, nCV, nJobs, baselines))
+        if "knnc" in listOfClassifiers:
+            results.append(classify(knnc, "KNN", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridKNN}))
+        if "lrc" in listOfClassifiers:
+            results.append(classify(lrc, "Logistic Regression", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridLR}))
+        if "dtc" in listOfClassifiers:
+            results.append(classify(dtc, "Decision Tree", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridDT}))
+        if "svmc" in listOfClassifiers:
+            results.append(classify(svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}))
+        if "rfc" in listOfClassifiers:
+            results.append(classify(etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC}))
 
 
     precRecall, roc = getCurves(results)
@@ -204,6 +220,8 @@ if __name__ == "__main__":
     op.add_option("--ignorePickle", "-i", action="store_true", dest="ignorePickle", help="Don't Generate Pickle of plots", default=False)
     op.add_option("--useScoop", "-s", action="store_true", dest="useScoop", help="Use Scoop to run classifier in parallel", default=False)
     op.add_option("--njobs", "-j", action="store", type="int", dest="njobs", help="Number of parallel jobs to run.", metavar="X", default=2)
+    op.add_option("--classifiers", "-l", action="store", type="string", dest="classifiers", help="Classifiers to run. Options are dmfc|dsc|duc|nbc|knnc|lrc|dtc|svmc|etc", metavar="cl1|cl2|..", default="dmfc|dsc|duc|nbc|knnc|lrc|dtc|svmc|etc")
+    op.add_option("--dataVersion", "-d", action="store", type="string", dest="dataVersion", help="Options are: wsdm | semanticMenas.", metavar="V")
 
     (opts, args) = op.parse_args()
     if len(args) > 0:
@@ -218,6 +236,12 @@ if __name__ == "__main__":
     print "Generating Pickle = ", not opts.ignorePickle
     print "Running in parallel =", opts.useScoop
     print "Njobs = ", opts.njobs
+    print "Classifiers = ", opts.classifiers
+    listOfClassifiers = opts.classifiers.split("|")
+    
+    if not opts.dataVersion:
+        print "Please, use a dataversion"
+        sys.exit(0)
 
-    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.explanation, opts.healthUsers, opts.gridSearch, not opts.ignorePickle, opts.hasPlotLibs, opts.useScoop, opts.njobs)
+    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.explanation, opts.healthUsers, opts.gridSearch, not opts.ignorePickle, opts.hasPlotLibs, opts.useScoop, opts.njobs, listOfClassifiers, opts.dataVersion)
 

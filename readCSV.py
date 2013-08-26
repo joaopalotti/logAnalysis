@@ -1,9 +1,14 @@
-import csv
+import csv, sys, gzip
 from DataSet import DataSet
 from datetime import datetime
 from time import time
-import sys
-from auxiliarFunctions import openZip
+#from auxiliarFunctions import openZip
+
+def openZip(filename):
+    if filename.endswith(".gz"):
+        return gzip.open(filename, 'rb')
+    else:
+        return open(filename, 'rb')
 
 '''check if two rows belong to the same user and during the same session (defined by default as a 30 min time'''
 def checkSession(previousRow, currentRow, timeBetweenInSeconds=60*30, dateFormat='%Y-%m-%d %H:%M:%S', idIndex=0, dateIndex=2, usingTimestamp=False):
