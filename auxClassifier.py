@@ -33,7 +33,7 @@ def preprocessing(X_noProcess, method):
     # http://scikit-learn.org/stable/modules/preprocessing.html
     from sklearn import preprocessing
     if method == "standard":
-        X = preprocessing.StandardScaler().fit_transforme(X_noProcess)
+        X = preprocessing.StandardScaler().fit_transform(X_noProcess)
     elif method == "scale":
         X = preprocessing.scale(X_noProcess)
     elif method == "minmax":
