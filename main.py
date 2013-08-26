@@ -9,7 +9,7 @@ usingAugHON = True
 toyExample = False
 testing = "" # "1."
 
-aolNotHealthOption = 4
+aolNotHealthOption = 2
 # 0) NOT using it
 # 1) aolNotHealthFinal-noDash 
 # 2) aolHealthNoAnimal-noDash-clicked
