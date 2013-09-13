@@ -20,17 +20,17 @@ from createFeatureVector import userClass
 # python runClassifiers.pt --preprocessing=[normalize|scale|minmax|nothing] -b [forceBalance|-1] -g [proportional|-1] -m [minNumberOfQueries] -s [nseed]"
 
 nCV = 10
-CSVM = 1000000
+CSVM = 10000
 SVMMaxIter=10000
 
-classifyParameters = {"KNN-K": 100, "ERT-n_estimators": 10, "SVM-cacheSize": 10000, "SVM-kernel": "rbf", "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter, "SVM-gamma":0.001, "LR-C":1000} 
+classifyParameters = {"KNN-K": 100, "ETC-n_estimators": 10, "SVM-cacheSize": 2000, "SVM-kernel": "rbf", "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter, "SVM-gamma":0.0001, "LR-C":1000, "ETC-criterion": "entropy", "ETC-max_features":None} 
 
-gridETC = [{'criterion': ['gini','entropy'], 'max_features': ["auto", None, "log2"]}]
+gridETC = [{'criterion': ['entropy'], 'max_features': [None], "n_estimators":[10,100,1000,100000,10000000]}]
 gridKNN = [{'n_neighbors': [1,2,3,4,5,10,15,20,50,100], 'algorithm': ["auto", "kd_tree"]}]
-gridSVM = [{'kernel': ['rbf'], 'gamma': [0, 1e-3, 1e-4], 'C': [1, 1000, 1000000]}]
 gridLR = [{'C': [1,1000,10000,10000000], 'penalty': ["l1", "l2"]}]
 gridDT = [{'criterion': ["gini","entropy"], 'max_features': ["auto", None, "log2"]}]
 
+gridSVM = [{'kernel': ['rbf'], 'gamma': [100, 10, 1, 0, 1e-3, 1e-4, 1e-6], 'C': [1000000]}]
 
 def transformeInDict(userDict, n=-1, proportional=-1, dataVersion=None):
     listOfDicts = list()
@@ -164,7 +164,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
         clfrs.append( (svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}) )
     # ================================================================
     if "etc" in listOfClassifiers:
-        etc = ExtraTreesClassifier(random_state=0, n_jobs=nJobs, n_estimators=classifyParameters["ERT-n_estimators"])
+        etc = ExtraTreesClassifier(random_state=0, n_jobs=nJobs, n_estimators=classifyParameters["ETC-n_estimators"], criterion=classifyParameters["ETC-criterion"], max_features=classifyParameters["ETC-max_features"])
         clfrs.append( (etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC}) )
     
     results = []
@@ -188,7 +188,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
             results.append(classify(dtc, "Decision Tree", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridDT}))
         if "svmc" in listOfClassifiers:
             results.append(classify(svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}))
-        if "rfc" in listOfClassifiers:
+        if "etc" in listOfClassifiers:
             results.append(classify(etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC}))
 
 
