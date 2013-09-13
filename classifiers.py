@@ -162,16 +162,40 @@ def plotGraph(precRecallDict, fileName, xlabel, ylabel, generatePickle=True, has
     import matplotlib.pylab as plt
     
     for title, yx in precRecallDict.items():
-        plt.plot(yx[1], yx[0], label=title)
+        if title == "Random Forest":
+            plt.plot(yx[1], yx[0], label="Random Forest (AUC=0.94)")
+    
+    for title, yx in precRecallDict.items():
+        if title != "Random Forest":
+            if title == "DummyMostFrequent":
+                title = "Most Freq. Class Classifier (AUC=0.50)"
+            
+            if title == "Naive Bayes":
+                title = "Naive Bayes (AUC=0.72)"
+            
+            if title == "KNN":
+                title = "KNN (AUC=0.93)"
+            
+            if title == "Decision Tree":
+                continue
+                title = "Decision Tree (AUC=0.81)"
+            
+            if title == "Logistic Regression":
+                title = "Logistic Regression (AUC=0.89)"
+            
+            if title == "SVM":
+                title = "SVM (AUC=0.93)"
+            plt.plot(yx[1], yx[0], label=title)
 
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.ylim([0.0, 1.05])
+    plt.ylim([0.0, 1.01])
     plt.xlim([0.0, 1.0])
-    #plt.legend(loc=2)
-    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05), ncol=3, fancybox=True, shadow=True)
+    plt.legend(loc=4)
+    #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05), ncol=3, fancybox=True, shadow=True) # upper part
     #plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=5)
+    #plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.00), fancybox=True, shadow=True, ncol=5)
 
     if fileName:
         plt.savefig(fileName + ".eps" , papertype="a4", orientation="portrait")
