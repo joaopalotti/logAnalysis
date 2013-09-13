@@ -198,6 +198,8 @@ def getROC(y, probas):
     roc_auc = auc(fpr, tpr)
     print("Area under the ROC curve : %f" % roc_auc)
     print "thresholdsROC = ", thresholdsROC
+    print "Probas ===> ", probas
+    print "Fpr -> ", fpr, "tpr -> ", tpr
 
     return (tpr, fpr)
 

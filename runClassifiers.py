@@ -23,7 +23,7 @@ nCV = 10
 CSVM = 10000
 SVMMaxIter=10000
 
-classifyParameters = {"KNN-K": 100, "ETC-n_estimators": 10, "SVM-cacheSize": 2000, "SVM-kernel": "rbf", "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter, "SVM-gamma":0.0001, "LR-C":1000, "ETC-criterion": "entropy", "ETC-max_features":None} 
+classifyParameters = {"KNN-K": 20, "ETC-n_estimators": 120, "SVM-cacheSize": 2000, "SVM-kernel": "rbf", "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter, "SVM-gamma":0.0001, "LR-C":1000, "ETC-criterion": "entropy", "ETC-max_features":None, "DT-criterion": "entropy", "DT-max_features":None} 
 
 gridETC = [{'criterion': ['entropy'], 'max_features': [None], "n_estimators":[10,100,1000,100000,10000000]}]
 gridKNN = [{'n_neighbors': [1,2,3,4,5,10,15,20,50,100], 'algorithm': ["auto", "kd_tree"]}]
@@ -156,7 +156,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
         clfrs.append( (lrc, "Logistic Regression", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridLR}) )
     # ================================================================
     if "dtc" in listOfClassifiers:
-        dtc = DecisionTreeClassifier()
+        dtc = DecisionTreeClassifier( criterion=classifyParameters["DT-criterion"], max_features=classifyParameters["DT-max_features"] )
         clfrs.append( (dtc, "Decision Tree", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridDT}) )
     # ================================================================
     if "svmc" in listOfClassifiers:
@@ -195,8 +195,8 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     precRecall, roc = getCurves(results)
     roc["Random Classifier"] = ([0,1],[0,1])
 
-    plotGraph(precRecall, fileName="precisionAndRecall", xlabel="Recall", ylabel="Precision", generatePickle=generatePickle, hasPlotLibs=hasPlotLibs)
-    plotGraph(roc, fileName="ROC", xlabel="False Positive Rate", ylabel="True Positive Rate", generatePickle=generatePickle, hasPlotLibs=hasPlotLibs)
+    plotGraph(precRecall, fileName="officialPR-DT", xlabel="Recall", ylabel="Precision", generatePickle=generatePickle, hasPlotLibs=hasPlotLibs)
+    plotGraph(roc, fileName="officialROC-DT", xlabel="False Positive Rate", ylabel="True Positive Rate", generatePickle=generatePickle, hasPlotLibs=hasPlotLibs)
     
     for r in results:
         label = r[0]
