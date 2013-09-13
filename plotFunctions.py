@@ -124,13 +124,12 @@ def plotSizeOfQueriesRelative(myPlotter, queryInNumbers, printValuesToFile, plot
 
 def plotSizeOfWords(myPlotter, queryInCharsList, printValuesToFile, plottingInstalled=True):
     
-    wordsSize = []
     for dataItem in queryInCharsList[:-1]:
-        dataName, wordsSize = dataItem[0], dataItem[1]
-        myPlotter.plotFrequency(wordsSize, "Word Size", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="wordSize", plottingInstalled=plottingInstalled)
+        dataName, wordSize = dataItem[0], dataItem[1]
+        myPlotter.plotFrequency(wordSize, "Word Size", label=dataName, showIt=False, lastOne=False, printValuesToFile=printValuesToFile, saveName="wordSize", plottingInstalled=plottingInstalled)
 
     dataName, wordSize = queryInCharsList[-1][0], queryInCharsList[-1][1]
-    myPlotter.plotFrequency(wordsSize, "Word Size", label=dataName, saveName="wordSize", showIt=False, lastOne=True, printValuesToFile=printValuesToFile, plottingInstalled=plottingInstalled)
+    myPlotter.plotFrequency(wordSize, "Word Size", label=dataName, saveName="wordSize", showIt=False, lastOne=True, printValuesToFile=printValuesToFile, plottingInstalled=plottingInstalled)
 
 def plotMeshDepth(myPlotter, dataList, printValuesToFile, plottingInstalled=True):
     for dataItem in dataList[:-1]:
