@@ -317,63 +317,43 @@ public class myApi2 {
             //System.out.println("Parsing (1) => " + list);
             String[] elements = null;
 
-            if(adjust != 0){
-                elements = getElement(list, adjust);
-                tokenAdjust = adjust;
-                adjust = 0;
-            }
-            else{ 
-                elements = getElement(list);
-            }
+            elements = getElement(list);
             String actual = elements[0];
             String rest = elements[1];
             
             //System.out.println("Actual => " + actual);
             //System.out.println("Rest   => " + rest);
-            String token = null; 
+            
+            int op = countOccurences(actual, '('); 
+            int cp = countOccurences(actual, ')');
+            int rop = countOccurences(rest, '('); 
+            int rcp = countOccurences(rest, ')');
+            
+            if(op == cp && op == 0){
+                adjust = -1;
+                elements = getElement(list, adjust);
+                actual = elements[0];
+                rest = elements[1];
+
+                //System.out.println("NEW Actual => " + actual);
+                //System.out.println("NEW Rest   => " + rest);
+            }
+            else if(rcp > rop){
+                adjust = 1;
+                elements = getElement(list, adjust);
+                actual = elements[0];
+                rest = elements[1];
+
+                //System.out.println("NEW Actual => " + actual);
+                //System.out.println("NEW Rest   => " + rest);
+            }
+
             String tag = getTag(actual);
+            String token = getToken(actual, adjust);
             
-            if(tag == null){
-                tag = getTag(rest);
-                token = getToken(rest);
-                if( tag.equals("punc")){
-                    if(token.startsWith("("))
-                        adjust = -1;
-                    //System.out.println("Configured adjust of "+ adjust);
-                }
-                continue;
-            }
+            //System.out.println("TAG => " + tag);
+            //System.out.println("TOKEN   => " + token);
             
-            //System.out.println("Tag   => " + tag);
-            
-            //verifies if the number of [] is correct. It may indicate that the char is ")"
-            if( tag.equals("punc")){
-                int op = countOccurences(actual, '('); 
-                int cp = countOccurences(actual, ')');
-                
-                int oc = countOccurences(actual, '['); 
-                int cc = countOccurences(actual, ']');
-                
-                //System.out.println("op = " + op + " cp = " + cp + " oc = " + oc + " cc = " + cc);
-                if (cp == op && oc > cc){
-                    token = getToken(actual, 1);
-                    //System.out.println("Token -> "+ token);
-                    if(token.equals(")")){
-                        adjust = 1;
-                        continue;
-                    }
-                }
-                //System.out.println("Configured adjust of "+ adjust);
-            }
-
-            if(tokenAdjust != 0){
-                token = getToken(actual, tokenAdjust);
-                tokenAdjust = 0;
-            }else{
-                token = getToken(actual);
-            }
-            
-
             result.add(token);
             result.add(tag);
 
