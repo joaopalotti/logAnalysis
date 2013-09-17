@@ -308,14 +308,14 @@ public class myApi2 {
         List<String> result = new ArrayList<String>();
         int adjust = 0;
         int tokenAdjust = 0;
-        System.out.println("Initial list => " + list);
+        //System.out.println("Initial list => " + list);
         list = list.substring(1, list.length() - 1);
 
         while(true){
             if( list.charAt(0) == ',' )
                 list = list.substring(1, list.length());
 
-            System.out.println("Parsing (1) => " + list);
+            //System.out.println("Parsing (1) => " + list);
             String[] elements = null;
 
             if( adjust != 0){
@@ -329,8 +329,8 @@ public class myApi2 {
             String actual = elements[0];
             String rest = elements[1];
             
-            System.out.println("Actual => " + actual);
-            System.out.println("Parsing (2) => " + rest);
+            //System.out.println("Actual => " + actual);
+            //System.out.println("Parsing (2) => " + rest);
             String token = null; 
             String tag = getTag(actual);
             
@@ -340,7 +340,7 @@ public class myApi2 {
                 if( tag.compareTo("punc") == 0){
                     if(token.startsWith("("))
                         adjust = -1;
-                    System.out.println("Configured adjust of "+ adjust);
+                    //System.out.println("Configured adjust of "+ adjust);
                 }
                 continue;
             }
@@ -348,10 +348,10 @@ public class myApi2 {
             //verifies if the nubmer of [] is correct. It may indicate that the char is ")"
             if( tag.compareTo("punc") == 0){
                 elements = getElement(actual, '[', ']', 0);
-                System.out.println("Checing punc " + elements[0] +  " ----------- " + elements[1]);
+                //System.out.println("Checing punc " + elements[0] +  " ----------- " + elements[1]);
                 if (elements[0].length() == 0 || elements[1].length() == 0){
                     adjust = 1;
-                    System.out.println("Configured adjust of "+ adjust);
+                    //System.out.println("Configured adjust of "+ adjust);
                     continue;
                 }
             }
@@ -456,18 +456,18 @@ public class myApi2 {
             if (list.charAt(i) == copen && start == -1){
                 start = i;
                 count++;
-                System.out.println("Count -> " + count +  "  i = " + i + " charat => " + list.charAt(i));
+                //System.out.println("Count -> " + count +  "  i = " + i + " charat => " + list.charAt(i));
             }
             else if (list.charAt(i) == copen){
                 count++;
-                System.out.println("Count -> " + count +  "  i = " + i + " charat => " + list.charAt(i));
+                //System.out.println("Count -> " + count +  "  i = " + i + " charat => " + list.charAt(i));
             }
             else if (list.charAt(i) == cclose) {
                 count--;
-                System.out.println("Count -> " + count +  "  i = " + i + " charat => " + list.charAt(i));
+                //System.out.println("Count -> " + count +  "  i = " + i + " charat => " + list.charAt(i));
                 if(count <= 0){
                     stop = i;
-                    System.out.println("BREAK! i =  " + i);
+                    //System.out.println("BREAK! i =  " + i);
                     break;
                 }
             }
