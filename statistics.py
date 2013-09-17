@@ -178,6 +178,8 @@ def calculateStatistics(dataList, usingScoop):
         countingQueryRankingList.append([r[0],r[10]])
         countingQueryInNumbersList.append([r[0],r[11]])
         countingQueryInCharsList.append([r[0],r[12]])
+
+        print "Len r12 -----> ", len(r[12])
         
     # Plot graphics
     if plotGraphs:
@@ -869,6 +871,11 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
 
     indexGreatestQuery, _ = max(enumerate(queryInNumbers), key=operator.itemgetter(1))
     greatestQuery = listOfQueries[indexGreatestQuery]
+
+    print "QUERY IN CHARS =>> ", queryInChars[0:10]
+    print "size -> ", len(queryInChars)
+    print "List OF querires --> ", listOfQueries[0:10]
+    print "size -> ", len(listOfQueries)
 
     #print queryInNumbers
     #print greatestQuery, len(greatestQuery)
