@@ -306,24 +306,64 @@ public class myApi2 {
 
         //System.out.println("Parsing => " + list);
         List<String> result = new ArrayList<String>();
+        int adjust = 0;
+        int tokenAdjust = 0;
+        System.out.println("Initial list => " + list);
         list = list.substring(1, list.length() - 1);
+
         while(true){
             if( list.charAt(0) == ',' )
                 list = list.substring(1, list.length());
 
-            //System.out.println("Parsing (1) => " + list);
+            System.out.println("Parsing (1) => " + list);
+            String[] elements = null;
 
-            String[] elements = getElement(list);
+            if( adjust != 0){
+                elements = getElement(list, adjust);
+                tokenAdjust = adjust;
+                adjust = 0;
+            }
+            else{ 
+                elements = getElement(list);
+            }
             String actual = elements[0];
             String rest = elements[1];
             
-            //System.out.println("Actual => " + actual);
-            //System.out.println("Parsing (2) => " + rest);
-            String token = getToken(actual);
+            System.out.println("Actual => " + actual);
+            System.out.println("Parsing (2) => " + rest);
+            String token = null; 
             String tag = getTag(actual);
-            //System.out.println("Token => " + token);
-            //System.out.println("Tag => " + tag);
             
+            if(tag == null){
+                tag = getTag(rest);
+                token = getToken(rest);
+                if( tag.compareTo("punc") == 0){
+                    if(token.startsWith("("))
+                        adjust = -1;
+                    System.out.println("Configured adjust of "+ adjust);
+                }
+                continue;
+            }
+            
+            //verifies if the nubmer of [] is correct. It may indicate that the char is ")"
+            if( tag.compareTo("punc") == 0){
+                elements = getElement(actual, '[', ']', 0);
+                System.out.println("Checing punc " + elements[0] +  " ----------- " + elements[1]);
+                if (elements[0].length() == 0 || elements[1].length() == 0){
+                    adjust = 1;
+                    System.out.println("Configured adjust of "+ adjust);
+                    continue;
+                }
+            }
+
+            if(tokenAdjust != 0){
+                token = getToken(actual, tokenAdjust);
+                tokenAdjust = 0;
+            }else{
+                token = getToken(actual);
+            }
+            
+
             result.add(token);
             result.add(tag);
 
@@ -334,12 +374,18 @@ public class myApi2 {
 
         return result;
     }
-
     public static String getToken(String list){
+        return getToken(list, 0);
+    }
+
+    public static String getToken(String list, int adjust){
+        if(list.isEmpty())
+            return null;
+
         //treat punctuation separately
         if(list.startsWith("punc(")){
             String[] parts = list.split("inputmatch");
-            String tag = getElement(parts[1])[0];
+            String tag = getElement(parts[1], adjust)[0];
             return tag.substring(2, tag.length() - 2);
         }
         else if(list.startsWith("shapes(")){
@@ -364,6 +410,9 @@ public class myApi2 {
     }
 
     public static String getTag(String list){
+        if(list.isEmpty())
+            return null;
+        
         //treat punctuation separately
         if(list.startsWith("punc(")){
             return "punc";
@@ -390,23 +439,35 @@ public class myApi2 {
     }
 
     public static String[] getElement(String list) {
-        String result[] = new String[2];
-        int start = -1;
-        int stop = -1;
-        int count = 0;
+        return getElement(list, '(', ')', 0);
+    }
 
+    public static String[] getElement(String list, int adjust) {
+        return getElement(list, '(', ')', adjust);
+    }
+
+    public static String[] getElement(String list, char copen, char cclose, int adjust) {
+        String result[] = new String[2];
+        int start = -1; // counts (
+        int stop = -1;
+        int count = adjust;
+        
         for(int i = 0; i < list.length(); i++){
-            if (list.charAt(i) == '(' && start == -1){
+            if (list.charAt(i) == copen && start == -1){
                 start = i;
                 count++;
+                System.out.println("Count -> " + count +  "  i = " + i + " charat => " + list.charAt(i));
             }
-            else if (list.charAt(i) == '('){
+            else if (list.charAt(i) == copen){
                 count++;
+                System.out.println("Count -> " + count +  "  i = " + i + " charat => " + list.charAt(i));
             }
-            else if (list.charAt(i) == ')') {
+            else if (list.charAt(i) == cclose) {
                 count--;
+                System.out.println("Count -> " + count +  "  i = " + i + " charat => " + list.charAt(i));
                 if(count <= 0){
                     stop = i;
+                    System.out.println("BREAK! i =  " + i);
                     break;
                 }
             }
