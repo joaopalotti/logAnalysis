@@ -307,22 +307,28 @@ public class myApi2 {
         List<String> result = new ArrayList<String>();
         int adjust = 0;
         int tokenAdjust = 0;
-        //System.out.println("Initial list => " + list);
+        System.out.println("Initial list => " + list);
         list = list.substring(1, list.length() - 1);
 
         while(true){
             if( list.charAt(0) == ',' )
                 list = list.substring(1, list.length());
 
-            //System.out.println("Parsing (1) => " + list);
+            System.out.println("Parsing (1) => " + list);
             String[] elements = null;
+
+            /*Remove bug in metamap*/
+            //Example of query that is badly processed: inputmatch([RA,)]) -> inputmatch([RA])
+            list = list.replaceAll("inputmatch\\(\\[([\\w]*)\\,\\)\\]\\)", "inputmatch\\(\\[$1\\]\\)");
+
+            System.out.println("Replaced => " + list);
 
             elements = getElement(list);
             String actual = elements[0];
             String rest = elements[1];
             
-            //System.out.println("Actual => " + actual);
-            //System.out.println("Rest   => " + rest);
+            System.out.println("Actual => " + actual);
+            System.out.println("Rest   => " + rest);
             
             int op = countOccurences(actual, '('); 
             int cp = countOccurences(actual, ')');
@@ -335,8 +341,9 @@ public class myApi2 {
                 actual = elements[0];
                 rest = elements[1];
 
-                //System.out.println("NEW Actual => " + actual);
-                //System.out.println("NEW Rest   => " + rest);
+                System.out.println("op == cp == 0");
+                System.out.println("NEW Actual => " + actual);
+                System.out.println("NEW Rest   => " + rest);
             }
             else if(rcp > rop){
                 adjust = 1;
@@ -344,15 +351,16 @@ public class myApi2 {
                 actual = elements[0];
                 rest = elements[1];
 
-                //System.out.println("NEW Actual => " + actual);
-                //System.out.println("NEW Rest   => " + rest);
+                System.out.println("op == cp == 0");
+                System.out.println("NEW Actual => " + actual);
+                System.out.println("NEW Rest   => " + rest);
             }
 
             String tag = getTag(actual);
             String token = getToken(actual, adjust);
             
-            //System.out.println("TAG => " + tag);
-            //System.out.println("TOKEN   => " + token);
+            System.out.println("TAG => " + tag);
+            System.out.println("TOKEN   => " + token);
             
             result.add(token);
             result.add(tag);
