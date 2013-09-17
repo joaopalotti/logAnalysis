@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Iterator;
-
 import au.com.bytecode.opencsv.*;
 import gov.nih.nlm.nls.metamap.*;
 
@@ -318,7 +317,7 @@ public class myApi2 {
             //System.out.println("Parsing (1) => " + list);
             String[] elements = null;
 
-            if( adjust != 0){
+            if(adjust != 0){
                 elements = getElement(list, adjust);
                 tokenAdjust = adjust;
                 adjust = 0;
@@ -330,14 +329,14 @@ public class myApi2 {
             String rest = elements[1];
             
             //System.out.println("Actual => " + actual);
-            //System.out.println("Parsing (2) => " + rest);
+            //System.out.println("Rest   => " + rest);
             String token = null; 
             String tag = getTag(actual);
             
             if(tag == null){
                 tag = getTag(rest);
                 token = getToken(rest);
-                if( tag.compareTo("punc") == 0){
+                if( tag.equals("punc")){
                     if(token.startsWith("("))
                         adjust = -1;
                     //System.out.println("Configured adjust of "+ adjust);
@@ -345,15 +344,26 @@ public class myApi2 {
                 continue;
             }
             
-            //verifies if the nubmer of [] is correct. It may indicate that the char is ")"
-            if( tag.compareTo("punc") == 0){
-                elements = getElement(actual, '[', ']', 0);
-                //System.out.println("Checing punc " + elements[0] +  " ----------- " + elements[1]);
-                if (elements[0].length() == 0 || elements[1].length() == 0){
-                    adjust = 1;
-                    //System.out.println("Configured adjust of "+ adjust);
-                    continue;
+            //System.out.println("Tag   => " + tag);
+            
+            //verifies if the number of [] is correct. It may indicate that the char is ")"
+            if( tag.equals("punc")){
+                int op = countOccurences(actual, '('); 
+                int cp = countOccurences(actual, ')');
+                
+                int oc = countOccurences(actual, '['); 
+                int cc = countOccurences(actual, ']');
+                
+                //System.out.println("op = " + op + " cp = " + cp + " oc = " + oc + " cc = " + cc);
+                if (cp == op && oc > cc){
+                    token = getToken(actual, 1);
+                    //System.out.println("Token -> "+ token);
+                    if(token.equals(")")){
+                        adjust = 1;
+                        continue;
+                    }
                 }
+                //System.out.println("Configured adjust of "+ adjust);
             }
 
             if(tokenAdjust != 0){
@@ -367,13 +377,23 @@ public class myApi2 {
             result.add(token);
             result.add(tag);
 
-            if(rest.compareTo("") == 0)
+            if(rest.equals(""))
                 break;
             list = rest;
         }
 
         return result;
     }
+
+    public static int countOccurences(String s, char c){
+        int counter = 0;
+        for(int i = 0; i < s.length() ; i++)
+            if(s.charAt(i) == c)
+                counter ++;
+
+        return counter;
+    }
+
     public static String getToken(String list){
         return getToken(list, 0);
     }
