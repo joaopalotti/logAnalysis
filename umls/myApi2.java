@@ -319,7 +319,10 @@ public class myApi2 {
 
             /*Remove bug in metamap*/
             //Example of query that is badly processed: inputmatch([RA,)]) -> inputmatch([RA])
-            list = list.replaceAll("inputmatch\\(\\[([\\w]*)\\,\\)\\]\\)", "inputmatch\\(\\[$1\\]\\)");
+            //list = list.replaceAll("inputmatch\\(\\[([\\w]*)\\,\\)\\]\\)", "inputmatch\\(\\[$1\\]\\)");
+            
+            //merge all inputmatches. Ex inputmatch([Critical,Care,",(,nursing]) -> inputmatch([a])
+            list = list.replaceAll("inputmatch\\(\\[([\\w]*)+\\,[^]]+\\]\\)", "inputmatch\\(\\[a\\]\\)");
 
             System.out.println("Replaced => " + list);
 
