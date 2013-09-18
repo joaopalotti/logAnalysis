@@ -307,14 +307,14 @@ public class myApi2 {
         List<String> result = new ArrayList<String>();
         int adjust = 0;
         int tokenAdjust = 0;
-        System.out.println("Initial list => " + list);
+        //System.out.println("Initial list => " + list);
         list = list.substring(1, list.length() - 1);
 
         while(true){
             if( list.charAt(0) == ',' )
                 list = list.substring(1, list.length());
 
-            System.out.println("Parsing (1) => " + list);
+            //System.out.println("Parsing (1) => " + list);
             String[] elements = null;
 
             /*Remove bug in metamap*/
@@ -322,31 +322,37 @@ public class myApi2 {
             //list = list.replaceAll("inputmatch\\(\\[([\\w]*)\\,\\)\\]\\)", "inputmatch\\(\\[$1\\]\\)");
             
             //merge all inputmatches. Ex inputmatch([Critical,Care,",(,nursing]) -> inputmatch([a])
-            list = list.replaceAll("inputmatch\\(\\[([\\w]*)+\\,[^]]+\\]\\)", "inputmatch\\(\\[a\\]\\)");
+            //list = list.replaceAll("inputmatch\\(\\[([\\w]*)+\\,[^]]+\\]\\)", "inputmatch\\(\\[a\\]\\)");
 
-            System.out.println("Replaced => " + list);
+            //System.out.println("Replaced => " + list);
 
             elements = getElement(list);
             String actual = elements[0];
             String rest = elements[1];
             
-            System.out.println("Actual => " + actual);
-            System.out.println("Rest   => " + rest);
+            //System.out.println("Actual => " + actual);
+            //System.out.println("Rest   => " + rest);
             
             int op = countOccurences(actual, '('); 
             int cp = countOccurences(actual, ')');
             int rop = countOccurences(rest, '('); 
             int rcp = countOccurences(rest, ')');
             
+            /*System.out.println(" op = "+ op );
+            System.out.println(" cp = "+ cp );
+            System.out.println(" rop = "+ rop );
+            System.out.println(" rcp = "+ rcp );
+            System.out.println(" true ? " + (op == cp && op == 0));*/
+
             if(op == cp && op == 0){
                 adjust = -1;
                 elements = getElement(list, adjust);
                 actual = elements[0];
                 rest = elements[1];
 
-                System.out.println("op == cp == 0");
+                /*System.out.println("op == cp == 0");
                 System.out.println("NEW Actual => " + actual);
-                System.out.println("NEW Rest   => " + rest);
+                System.out.println("NEW Rest   => " + rest);*/
             }
             else if(rcp > rop){
                 adjust = 1;
@@ -354,16 +360,16 @@ public class myApi2 {
                 actual = elements[0];
                 rest = elements[1];
 
-                System.out.println("op == cp == 0");
+                /*System.out.println("rcp > rop");
                 System.out.println("NEW Actual => " + actual);
-                System.out.println("NEW Rest   => " + rest);
+                System.out.println("NEW Rest   => " + rest);*/
             }
 
             String tag = getTag(actual);
             String token = getToken(actual, adjust);
             
-            System.out.println("TAG => " + tag);
-            System.out.println("TOKEN   => " + token);
+            //System.out.println("TAG => " + tag);
+            //System.out.println("TOKEN   => " + token);
             
             result.add(token);
             result.add(tag);
@@ -376,12 +382,19 @@ public class myApi2 {
         return result;
     }
 
-    public static int countOccurences(String s, char c){
-        int counter = 0;
-        for(int i = 0; i < s.length() ; i++)
-            if(s.charAt(i) == c)
-                counter ++;
+    public static int countOccurences(String inS, char c){
+        
+        String s = inS.replaceAll("inputmatch\\(\\[([\\w]*)+[^]]+\\]\\)", "inputmatch\\(\\[a\\]\\)");
+        //System.out.println(" newS = "+ s);
 
+        int counter = 0;
+        //System.out.println("Counting occurences of "+ c + " in " + s + " (size = " + s.length() + ")");
+        for(int i = 0; i < s.length() ; i++){
+            if(s.charAt(i) == c){
+                counter ++;
+                //System.out.println(" i = "+ i );
+            }
+        }
         return counter;
     }
 
