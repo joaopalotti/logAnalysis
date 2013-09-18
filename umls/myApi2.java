@@ -22,6 +22,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
 import au.com.bytecode.opencsv.*;
 import gov.nih.nlm.nls.metamap.*;
 
@@ -272,11 +275,11 @@ public class myApi2 {
         toReturn.add(output);
         output = "";
        
-        if( posTags.size() >= 2){
-            output += (posTags.get(0) + "/" + posTags.get(1));
+        if( posTags.size() >= 1){
+            output += (posTags.get(0));
 
-            for(int i = 2; i < posTags.size(); i+=2){
-                output += ( ";" + posTags.get(i) + "/" + posTags.get(i+1) ) ;
+            for(int i = 1; i < posTags.size(); i++){
+                output += ( ";" + posTags.get(i) ) ;
             }
         }
         toReturn.add(output);
@@ -307,9 +310,22 @@ public class myApi2 {
         List<String> result = new ArrayList<String>();
         int adjust = 0;
         int tokenAdjust = 0;
-//        System.out.println("Initial list => " + list);
-        list = list.substring(1, list.length() - 1);
+        //System.out.println("Initial list => " + list);
+        Pattern p = Pattern.compile("(tag\\(\\w+\\)|punc|shapes)");
+        Matcher m = p.matcher(list);
+        while (m.find()) {
+            String s = m.group(1);
+            if(s.startsWith("tag(")){
+                s = s.substring(4, s.length()-1);
+            }
+            //System.out.println("s --> " + s);
+            result.add(s);
+        }
 
+
+
+        //list = list.substring(1, list.length() - 1);
+        /*
         while(true){
             if( list.charAt(0) == ',' )
                 list = list.substring(1, list.length());
@@ -317,7 +333,7 @@ public class myApi2 {
             //System.out.println("Parsing (1) => " + list);
             String[] elements = null;
 
-            /*Remove bug in metamap*/
+            //Remove bug in metamap
             //Example of query that is badly processed: inputmatch([RA,)]) -> inputmatch([RA])
             //list = list.replaceAll("inputmatch\\(\\[([\\w]*)\\,\\)\\]\\)", "inputmatch\\(\\[$1\\]\\)");
             
@@ -329,50 +345,53 @@ public class myApi2 {
             elements = getElement(list);
             String actual = elements[0];
             String rest = elements[1];
-/*            
+            
             System.out.println("Actual => " + actual);
             System.out.println("Rest   => " + rest);
-*/
+
             int op = countOccurences(actual, '('); 
             int cp = countOccurences(actual, ')');
             int rop = countOccurences(rest, '('); 
             int rcp = countOccurences(rest, ')');
-/*            
+            
             System.out.println(" op = "+ op );
             System.out.println(" cp = "+ cp );
             System.out.println(" rop = "+ rop );
             System.out.println(" rcp = "+ rcp );
             System.out.println(" true ? " + (op == cp && op == 0));
-*/
+
             if(op == cp && op == 0){
                 adjust = -1;
                 list = list.replaceAll("inputmatch\\(\\[([\\w]*)+\\,[^]]+\\]\\)", "inputmatch\\(\\[a\\]\\)");
+                //actual = rest;
+                //rest = "";
+
                 elements = getElement(list, adjust);
                 actual = elements[0];
                 rest = elements[1];
-/*
+
                 System.out.println("op == cp == 0");
                 System.out.println("NEW Actual => " + actual);
                 System.out.println("NEW Rest   => " + rest);
-*/
+
             }
             else if(rcp > rop){
                 adjust = 1;
                 elements = getElement(list, adjust);
                 actual = elements[0];
                 rest = elements[1];
-/*
+
                 System.out.println("rcp > rop");
                 System.out.println("NEW Actual => " + actual);
                 System.out.println("NEW Rest   => " + rest);
-*/
+
             }
 
             String tag = getTag(actual);
             String token = getToken(actual, adjust);
             
-//            System.out.println("TAG => " + tag);
-//            System.out.println("TOKEN   => " + token);
+            System.out.println("TAG => " + tag);
+            System.out.println("TOKEN   => " + token);
             
             result.add(token);
             result.add(tag);
@@ -381,6 +400,7 @@ public class myApi2 {
                 break;
             list = rest;
         }
+        */
 
         return result;
     }
