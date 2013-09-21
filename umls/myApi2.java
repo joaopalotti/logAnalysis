@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import au.com.bytecode.opencsv.*;
 import gov.nih.nlm.nls.metamap.*;
@@ -98,7 +100,6 @@ public class myApi2 {
     }
 
 
-
     /**
      * Process terms using MetaMap API and display result to standard output.
      *
@@ -119,8 +120,11 @@ public class myApi2 {
         
         Set<String> mesh = new HashSet<String>();
         Set<String> semantics = new HashSet<String>();
-
+        List<String> posTags = new ArrayList<String>();
+        Set<String> sources = new HashSet<String>();
+        Set<String> concepts = new HashSet<String>();
         List<Result> resultList = api.processCitationsFromString(terms);
+
         for (Result result: resultList) {
             if (result != null) {
 
@@ -170,29 +174,18 @@ public class myApi2 {
                     
                     
                     for (PCM pcm: utterance.getPCMList()) {
+                        String toProcess = pcm.getPhrase().getMincoManAsString();
+                        List<String> parsedList = parseList(toProcess);
+
+                        for (int i = 0; i < parsedList.size(); i++) {
+                            posTags.add(parsedList.get(i));
+                        }
+
                         /*
                         out.println("Phrase:");
                         out.println(" text: " + pcm.getPhrase().getPhraseText());
                         out.println(" Minimal Commitment Parse: " + pcm.getPhrase().getMincoManAsString());
                         
-                        out.println("Candidates:");
-
-                        for (Ev ev: pcm.getCandidatesInstance().getEvList()) {
-                            out.println(" Candidate:");
-                            out.println("  Score: " + ev.getScore());
-                            out.println("  Concept Id: " + ev.getConceptId());
-                            out.println("  Concept Name: " + ev.getConceptName());
-                            out.println("  Preferred Name: " + ev.getPreferredName());
-                            out.println("  Matched Words: " + ev.getMatchedWords());
-                            out.println("  Semantic Types: " + ev.getSemanticTypes());
-                            out.println("  MatchMap: " + ev.getMatchMap());
-                            out.println("  MatchMap alt. repr.: " + ev.getMatchMapList());
-                            out.println("  is Head?: " + ev.isHead());
-                            out.println("  is Overmatch?: " + ev.isOvermatch());
-                            out.println("  Sources: " + ev.getSources());
-                            out.println("  Positional Info: " + ev.getPositionalInfo());
-                            out.println("  Pruning Status: " + ev.getPruningStatus());
-                        }
 
                         out.println("Mappings:");
                         */
@@ -201,24 +194,32 @@ public class myApi2 {
                             //out.println(" Map Score: " + map.getScore());
                             for (Ev mapEv: map.getEvList()) {
                                 
-                                out.println("  Concept Name: " + mapEv.getConceptName());
-                        
+                                //out.println("  Concept Name: " + mapEv.getConceptName());
+                                String conceptUID = mapEv.getConceptId();
+                                //out.println("  Concept ID: " + conceptUID);
+                                concepts.add(conceptUID);
+
                                 //Take the MESH code only if the MSH is in the source list
-                                if ( mapEv.getSources().contains("MSH") ){
+                                if (mapEv.getSources().contains("MSH")){
                                     String conceptId = mapEv.getConceptId();
                                     ArrayList<String> meshIds = this.meshMap.get(conceptId);
                                     if( meshIds != null){
                                         for (String s : meshIds){
-                                            out.println(conceptId + " ---> " + s);
+                                            //out.println(conceptId + " ---> " + s);
                                             //output += ( s + ";" ) ;
                                             mesh.add(s);
                                         }
                                     }
                                 }
                                 //output += ( "," ) ;
-                                
+                                List<String> sourceList = mapEv.getSources();
+                                //out.println("  Sources: " + sourceList);
+                                for(String s: sourceList){
+                                    sources.add(s);
+                                }
+
                                 List<String> semanticTypes = mapEv.getSemanticTypes();
-                                out.println("  Semantic Types: " + mapEv.getSemanticTypes());    
+                                //out.println("  Semantic Types: " + mapEv.getSemanticTypes());    
                                 for(String s: semanticTypes){
                                     //output += (s + ";");
                                     semantics.add(s);
@@ -259,61 +260,330 @@ public class myApi2 {
             }
         }
         toReturn.add(output);
+        output = "";
+         
+        if( sources.size() >= 1){
+            Iterator<String> iterator = sources.iterator();
+            String first = iterator.next();
+            output += ( first ) ;
 
+            while(iterator.hasNext()) {
+                String others = iterator.next();
+                output += ( ";" + others ) ;
+            }
+        }
+        toReturn.add(output);
+        output = "";
+       
+        if( posTags.size() >= 1){
+            output += (posTags.get(0));
+
+            for(int i = 1; i < posTags.size(); i++){
+                output += ( ";" + posTags.get(i) ) ;
+            }
+        }
+        toReturn.add(output);
+        output = "";
+        
+        if( concepts.size() >= 1){
+            Iterator<String> iterator = concepts.iterator();
+            String first = iterator.next();
+            output += ( first ) ;
+
+            while(iterator.hasNext()) {
+                String others = iterator.next();
+                output += ( ";" + others ) ;
+            }
+        }
+        toReturn.add(output);
+        output = "";
+       
         this.api.resetOptions();
         return toReturn;
     }
 
+    public static List<String> parseList(String list) {
+    //Parses lists like: [mod([inputmatch([histiocytose]),tag(noun),tokens([histiocytose])]),head([lexmatch([X]),inputmatch([X]),tag(noun),tokens([x])])]
+    //Creating another java list: [token, tag]
+
+//        System.out.println("Parsing => " + list);
+        List<String> result = new ArrayList<String>();
+        int adjust = 0;
+        int tokenAdjust = 0;
+        //System.out.println("Initial list => " + list);
+        Pattern p = Pattern.compile("(tag\\(\\w+\\)|punc|shapes)");
+        Matcher m = p.matcher(list);
+        while (m.find()) {
+            String s = m.group(1);
+            if(s.startsWith("tag(")){
+                s = s.substring(4, s.length()-1);
+            }
+            //System.out.println("s --> " + s);
+            result.add(s);
+        }
+
+
+
+        //list = list.substring(1, list.length() - 1);
+        /*
+        while(true){
+            if( list.charAt(0) == ',' )
+                list = list.substring(1, list.length());
+
+            //System.out.println("Parsing (1) => " + list);
+            String[] elements = null;
+
+            //Remove bug in metamap
+            //Example of query that is badly processed: inputmatch([RA,)]) -> inputmatch([RA])
+            //list = list.replaceAll("inputmatch\\(\\[([\\w]*)\\,\\)\\]\\)", "inputmatch\\(\\[$1\\]\\)");
+            
+            //merge all inputmatches. Ex inputmatch([Critical,Care,",(,nursing]) -> inputmatch([a])
+            //list = list.replaceAll("inputmatch\\(\\[([\\w]*)+\\,[^]]+\\]\\)", "inputmatch\\(\\[a\\]\\)");
+
+            //System.out.println("Replaced => " + list);
+
+            elements = getElement(list);
+            String actual = elements[0];
+            String rest = elements[1];
+            
+            System.out.println("Actual => " + actual);
+            System.out.println("Rest   => " + rest);
+
+            int op = countOccurences(actual, '('); 
+            int cp = countOccurences(actual, ')');
+            int rop = countOccurences(rest, '('); 
+            int rcp = countOccurences(rest, ')');
+            
+            System.out.println(" op = "+ op );
+            System.out.println(" cp = "+ cp );
+            System.out.println(" rop = "+ rop );
+            System.out.println(" rcp = "+ rcp );
+            System.out.println(" true ? " + (op == cp && op == 0));
+
+            if(op == cp && op == 0){
+                adjust = -1;
+                list = list.replaceAll("inputmatch\\(\\[([\\w]*)+\\,[^]]+\\]\\)", "inputmatch\\(\\[a\\]\\)");
+                //actual = rest;
+                //rest = "";
+
+                elements = getElement(list, adjust);
+                actual = elements[0];
+                rest = elements[1];
+
+                System.out.println("op == cp == 0");
+                System.out.println("NEW Actual => " + actual);
+                System.out.println("NEW Rest   => " + rest);
+
+            }
+            else if(rcp > rop){
+                adjust = 1;
+                elements = getElement(list, adjust);
+                actual = elements[0];
+                rest = elements[1];
+
+                System.out.println("rcp > rop");
+                System.out.println("NEW Actual => " + actual);
+                System.out.println("NEW Rest   => " + rest);
+
+            }
+
+            String tag = getTag(actual);
+            String token = getToken(actual, adjust);
+            
+            System.out.println("TAG => " + tag);
+            System.out.println("TOKEN   => " + token);
+            
+            result.add(token);
+            result.add(tag);
+
+            if(rest.equals(""))
+                break;
+            list = rest;
+        }
+        */
+
+        return result;
+    }
+
+    public static int countOccurences(String inS, char c){
+        
+        String s = inS.replaceAll("inputmatch\\(\\[([\\w]*)+[^]]+\\]\\)", "inputmatch\\(\\[a\\]\\)");
+//        System.out.println(" newS = "+ s);
+
+        int counter = 0;
+        //System.out.println("Counting occurences of "+ c + " in " + s + " (size = " + s.length() + ")");
+        for(int i = 0; i < s.length() ; i++){
+            if(s.charAt(i) == c){
+                counter ++;
+                //System.out.println(" i = "+ i );
+            }
+        }
+        return counter;
+    }
+
+    public static String getToken(String list){
+        return getToken(list, 0);
+    }
+
+    public static String getToken(String list, int adjust){
+        if(list.isEmpty())
+            return null;
+
+        //treat punctuation separately
+        if(list.startsWith("punc(")){
+            String[] parts = list.split("inputmatch");
+            String tag = getElement(parts[1], adjust)[0];
+            return tag.substring(2, tag.length() - 2);
+        }
+        else if(list.startsWith("shapes(")){
+            String[] parts = list.split("features");
+            String tag = getElement(parts[1])[0];
+            return tag.substring(2, tag.length() - 2);
+        }
+
+        String[] parts = list.split("tokens\\(");
+        if(parts.length != 2){
+            System.out.println("TOKEN - Error in the number of parts this string has! Parts: " + parts.length);
+            System.out.println("Line => " + list);
+            for(int i = 0; i < parts.length; i++){
+                System.out.println(i + " --- " + parts[i]);
+            }
+            System.out.println("Aborting....");
+            System.exit(0);
+        }
+        String token = getElement(parts[1])[0];
+        return token.substring(1, token.length() - 2).replaceAll(","," ");
+
+    }
+
+    public static String getTag(String list){
+        if(list.isEmpty())
+            return null;
+        
+        //treat punctuation separately
+        if(list.startsWith("punc(")){
+            return "punc";
+        }
+        if(list.startsWith("shapes(")){
+            return "shape";
+        }
+
+        String[] parts = list.split("tag\\(");
+        if(parts.length != 2){
+            System.out.println("TAG - Error in the number of parts this string has! Parts: " + parts.length);
+            System.out.println("Line => " + list);
+
+            for(int i = 0; i < parts.length; i++){
+                System.out.println(i + " --- " + parts[i]);
+            }
+
+            System.out.println("Aborting....");
+            System.exit(0);
+        }
+
+        String tag = getElement(parts[1])[0];
+        return tag.substring(0, tag.length() - 1);
+    }
+
+    public static String[] getElement(String list) {
+        return getElement(list, '(', ')', 0);
+    }
+
+    public static String[] getElement(String list, int adjust) {
+        return getElement(list, '(', ')', adjust);
+    }
+
+    public static String[] getElement(String list, char copen, char cclose, int adjust) {
+        String result[] = new String[2];
+        int start = -1; // counts (
+        int stop = -1;
+        int count = adjust;
+        
+        for(int i = 0; i < list.length(); i++){
+            if (list.charAt(i) == copen && start == -1){
+                start = i;
+                count++;
+                //System.out.println("Count -> " + count +  "  i = " + i + " charat => " + list.charAt(i));
+            }
+            else if (list.charAt(i) == copen){
+                count++;
+                //System.out.println("Count -> " + count +  "  i = " + i + " charat => " + list.charAt(i));
+            }
+            else if (list.charAt(i) == cclose) {
+                count--;
+                //System.out.println("Count -> " + count +  "  i = " + i + " charat => " + list.charAt(i));
+                if(count <= 0){
+                    stop = i;
+                    //System.out.println("BREAK! i =  " + i);
+                    break;
+                }
+            }
+        }
+        result[0] =  list.substring(0, stop + 1);
+        result[1] =  list.substring(stop + 1, list.length());
+        return result;
+    }
+
+
     /** print information about server options */
     public static void printHelp() {
-        System.out.println("usage: gov.nih.nlm.nls.metamap.MetaMapApiTest [options] terms|inputFilename");
+        System.out.println("usage: myApi2 [options]");
         System.out.println("  allowed metamap options: ");
-        System.out.println("    -C : use relaxed model ");
-        System.out.println("    -A : use strict model ");
-        System.out.println("    -d : no derivational variants");
-        System.out.println("    -D : all derivational variants");
-        System.out.println("    -a : allow Acronym/Abbreviation variants");
-        System.out.println("    -K : ignore stop phrases.");
-        System.out.println("    -I : allow Large N");
-        System.out.println("    -r : threshold ");
-        System.out.println("    -i : ignore word order");
-        System.out.println("    -Y : prefer multiple concepts");
-        System.out.println("    -b : compute/display all mappings");
-        System.out.println("    -X : truncate candidates mapping");
-        System.out.println("    -y : use WSD ");
-        System.out.println("    -z : use term processing ");
-        System.out.println("    -o : allow overmatches ");
-        System.out.println("    -g : allow concept gaps");
-        System.out.println("    -8 : dynamic variant generation");
-        System.out.println("    -@ --WSD <hostname> : Which WSD server to use.");
-        System.out.println("    -J --restrict_to_sts <semtypelist> : restrict to semantic types");
-        System.out.println("    -R --restrict_to_sources <sourcelist> : restrict to sources");
-        System.out.println("    -S --tagger <sourcelist> : Which tagger to use.");
-        System.out.println("    -V --mm_data_version <name> : version of MetaMap data to use.");
-        System.out.println("    -Z --mm_data_year <name> : year of MetaMap data to use.");
-        System.out.println("    -k --exclude_sts <semtypelist> : exclude semantic types");
-        System.out.println("    -e --exclude_sources <sourcelist> : exclude semantic types");
-        System.out.println("    -r --threshold <integer> : Threshold for displaying candidates.");
-        System.out.println("API options:");
-        System.out.println("    --metamap_server_host <hostname> : use MetaMap server on specified host");
-        System.out.println("    --metamap_server_port <port number> : use MetaMap server on specified host");
-        System.out.println("    --metamap_server_timeout <interval> : wait for MetaMap server for specified interval.");
-        System.out.println("                                          interval of 0 will wait indefinitely.");
-        System.out.println("Program options:");
-        System.out.println("    --input <filename> : get input from file.");
-        System.out.println("    --output <filename> : send output to file.");
+        System.out.println("    -i : input filename ");
+        System.out.println("    -o : output filename");
+        System.out.println("    -n : number of lines to process.");
+        System.out.println("    -a : use it if the process stoped and you want to append the results");
+        System.out.println("    -b : metamap will NOT compute abbreviations");
+        System.out.println("    -y : metamap will use WSD ");
     }
 
     /** @param inFile File class referencing input file. */
-    static CSVReader readInputFile(File inFile)  throws java.io.FileNotFoundException, java.io.IOException
+    static CSVReader readInputFile(String inFileName)  throws java.io.FileNotFoundException, java.io.IOException
     {
-        GZIPInputStream gzip = new GZIPInputStream(new FileInputStream(inFile));
-        BufferedReader ib = new BufferedReader(new InputStreamReader(gzip));
-        CSVReader reader = new CSVReader(ib);
+        
+        System.out.println("Input Filename: " + inFileName.trim());
+        CSVReader reader = null;
+
+        if (inFileName.endsWith(".gz")){
+            System.out.println("Reading ziped file");
+            GZIPInputStream gzip = new GZIPInputStream(new FileInputStream(new File(inFileName.trim())));
+            BufferedReader ib = new BufferedReader(new InputStreamReader(gzip));
+            reader = new CSVReader(ib, ',', '\"' , '\\');
+        }
+        else{
+            reader = new CSVReader(new FileReader(inFileName), ',', '\"' , '\\');
+        }
 
         return reader;
     }
     
+    static ArrayList<String> recoverFail(String outFileName) throws java.io.FileNotFoundException, java.io.IOException{
+        
+        String lastTime = null;
+        String lastUserId = null;
+        
+        System.out.println("Recoving starts now!!!!! ");
+        CSVReader internalReader = new CSVReader(new FileReader(outFileName), ',', '\"' , '\\');
+        String[] nextLine;
+        String[] previousLine = null;
+
+        while ( (nextLine = internalReader.readNext()) != null) {
+            previousLine = nextLine;
+        }
+        if(previousLine != null){
+            lastTime = previousLine[0];
+            lastUserId = previousLine[1];
+        }
+        if(lastTime != null && lastUserId != null){
+            System.out.println("Recovered last time = " + lastTime + " and last user id = " + lastUserId);
+        }
+        
+        ArrayList<String> result = new ArrayList<String>();
+        result.add(0, lastTime );
+        result.add(1, lastUserId);
+        return result;
+    } 
+
     public static void main(String[] args) 
         throws Exception
     {
@@ -324,13 +594,16 @@ public class myApi2 {
         String outFile = "output.csv";
         int totalLines = -1;
         boolean append = false;
+        boolean wsd = false;
         HashMap<String, List<String> > cache = new HashMap<String, List<String> >();
+        List<String> options = new ArrayList<String>();
 
         InputStream input = System.in;
         PrintStream output = System.out;
         if (args.length < 1) {
             //    printHelp();
             System.out.println("Enter the filename, please");
+            printHelp();
             System.exit(0);
         }
         
@@ -351,219 +624,138 @@ public class myApi2 {
                 inFilename = args[i+1];
 	            System.out.println("Input file is " + inFilename);
             }
+            else if ( args[i].equals("-b") ){
+	            System.out.println("Using abbreviations");
+	            options.add("a");
+            }
+            else if ( args[i].equals("-y") ){
+                wsd = true;
+                System.out.println("using WSD");
+	            options.add("y");
+            }
+
         }
         if(inFilename == null){
 	            System.out.println("Error...use -i <filename> to enter the filename you want.");
 	            System.exit(0);
         }
-
-        //StringBuffer termBuf = new StringBuffer();
-        List<String> options = new ArrayList<String>();
-        int i = 0; 
-        //ADDED MY DEFAULT OPTION
-        //options.add("-R");
-        //options.add("MSH");
-        /*
-        while (i < args.length) {
-
-            if (args[i].charAt(0) == '-') {
-                if (args[i].equals("-h") || args[i].equals("--help") || args[i].equals("-?")) {
-                    printHelp();
-                    System.exit(0);
-                } else if ( args[i].equals("-%") || args[i].equals("--XML") ) {
-                    options.add(args[i]); i++;
-                    options.add(args[i]);
-                } else if ( args[i].equals("-@") || args[i].equals("--WSD") ) {
-                    options.add(args[i]); i++;
-                    options.add(args[i]);
-                } else if ( args[i].equals("-J") || args[i].equals("--restrict_to_sts") )  {
-                    options.add(args[i]); i++;
-                    options.add(args[i]);
-                } else if ( args[i].equals("-R") || args[i].equals("--restrict_to_sources") ) {
-                    options.add(args[i]); i++;
-                    options.add(args[i]);
-                } else if ( args[i].equals("-S") || args[i].equals("--tagger") ) {
-                    options.add(args[i]); i++;
-                    options.add(args[i]);
-                } else if ( args[i].equals("-V") || args[i].equals("--mm_data_version") ) {
-                    options.add(args[i]); i++;
-                    options.add(args[i]);
-                } else if ( args[i].equals("-Z") || args[i].equals("--mm_data_year") ) {
-                    options.add(args[i]); i++;
-                    options.add(args[i]);
-                } else if ( args[i].equals("-e") || args[i].equals("--exclude_sources") ) {
-                    options.add(args[i]); i++;
-                    options.add(args[i]);
-                } else if ( args[i].equals("-k") || args[i].equals("--exclude_sts") )  {
-                    options.add(args[i]); i++;
-                    options.add(args[i]);
-                } else if ( args[i].equals("-r") || args[i].equals("--threshold") ) {
-                    options.add(args[i]); i++;
-                    options.add(args[i]);
-                } else if ( args[i].equals("--metamap_server_host") ) {
-                    i++;
-                    serverhost = args[i];
-                } else if ( args[i].equals("--metamap_server_port") ) {
-                    i++;
-                    serverport = Integer.parseInt(args[i]);
-                } else if (args[i].equals("--metamap_server_timeout") ) {
-                    i++;
-                    timeout = Integer.parseInt(args[i]);
-                } else if (args[i].equals("--input") ) {
-                    i++;
-                    inFilename = args[i];
-                    System.out.println("output file: " + args[i]);
-                } else if (args[i].equals("--output") ) {
-                    i++;
-                    output = new PrintStream(args[i]);
-                    System.out.println("output file: " + args[i]);
-                } else {
-                    options.add(args[i]);
-                }
-            } else {
-                termBuf.append(args[i]).append(" "); 
-            }
-            i++;
-        }
-        */
-        //System.out.println("serverport: " + serverport);
+        
+        // start service
         myApi2 frontEnd = new myApi2(serverhost, serverport);
-        //System.out.println("options: " + options);
-        //System.out.println("terms: " + termBuf);
-        /*
-        if (timeout > -1) {
-            frontEnd.setTimeout(timeout);
+        System.out.println("options: " + options);
+       
+        // configure input file
+        CSVReader reader = readInputFile(inFilename);
+
+        if (reader == null) {
+            System.out.println("File not found. Aborted.");
+            System.exit(0);
         }
-        */
         
+        String lastTime = null;
+        String lastUserId = null;
+    
+        if(append){
+            ArrayList<String> timeAndId = recoverFail(outFile);
+            lastTime = timeAndId.get(0);
+            lastUserId = timeAndId.get(1);
+        }
+
+        CSVWriter writer = new CSVWriter(new FileWriter(outFile, append), ',', '\"', '\\');
+
+        String [] nextLine;
+        int lineNumber = 0;
+        boolean recovered = false;
         
-        if (inFilename != null) {
-            File inFile = new File(inFilename.trim()); 
-
-            if (inFile.exists()) {
-                    
-                System.out.println("input file: " + inFilename);
-                
-                GZIPInputStream gzip = new GZIPInputStream(new FileInputStream(inFile));
-                BufferedReader ib = new BufferedReader(new InputStreamReader(gzip));
-                CSVReader reader = new CSVReader(ib, ',', '\"' , '\\');
-
-                String lastTime = null;
-                String lastUserId = null;
-
-                if(append){
-                    
-                    System.out.println("Recoving starts now!!!!! ");
-                    CSVReader internalReader = new CSVReader(new FileReader(outFile), ',', '\"' , '\\');
-                    String[] nextLine;
-                    String[] previousLine = null;
-
-                    while ( (nextLine = internalReader.readNext()) != null) {
-                        previousLine = nextLine;
-                    }
-                    if(previousLine != null){
-                        lastTime = previousLine[0];
-                        lastUserId = previousLine[1];
-                    }
-                    if(lastTime != null && lastUserId != null){
-                        System.out.println("Recovered last time = " + lastTime + " and last user id = " + lastUserId);
-                    }
+        while ((nextLine = reader.readNext()) != null) {
+            
+            if(append && !recovered){
+                if( nextLine[0].equals(lastTime) && nextLine[1].equals(lastUserId)){
+                    recovered = true;
+                    continue;
                 }
-
-                CSVWriter writer = new CSVWriter(new FileWriter(outFile, append), ',', '\"', '\\');
-        
-                String [] nextLine;
-                int lineNumber = 0;
-                boolean recovered = false;
-                
-                while ((nextLine = reader.readNext()) != null) {
-                    
-                    if(append && !recovered){
-                        if( nextLine[0].equals(lastTime) && nextLine[1].equals(lastUserId)){
-                            recovered = true;
-                            continue;
-                        }
-                        if(!recovered){
-                            lineNumber++;
-                            continue;
-                        }
-                    }
-
-                    //System.out.println(nextLine[0] + "," + nextLine[1] + ", " + nextLine[2] + ", " + nextLine[3] + ", " + nextLine[4]);
-                    
-                    String inString = nextLine[2];
-                    System.out.println("INPUT = " + inString);
-
-                    if( inString.matches(".*' s$") ){
-                        System.out.println("BAD STRING FOUND. Skipping it ---> " + inString);
-                        lineNumber++;
-                        continue;
-                    }
-                    if( inString.matches("(^|.* )[pP][mM][iI][dD]:.*")){
-                        System.out.println("BAD STRING FOUND. Skipping it ---> " + inString);
-                        lineNumber++;
-                        continue;
-                    }
-                    if( inString.matches(" *")){
-                        System.out.println("BAD STRING FOUND. Skipping it ---> " + inString);
-                        lineNumber++;
-                        continue;
-                    }
-                    
-                    List<String> processed = null;
-
-                    if ( cache.containsKey(inString) ){
-                        processed = cache.get(inString);
-                    }
-                    else{
-                        processed = frontEnd.process( inString, output, options);
-                        cache.put(inString, processed);
-                    }
-
-                    if (processed == null){
-                        lineNumber++;
-                        continue;
-                    }
-                    
-                    String [] toWrite = new String [nextLine.length + processed.size() - 2];
-                   
-                    // in version 5, we need to write the umls in the positions 4 and 5 (starting the counting from 0)
-                    int j = 0;
-
-                    //Two last cols should be empty strings
-                    for(  ; j < 4; j++){
-                        toWrite[j] = nextLine[j]; 
-                    }
-                    
-                    for( int k = 0  ; k  < processed.size(); j++, k++){
-                        System.out.println(" element ---> " + processed.get(k));
-                        toWrite[j] = processed.get( k );
-                    }
-                    
-                    for(  ; j < nextLine.length; j++){
-                        toWrite[j] = nextLine[j]; 
-                    }
- 
-                    writer.writeNext(toWrite, false);
-                    writer.flush();
+                if(!recovered){
                     lineNumber++;
-
-                    if(totalLines < 0){
-                        System.out.println("PROCESSED LINES ====> " + lineNumber);
-                    }
-                    else{
-                        System.out.printf("PORCENTAGE PROCESSED  ====> %.4f \n\n", 100.0 * lineNumber/totalLines);
-                    
-                    }
+                    continue;
                 }
-                
-                writer.close();
-                reader.close();
+            }
+
+            //System.out.println(nextLine[0] + "," + nextLine[1] + ", " + nextLine[2] + ", " + nextLine[3] + ", " + nextLine[4]);
+            
+            String inString = nextLine[2];
+            System.out.println("INPUT = " + inString);
+
+            if( inString.matches(".*' s$") ){
+                System.out.println("BAD STRING FOUND. Skipping it ---> " + inString);
+                lineNumber++;
+                continue;
+            }
+            if( inString.matches("(^|.* )[pP][mM][iI][dD]:.*")){
+                System.out.println("BAD STRING FOUND. Skipping it ---> " + inString);
+                lineNumber++;
+                continue;
+            }
+            if( inString.matches(" *")){
+                System.out.println("BAD STRING FOUND. Skipping it ---> " + inString);
+                lineNumber++;
+                continue;
+            }
+            
+            List<String> processed = null;
+
+            if ( cache.containsKey(inString) ){
+                processed = cache.get(inString);
             }
             else{
-                System.out.println("File not found. Aborted.");
+                processed = frontEnd.process( inString, output, options);
+                cache.put(inString, processed);
+            }
+
+            if (processed == null){
+                lineNumber++;
+                continue;
+            }
+            
+            String [] toWrite = new String [nextLine.length + processed.size() - 2];
+           
+            // in version 5, we need to write the umls in the positions 4 and 5 (starting the counting from 0)
+            int j = 0;
+
+            //Two last cols should be empty strings
+            for(  ; j < 4; j++){
+                toWrite[j] = nextLine[j]; 
+            }
+            
+            for( int k = 0  ; k  < 2; j++, k++){
+                System.out.println(" element ---> " + processed.get(k));
+                toWrite[j] = processed.get( k );
+            }
+            
+            for(  ; j < nextLine.length; j++){
+                toWrite[j] = nextLine[j]; 
+            }
+            
+            for( int k = 2  ; k  < processed.size()  ; j++, k++){
+                System.out.println(" element ---> " + processed.get(k));
+                toWrite[j] = processed.get( k );
+            }
+ 
+            writer.writeNext(toWrite, false);
+            writer.flush();
+            lineNumber++;
+
+            if(totalLines < 0){
+                System.out.println("PROCESSED LINES ====> " + lineNumber);
+            }
+            else{
+                System.out.printf("PORCENTAGE PROCESSED  ====> %.4f \n\n", 100.0 * lineNumber/totalLines);
+            
             }
         }
+        
+        writer.close();
+        reader.close();
+
         /*
         } else if (termBuf.length() > 0) {
             File inFile = new File(termBuf.toString().trim()); 

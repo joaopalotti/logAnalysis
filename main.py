@@ -9,6 +9,7 @@ usingAugHON = True
 toyExample = True
 testing = "" # "1."
 version = "v6"
+khresmoiOnly = True
 
 aolNotHealthOption = 0
 # 0) NOT using it
@@ -18,6 +19,12 @@ aolNotHealthOption = 0
 # 4) aolNotHealthODPNoScience
 
 if __name__ == "__main__":
+    
+    if khresmoiOnly:
+        khresmoi = readMyFormat(PATH_TO_DATASETS + "hon/khresmoi_hon.v5.dataset.gz", "v5")
+        datasets =  [ [khresmoi, "khresmoi"] ]
+        calculateStatistics(datasets, usingScoop) 
+        sys.exit(0)
 
     if toyExample:
         in50 = readMyFormat("v6", "v6")
