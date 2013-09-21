@@ -69,6 +69,9 @@ def calculateMetrics(dataPair):
             countingMeshWeighted, countingDiseaseWeighted = calculateMesh(data)
     
     countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, meanComboScore = calculateCHV(data)
+    countingPOS = calculatePOS(data)
+    countingSources = calculateSources(data)
+    countingConcepts = calculateConcepts(data)
 
     # Print statistics
     with open(dataName + ".result", "w") as f:
@@ -83,7 +86,9 @@ def calculateMetrics(dataPair):
         printMeshClassificationMetrics(f, countingMesh, countingDisease, numberOfQueries, hasMeshValues, countingMeshDepth)
         printSemantic(f, vectorOfActionSequence, vectorOfCicleSequence, countingFullSemanticTypes, numberOfQueries)
         printOutliers(f, outliersToRemove)
-
+        printPOS(f, countingPOS)
+        printSources(f, countingSources, numberOfQueries)
+        printConcepts(f, countingConcepts, numberOfQueries)
     
     #Data for tables
     numberOfMeshTerms = sum(countingMesh.values())
@@ -91,10 +96,12 @@ def calculateMetrics(dataPair):
     numberOfMeshWeightedTerms = sum(countingMeshWeighted.values())
     numberOfMeshWeightedDiseases = sum(countingDiseaseWeighted.values())
     uniqueQueries = len(countingQueries)
-
-    appendGeneral(generalTableRow, dataName, lastDay, firstDay, numberOfUsers, numberOfQueries, npTerms, npChars, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession, npTime, countingNL, countingReAccess, hasAcronym, percentageAcronymInQueries, usersUsingAcronyms, setOfUsersWithSemantic, uniqueQueries)
-    appendGeneralModified(generalModifiedRow, dataName, numberOfQueries, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions)
-    appendGeneralMesh(generalMeshRow, dataName, hasMeshValues, numberOfQueries, numberOfMeshTerms, numberOfMeshDiseases, usersUsingMesh, numberOfUsers, mapUserMeanMeshDepth)
+    numberOfConcepts = sum(countingConcepts.values())
+    numberOfSources = sum(countingSources.values())
+    
+    appendGeneral(dataName, lastDay, firstDay, numberOfUsers, numberOfQueries, npTerms, npChars, meanQueriesPerDay, numberOfSessions, npNumQueriesInSession, npTime, countingNL, countingReAccess, hasAcronym, percentageAcronymInQueries, usersUsingAcronyms, setOfUsersWithSemantic, uniqueQueries, numberOfConcepts, numberOfSources)
+    appendGeneralModified(dataName, numberOfQueries, numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions)
+    appendGeneralMesh(dataName, hasMeshValues, numberOfQueries, numberOfMeshTerms, numberOfMeshDiseases, usersUsingMesh, numberOfUsers, mapUserMeanMeshDepth)
 
     #To avoid division by zero
     numberOfMeshTerms = numberOfMeshTerms if numberOfMeshTerms != 0 else 1
@@ -102,25 +109,26 @@ def calculateMetrics(dataPair):
     numberOfMeshWeightedTerms = numberOfMeshWeightedTerms if numberOfMeshWeightedTerms != 0 else 1
     numberOfMeshWeightedDiseases = numberOfMeshWeightedDiseases if numberOfMeshWeightedDiseases != 0 else 1
     
-    appendMesh(meshTableRow, dataName, countingMesh, numberOfMeshTerms)
-    appendDisease(diseaseTableRow, dataName, countingDisease, numberOfMeshDiseases)
-    appendMeshWeighted(meshTableWeightedRow, dataName, countingMeshWeighted, numberOfMeshWeightedTerms)
-    appendDiseaseWeighted(diseaseTableWeightedRow, dataName, countingDiseaseWeighted, numberOfMeshWeightedDiseases)
-    appendMeshByUser(meshByUserRow, dataName, countingMeshByUser, numberOfUsers)
-    appendDiseaseByUser(diseaseByUserRow, dataName, countingDiseaseByUser, numberOfUsers)
-    appendMeshByUserWeighted(meshByUserWeightedRow, dataName, countingMeshWeightedByUser, numberOfUsers)
-    appendDiseaseByUserWeighte(diseaseByUserWeightedRow, dataName, countingDiseaseWeightedByUser, numberOfUsers)
+    appendMesh(dataName, countingMesh, numberOfMeshTerms)
+    appendDisease(dataName, countingDisease, numberOfMeshDiseases)
+    appendMeshWeighted(dataName, countingMeshWeighted, numberOfMeshWeightedTerms)
+    appendDiseaseWeighted(dataName, countingDiseaseWeighted, numberOfMeshWeightedDiseases)
+    appendMeshByUser(dataName, countingMeshByUser, numberOfUsers)
+    appendDiseaseByUser(dataName, countingDiseaseByUser, numberOfUsers)
+    appendMeshByUserWeighted(dataName, countingMeshWeightedByUser, numberOfUsers)
+    appendDiseaseByUserWeighted(dataName, countingDiseaseWeightedByUser, numberOfUsers)
+    appendPOS(dataName, countingPOS, numberOfQueries)
 
     # ["Dtst", "Nothing", "Symptom", "Cause", "Remedy", "SymptomCause", "SymptomRemedy", "CauseRemedy", "SymptomCauseRemedy"]
     totalActions = sum(vectorOfActionSequence)
     totalActions = 1/100 if totalActions == 0 else totalActions
     print "Actions -> ", totalActions, " Queries -> ", numberOfQueries
-    appendSemanticFocus(semanticFocusRow, dataName, vectorOfActionSequence, totalActions)
+    appendSemanticFocus(dataName, vectorOfActionSequence, totalActions)
 
     #["Dtst","Nothing","Expansion","Shrinkage","Reformulation","ExpansionShrinkage","ExpansionReformulation","ShrinkageReformulation","ExpansionShrinkageReformulation"]
     totalOfModifiedSessions = sum(vectorOfModifiedSessions)
     totalOfModifiedSessions = 1/100 if totalOfModifiedSessions == 0 else totalOfModifiedSessions
-    appendModifiedSession( modifiedSessionRow, dataName, vectorOfModifiedSessions, totalOfModifiedSessions)
+    appendModifiedSession(dataName, vectorOfModifiedSessions, totalOfModifiedSessions)
     
     totalCicleSequence = sum(vectorOfCicleSequence)
     totalCicleSequence = 1/100 if totalCicleSequence == 0 else totalCicleSequence
@@ -129,11 +137,11 @@ def calculateMetrics(dataPair):
     totalMeshDepth = sum(countingMeshDepth.values())
     totalMeshDepth = 1/100 if totalMeshDepth == 0 else totalMeshDepth
     
-    appendMeshDepth(meshDepthRow, dataName, totalMeshDepth, countingMeshDepth)
-    appendSemanticByUser(semanticByUserRow, dataName, semanticTypesCountedByUser, numberOfUsers)
-    appendSemanticByUserWeighted(semanticByUserWeightedRow, dataName, numberOfUsers, semanticTypesCountedByUserWeighted)
-    appendBooleanUse(booleanUseRow, dataName, booleanTerms, numberOfQueries, usersUsingBools, numberOfUsers)
-    appendCHV(CHVRow, dataName, countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, numberOfQueries, meanComboScore)
+    appendMeshDepth(dataName, totalMeshDepth, countingMeshDepth)
+    appendSemanticByUser(dataName, semanticTypesCountedByUser, numberOfUsers)
+    appendSemanticByUserWeighted(dataName, numberOfUsers, semanticTypesCountedByUserWeighted)
+    appendBooleanUse(dataName, booleanTerms, numberOfQueries, usersUsingBools, numberOfUsers)
+    appendCHV(dataName, countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, numberOfQueries, meanComboScore)
     
     return dataName, countingAcronyms, countingTimePerSession, countingTokens, countingQueries, countingQueriesPerSession, countingMesh, countingDisease, countingMeshDepth, countingQueriesPerUser, countingQueryRanking, queryInNumbers, queryInChars
 
@@ -238,6 +246,8 @@ def calculateStatistics(dataList, usingScoop):
         tableBooleanUseHeader.append(l)
     for l in CHVRow:
         tableCHVHeader.append(l)
+    for l in postagsRow:
+        tablePOSHeader.append(l)
 
     latexWriter.addTable(tableGeneralHeader, caption="General Numbers", transpose=True)
     latexWriter.addTable(tableModifiedSessionHeader, caption="Modifications in a session", transpose=True)
@@ -258,8 +268,23 @@ def calculateStatistics(dataList, usingScoop):
     latexWriter.addTable(tableDiseaseByUserWeightedHeader, caption="Disease By User (\%) (WEIGHTED)", transpose=True)
     latexWriter.addTable(tableBooleanUseHeader, caption="Boolean usage", transpose=True)
     latexWriter.addTable(tableCHVHeader, caption="CHV usage", transpose=True)
-
+    latexWriter.addTable(tablePOSHeader, caption="POS tags usage", transpose=True)
     #print sum(countingMeshByUser.values()), sum(countingMeshWeightedByUser.values())
+
+def calculateSources(data):
+    sources = []
+    sources += [s for member in data for s in member.sourceList if member.sourceList] 
+    return Counter(sources) 
+
+def calculateConcepts(data):
+    concept = []
+    concept += [c for member in data for c in member.concepts] 
+    return Counter(concept) 
+
+def calculatePOS(data):
+    tags = []
+    tags += [tag for member in data for tag in member.postags] 
+    return Counter(tags) 
 
 def calculateCHV(data):
     
@@ -1212,5 +1237,23 @@ def printOutliers(writer, outliersToRemove):
         writer.write('{0:45} ==> {1:30}\n'.format("ID", id))
     writer.write("-" * 40 + "\n")
     writer.write("-" * 80 + "\n")
+
+def printPOS(writer, countingPOS):
+    writer.write("-" * 40 + "\n")
+    writer.write("POS TAGS:\n")
+    for tag, count in countingPOS.items():
+        writer.write('{0:45} ==> {1:8d}\n'.format(tag, count))
+
+def printSources(writer, countingSources, numberOfQueries):
+    writer.write("-" * 40 + "\n")
+    writer.write("SOURCES:\n")
+    for source, count in countingSources.most_common(20):
+        writer.write('{0:45} ==> {1:8d} ({2:.2f}%)\n'.format(source, count, 100.0 * count/numberOfQueries))
+
+def printConcepts(writer, countingConcepts, numberOfQueries):
+    writer.write("-" * 40 + "\n")
+    writer.write("CONCEPTS:\n")
+    for source, count in countingConcepts.most_common(10):
+        writer.write('{0:45} ==> {1:8d}\n'.format(source, count, 100.0 * count / numberOfQueries))
 
 

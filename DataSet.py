@@ -5,7 +5,7 @@ class DataSet(object):
     
     # CHVFound -> number of concepts that are in the CHV list
     # hasCHV -> if any of the concepts found are exactly as the CHV suggests
-    def __init__(self, dttime, userId, keywords, previouskeywords=None, category=None, publication=None, rank=None, clickurl=None, mesh=None, semanticTypes=None, usingTimestamp=False, CHVFound=0, hasCHV=False, hasUMLS=False, hasCHVMisspelled=False, comboScore=0): 
+    def __init__(self, dttime, userId, keywords, previouskeywords=None, category=None, publication=None, rank=None, clickurl=None, mesh=None, semanticTypes=None, usingTimestamp=False, CHVFound=0, hasCHV=False, hasUMLS=False, hasCHVMisspelled=False, comboScore=0, sourceList=None, postags=None, concepts=None): 
       
         withMs = re.compile("(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).(\d{3})")
         withMsAndQuote = re.compile("\"(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).(\d{3})\"")
@@ -59,6 +59,16 @@ class DataSet(object):
         self.hasCHVMisspelled = (hasCHVMisspelled == "True")
         self.comboScore = float(comboScore)
 
+        self.postags = postags # None is the default
+        if postags:
+            self.postags = [ p for p in postags.split(";") if p ]
+        self.sourceList = sourceList # None is the default
+        if sourceList:
+            self.sourceList = [ s for s in sourceList.split(";") if s ]
+        self.concepts = concepts # None is the default
+        if concepts:
+            self.concepts = [ c for c in concepts.split(";") if c ]
+    
     def printMe(self, out=sys.stdout):
         writer = csv.writer(out, delimiter=',', quoting=csv.QUOTE_ALL, quotechar ='"', escapechar='\\', doublequote=False)
         # Should add here any important information and modify the corresponding readCSV

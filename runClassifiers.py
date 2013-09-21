@@ -1,3 +1,5 @@
+from __future__ import division
+
 import pickle, sys
 import random
 import numpy as np
@@ -32,7 +34,7 @@ gridDT = [{'criterion': ["gini","entropy"], 'max_features': ["auto", None, "log2
 
 gridSVM = [{'kernel': ['rbf'], 'gamma': [100, 10, 1, 0, 1e-3, 1e-4, 1e-6], 'C': [1000000]}]
 
-def transformeInDict(userDict, n=-1, proportional=-1, dataVersion=None):
+def transformeInDict(userDict, n=-1, proportional=-1, groupsToUse=None):
     listOfDicts = list()
     listOfLabels = list()
 
@@ -44,14 +46,14 @@ def transformeInDict(userDict, n=-1, proportional=-1, dataVersion=None):
     for v, (key, user) in zip(p, userDict.iteritems()):
         if n >= 0 and v >= n:
             continue 
-        udict = user.toDict(dataVersion)
+        udict = user.toDict(groupsToUse)
         listOfDicts.append(udict)
         listOfLabels.append(user.label)
         #print user.label, udict
         #print udict  #### Check how this features are related with the features calculated by the random tree method
     return listOfDicts, listOfLabels
 
-def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers, gridSearch, generatePickle, hasPlotLibs, paralled, nJobs, listOfClassifiers, dataVersion):
+def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers, gridSearch, generatePickle, hasPlotLibs, paralled, nJobs, listOfClassifiers, groupsToUse):
    
     if healthUsers:
         positiveOutputFile = "healthUser-%d-%s.pk" % (minNumberOfQueries, explanation)
@@ -87,8 +89,8 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     print "Loaded"
 
     print "Transforming datasets into Dictionaries..."
-    ld1, ll1 = transformeInDict(negativeUserFV, forceBalance, proportional, dataVersion)
-    ld2, ll2 = transformeInDict(positiveUserFV, forceBalance, proportional, dataVersion)
+    ld1, ll1 = transformeInDict(negativeUserFV, forceBalance, proportional, groupsToUse)
+    ld2, ll2 = transformeInDict(positiveUserFV, forceBalance, proportional, groupsToUse)
     print "Transformed"
     
     listOfDicts = ld1 + ld2
@@ -221,7 +223,7 @@ if __name__ == "__main__":
     op.add_option("--useScoop", "-s", action="store_true", dest="useScoop", help="Use Scoop to run classifier in parallel", default=False)
     op.add_option("--njobs", "-j", action="store", type="int", dest="njobs", help="Number of parallel jobs to run.", metavar="X", default=2)
     op.add_option("--classifiers", "-l", action="store", type="string", dest="classifiers", help="Classifiers to run. Options are dmfc|dsc|duc|nbc|knnc|lrc|dtc|svmc|etc", metavar="cl1|cl2|..", default="dmfc|dsc|duc|nbc|knnc|lrc|dtc|svmc|etc")
-    op.add_option("--dataVersion", "-d", action="store", type="string", dest="dataVersion", help="Options are: wsdm | semanticMenas.", metavar="V")
+    op.add_option("--groupsToUse", "-d", action="store", type="string", dest="groupsToUse", help="Options are: g1 | g2 | ... | g7", metavar="V")
 
     (opts, args) = op.parse_args()
     if len(args) > 0:
@@ -239,9 +241,11 @@ if __name__ == "__main__":
     print "Classifiers = ", opts.classifiers
     listOfClassifiers = opts.classifiers.split("|")
     
-    if not opts.dataVersion:
-        print "Please, use a dataversion"
+    if not opts.groupsToUse:
+        print " -------- Please, use a Data Version (Ex. v5, v6)"
+        op.print_help()
         sys.exit(0)
+    listOfGroupsToUse = opts.groupsToUse.split("|")
 
-    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.explanation, opts.healthUsers, opts.gridSearch, not opts.ignorePickle, opts.hasPlotLibs, opts.useScoop, opts.njobs, listOfClassifiers, opts.dataVersion)
+    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.explanation, opts.healthUsers, opts.gridSearch, not opts.ignorePickle, opts.hasPlotLibs, opts.useScoop, opts.njobs, listOfClassifiers, listOfGroupsToUse)
 
