@@ -6,10 +6,10 @@ PATH_TO_DATASETS = "../logAnalysisDataSets/"
 usingScoop = False
 cikm = False
 usingAugHON = True
-toyExample = True
+toyExample = False
 testing = "" # "1."
 version = "v6"
-khresmoiOnly = True
+khresmoiOnly = False
 
 aolNotHealthOption = 0
 # 0) NOT using it

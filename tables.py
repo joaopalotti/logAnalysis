@@ -25,7 +25,7 @@ tableMeshByUserWeightedHeader = [ ["Dtst","A (Anatomy)","B (Organisms)","C (Dise
 tableDiseaseByUserWeightedHeader = [ ["Dtst(%)","C01(Bacterial)","C02(Viral)","C03(Parasitic)","C04(Neoplasms)","C05(Musculoskeletal)","C06(Digestive)","C07(Stomatognathic)","C08(Respiratory)","C09(Otorhinolaryngologic)","C10(Nervous)","C11(Eye)","C12(Male Urogenital)","C13(Female Urogenital)","C14(Cardiovascular)","C15(Hemic and Lymphatic)","C16(Congenital)","C17(Skin)","C18(Nutritional)","C19(Endocrine)","C20(Immune)","C21(Environmental)","C22(Animal)","C23(Pathological Conditions)","C24(Occupational)","C25(Substance-Related)","C26(Wounds and Injuries)"] ]
 tableBooleanUseHeader = [["Dtst", "# of ands", "% of ands", "# of ors", "% of ors",  "# of nots", "% of nots", "at least one", "% of booleans", "% UsersUsingBools" ]]
 tableCHVHeader = [["Dtst", "CHVFound", "CHVId/query", "UMLSId/query", "CHVMisspelled/query", "ComboScore"]]
-tablePOSHeader = [["Dtst", "Total/#Queries", "noun", "adj", "prep", "conj", "aux", "det", "pron", "verb", "punc", "shape"]]
+tablePOSHeader = [["Dtst", "Total/#Queries", "noun", "adj", "prep", "conj", "aux", "det", "pron", "verb", "punc", "shape", "adv"]]
 
 generalTableRow, generalMeshRow, meshTableRow, diseaseTableRow, meshTableWeightedRow, diseaseTableWeightedRow = [], [], [], [], [], []
 semanticFocusRow, cicleSequenceRow, generalModifiedRow, modifiedSessionRow, meshDepthRow, semanticByUserRow = [], [], [], [], [], []
@@ -97,5 +97,5 @@ def appendBooleanUse(dataName, booleanTerms, numberOfQueries, usersUsingBools, n
 
 def appendPOS(dataName, countingPOS, numberOfQueries):
     totalPOS = sum(countingPOS.values())
-    postagsRow.append( [dataName, totalPOS / numberOfQueries, countingPOS["noun"]/totalPOS, countingPOS["adj"]/totalPOS, countingPOS["prep"]/totalPOS, countingPOS["conj"]/totalPOS, countingPOS["aux"]/totalPOS, countingPOS["det"]/totalPOS, countingPOS["pron"]/totalPOS, countingPOS["verb"]/totalPOS, countingPOS["punc"]/totalPOS, countingPOS["shape"]/totalPOS ])
+    postagsRow.append( [dataName, totalPOS / numberOfQueries, countingPOS["noun"]/totalPOS, countingPOS["adj"]/totalPOS, countingPOS["prep"]/totalPOS, countingPOS["conj"]/totalPOS, countingPOS["aux"]/totalPOS, countingPOS["det"]/totalPOS, countingPOS["pron"]/totalPOS, countingPOS["verb"]/totalPOS, countingPOS["punc"]/totalPOS, countingPOS["shape"]/totalPOS, countingPOS["adv"]/totalPOS ])
 
