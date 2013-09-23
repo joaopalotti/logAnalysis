@@ -16,6 +16,7 @@ pathToData = "../logAnalysisDataSets/"
 honAug = True
 aolClean = True
 usingAdam = True
+toyExample = False
 
 acronymsSet = createAcronymSet(usingAdam)
 ### HOW TO USE:
@@ -23,7 +24,8 @@ acronymsSet = createAcronymSet(usingAdam)
 
 class userClass:
     def __init__(self, id, label, nc, nq, ns, mmd, unl, mwpq, ttps, uab, usy, usc, usrd, usnm, expa, shri, refo, expshr, expref, shrref, expshrref,\
-                chvf=0.0, chv=0.0, umls=0.0, chvm=0.0, combo=0.0, wpu=0, cslq=0, wslq=0, tls=0, nqls=0, modi=0, usem=0, lofs=[], soas=set()):
+                chv=[], wpu=0, cslq=0, wslq=0, tls=0, nqls=0, modi=0, usem=0, lofs=[], soas=set(),\
+                lofc=[], soac=set(), tags=[]):
         self.id = id
         self.label = label
         self.numberOfChars = nc
@@ -46,12 +48,6 @@ class userClass:
         self.expshrref = expshrref
         self.modifications = modi
         
-        self.chvf = chvf
-        self.chv = chv
-        self.umls = umls
-        self.chvm = chvm
-        self.comboScore = combo
-        
         self.numberOfWords = wpu
         self.useOfNL = unl
         self.useOfMedAbb = uab
@@ -66,7 +62,31 @@ class userClass:
 
         self.listOfSources = lofs
         self.setOfAllSources = soas
+        
+        self.listOfConcepts = lofc
+        self.setOfAllConcepts = soac
+        
+        allTags = []
+        for tag in tags:
+            allTags.extend(tag)
+        
+        self.countTags = Counter(allTags)
 
+        self.chv = chv
+        lenchv = len(self.chv)
+        self.chvdata, self.chvf, self.umls, self.chvMisspelled, self.comboScore = 0,0,0,0,0
+        for row in self.chv:
+            self.chvdata += row[0] 
+            self.chvf += row[0] 
+            self.umls += row[1]
+            self.chvMisspelled += row[2]
+            self.comboScore += row[3]
+        self.chvdata = self.chvdata / lenchv
+        self.chvf = self.chvf / lenchv
+        self.umls = self.umls / lenchv
+        self.chvMisspelled = self.chvMisspelled / lenchv
+        self.comboScore = self.comboScore / lenchv
+    
     def toDict(self, groups):
         featuresToUse = {}
         counter = 0
@@ -186,10 +206,76 @@ class userClass:
             counter+=1
             featuresToUse["%02d.NumberOfSourcesInLastQuery" % (counter) ] = 0 if len(self.listOfSources) == 0 else self.listOfSources[-1]
             counter+=1
+            ###------------------------- Concepts --------------------------###
+            featuresToUse["%02d.AvgQueriesUsingConcepts" % (counter) ] = len(self.listOfConcepts) / self.numberOfQueries 
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfConceptsPerQuery" % (counter) ] = sum(self.listOfConcepts) / self.numberOfQueries 
+            counter+=1
+            featuresToUse["%02d.TotalNumberOfDifferentConceptsUsed" % (counter) ] = len(self.setOfAllConcepts) 
+            counter+=1
+            featuresToUse["%02d.NumberOfConceptsInLastQuery" % (counter) ] = 0 if len(self.listOfConcepts) == 0 else self.listOfConcepts[-1]
+            counter+=1
 
+        if "g6" in groups:
+            featuresToUse["%02d.AvgNumberOfCHVDataFound" % (counter) ] =  self.chvdata
+            counter+=1
+            featuresToUse["%02d.NumberOfCHVDataLastQuery" % (counter) ] = self.chv[-1][0] 
+            counter+=1
+            featuresToUse["%02d.AnyCHVDataInPast" % (counter) ] = (self.chvdata > 0.0) 
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfCHVFound" % (counter) ] =  self.chvf
+            counter+=1
+            featuresToUse["%02d.NumberOfCHVLastQuery" % (counter) ] = self.chv[-1][1] 
+            counter+=1
+            featuresToUse["%02d.AnyCHVInPast" % (counter) ] = self.chvf > 0.0 
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfUMLSFound" % (counter) ] =  self.umls
+            counter+=1
+            featuresToUse["%02d.NumberOfUMLSLastQuery" % (counter) ] = self.chv[-1][2] 
+            counter+=1
+            featuresToUse["%02d.AnyUMLSInPast" % (counter) ] = self.umls > 0.0 
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfCHVMisspelledFound" % (counter) ] =  self.chvMisspelled
+            counter+=1
+            featuresToUse["%02d.NumberOfCHVMisspelledLastQuery" % (counter) ] = self.chv[-1][3] 
+            counter+=1
+            featuresToUse["%02d.AnyCHVMisspelledInPast" % (counter) ] = self.chvMisspelled > 0.0 
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfComboScoreFound" % (counter) ] =  self.comboScore
+            counter+=1
+            featuresToUse["%02d.NumberOfComboScoreLastQuery" % (counter) ] = self.chv[-1][4] 
+            counter+=1
+           
+        if "g7" in groups:
+            ###------------------------- TAGS --------------------------###
+            numberOfTags = sum(self.countTags.values())
+            numberOfTags = 1.0 if numberOfTags == 0 else numberOfTags
+
+            featuresToUse["%02d.PercentageOfNouns" % (counter) ] = 0.0 if 'noun' not in self.countTags.keys() else self.countTags['noun'] / numberOfTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfAdjectives" % (counter) ] = 0.0 if 'adj' not in self.countTags.keys() else self.countTags['adj'] / numberOfTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfConjuctions" % (counter) ] = 0.0 if 'conj' not in self.countTags.keys() else self.countTags['conj'] / numberOfTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfVerbs" % (counter) ] = 0.0 if 'verb' not in self.countTags.keys() else self.countTags['verb'] / numberOfTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfShapes" % (counter) ] = 0.0 if 'shape' not in self.countTags.keys() else self.countTags['shape'] / numberOfTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfPunctuations" % (counter) ] = 0.0 if 'punc' not in self.countTags.keys() else self.countTags['punc'] / numberOfTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfAdverbs" % (counter) ] = 0.0 if 'adv' not in self.countTags.keys() else self.countTags['adv'] / numberOfTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfDeterminers" % (counter) ] = 0.0 if 'det' not in self.countTags.keys() else self.countTags['det'] / numberOfTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfAuxiliars" % (counter) ] = 0.0 if 'aux' not in self.countTags.keys() else self.countTags['aux'] / numberOfTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfPrepositions" % (counter) ] = 0.0 if 'prep' not in self.countTags.keys() else self.countTags['prep'] / numberOfTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfPronotuns" % (counter) ] = 0.0 if 'pron' not in self.countTags.keys() else self.countTags['pron'] / numberOfTags 
+            counter+=1
+            ### TODO: more tags and last query tags
 
         print featuresToUse
-        #return {'15.CHVFound': self.chvf, '16.CHV':self.chv, '17.UMLS':self.umls, '18.CHVMisspelled':self.chvm, '19.ComboScore':self.comboScore}
 
         return featuresToUse
 
@@ -214,8 +300,10 @@ def createDictOfUsers(data, label):
     countingNotMedical = calculateUsingSemantic(data, noMedicalTypes())
     countingUserBehavior, numberOfModifications = calculateUserBehavior(data)
     countingWordsPerUser, countingLastWordsPerUser = calculateWordsPerUser(data)
-    countingUserCHVFound, countingUserCHV, countingUserUMLS, countingUserMisspelled, countingUserComboScore = calculateCHV(data)
     countingSources, setOfAllSources = calculateSources(data)
+    countingConcetps, setOfAllConcepts = calculateConcepts(data)
+    countingTags = calculateTags(data)
+    countingCHV = calculateCHV(data)
 
     for user in users:
         if user not in countingNumberOfQueriesPerUser or \
@@ -256,21 +344,47 @@ def createDictOfUsers(data, label):
         mmd = [] if user not in countingMeshDepthPerUser else countingMeshDepthPerUser[user]
         usem = countingUseMeshPerUser[user]
 
-        CHVFound, CHV    = countingUserCHVFound[user], countingUserCHV[user]
-        UMLS, CHVMisspelled = countingUserUMLS[user], countingUserMisspelled[user]
-        comboScore = countingUserComboScore[user]
-
         lofs = countingSources[user]
         soas = setOfAllSources[user]
+    
+        lofc = countingConcetps[user]
+        soac = setOfAllConcepts[user]
 
+        tags = countingTags[user]
+        
+        chv = countingCHV[user]
+        
         userDict[user] = userClass(user, label, nc=nc, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, ttps=ttps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
-                                   expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref,\
-                                      chvf=CHVFound, chv=CHV, umls=UMLS, chvm=CHVMisspelled, combo=comboScore, wpu=wpu, wslq=wslq, tls=tls, nqls=nqls,\
-                                  modi=modi, usem=usem, lofs=lofs, soas=soas)
+                                   expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref, chv=chv,\
+                                   wpu=wpu, wslq=wslq, tls=tls, nqls=nqls,\
+                                  modi=modi, usem=usem, lofs=lofs, soas=soas, lofc=lofc, soac=soac, tags=tags)
 
     return userDict
 
 #### ========================= METRICS ============================ #####
+def calculateTags(data):
+    mapUserListOfTags = defaultdict(list)
+    
+    userIds = sorted( (member.userId, member.postags) for member in data)
+    for (userId, tags) in userIds:
+        if tags:
+            mapUserListOfTags[userId].append( [t for t in tags] )
+    
+    return mapUserListOfTags
+    
+
+def calculateConcepts(data):
+    mapUserConcepts = defaultdict(list)
+    setOfConcepts = defaultdict(set)
+    
+    userIds = sorted( (member.userId, member.concepts) for member in data)
+    for (userId, concepts) in userIds:
+        if concepts:
+            mapUserConcepts[userId].append( len(concepts) )
+            setOfConcepts[userId].update( {s for s in concepts } )
+        
+        #print userId, concept
+    return mapUserConcepts, setOfConcepts
 
 def calculateSources(data):
     mapUserSource = defaultdict(list)
@@ -500,8 +614,7 @@ def calculateUserBehavior(data):
 
 def calculateCHV(data):
 
-    tempMap = defaultdict(list)
-    mapUserCHVFound, mapUserCHV, mapUserUMLS, mapUserMisspelled, mapComboScore = {}, {}, {}, {}, {}
+    mapCHV = defaultdict(list)
 
     for item in [( member.userId, member.CHVFound, \
                   1 if member.hasCHV == True else 0, 
@@ -510,19 +623,9 @@ def calculateCHV(data):
                   float(member.comboScore)
                  ) for member in data]:
 
-        tempMap[item[0]].append([item[1], item[2], item[3], item[4], item[5]])
+        mapCHV[item[0]].append([item[1], item[2], item[3], item[4], item[5]])
     
-    for user, values in tempMap.iteritems():
-        #print user, values
-        size = len(values)
-        mapUserCHVFound[user]   = sum([v[0] for v in values])/size
-        mapUserCHV[user]        = sum([v[1] for v in values])/size
-        mapUserUMLS[user]       = sum([v[2] for v in values])/size
-        mapUserMisspelled[user] = sum([v[3] for v in values])/size
-        mapComboScore[user]     = sum([v[4] for v in values])/size
-
-    return mapUserCHVFound, mapUserCHV, mapUserUMLS, mapUserMisspelled, mapComboScore
-
+    return mapCHV
 
 ##### ========================================================================================== #####
 
@@ -606,16 +709,17 @@ def regularMedicalUsers(minimalNumberOfQueries, maxNumberOfQueries, explanation)
     ### Load Datasets
     ##
     #
-    if simpleTest:
+    if toyExample:
+        honFV, goldMinerFV = {}, {}
+        aolHealthFV = createFV("v6", 0, 0, 100)
+        tripFV = createFV("v6", 1, 0, 100)
+                               
+    elif simpleTest:
         # 1 or 10% of the dataset only
-        if honAug:
-            honFV = {}# createFV(pathToData + "/hon/honAugEnglish."+ formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
-        else:
-            honFV = {} #createFV(pathToData + "/hon/honEnglish."+ formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
-
-        aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthCompleteFixed5." + formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+        honFV = createFV(pathToData + "/hon/honAugEnglish."+ formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+        aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthClean." + formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
         goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
-        tripFV = {} # createFV(pathToData + "/trip/trip." + formatVersion + ".1.dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
+        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".1.dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
    
     else:
         if honAug:
