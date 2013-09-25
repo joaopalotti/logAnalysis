@@ -10,16 +10,14 @@ from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import ExtraTreesClassifier
-#Auxiliars
-from sklearn.feature_extraction import DictVectorizer
+
 #My classes
-from classifiers import classify, classifyIncremental, makeReport, makeIncrementalReport
+from classifiers import classify, classifyIncremental, makeIncrementalReport
+from auxClassifier import preprocessing, shuffleData, vectorizeData, calculateBaselines
 from createFeatureVector import userClass
-from sklearn.metrics import f1_score, accuracy_score
 
 ### HOW TO USE:
-# python runClassifiers.py -h
-# python runClassifiers.pt --preprocessing=[normalize|scale|minmax|nothing] -b [forceBalance|-1] -g [proportional|-1] -m [minNumberOfQueries] -s [nseed]"
+# python runIncrementalClassifiers.py -h
 
 nJobs = 2
 nCV = 10
@@ -28,7 +26,7 @@ percentageIntervals = [0,10,20,30,40,50,60,70,80,90,100]
 classifyParameters = {"KNN-K": 100, "ERT-n_estimators": 10, "SVM-cacheSize": 1000, "SVM-kernel": "linear", "SVM-C": CSVM} 
 
 #ld1, listOfListOfQueries1, ll1 = transformeInDict(regularUserFV, n, proportional)
-def transformeInDict(userDict, n=-1, proportional=-1):
+def transformeInDict(userDict, n=-1, proportional=-1, groupToUse=None):
     listOfDicts = list()
     listOfLastQueries = list() # the last query has the "accumlated value for a user"
     listOfLabels = list()
@@ -47,13 +45,14 @@ def transformeInDict(userDict, n=-1, proportional=-1):
 
         listOfQueries = userDict[userId]
 
-        listOfLastQueries.append(listOfQueries[-1].toDict())
+        listOfLastQueries.append(listOfQueries[-1].toDict(groupToUse))
         listOfDicts.append(listOfQueries)
         listOfLabels.append(listOfQueries[0].label)
 
     #Returning a list of list of queries of a single user and list of labels
     return listOfLastQueries, listOfDicts, listOfLabels
 
+###TODO: check in the auxClassifier if this function can be reproducted 
 def plotResult(clf, intervals, accs, f1s, wf1s, mf1s, accBaseline, f1Baseline, wf1Baseline, mf1Baseline):
     import pylab as pl
     pl.clf()
@@ -78,18 +77,6 @@ def plotResult(clf, intervals, accs, f1s, wf1s, mf1s, accBaseline, f1Baseline, w
     #pl.show()
     pl.savefig(str(clf).split("(")[0] + ".png")
 
-def applyPreProcessing(data, preProcessing):
-    from sklearn import preprocessing
-    if preProcessing == "scale":
-        X = preprocessing.scale(data)
-    elif preProcessing == "minmax":
-        X = preprocessing.MinMaxScaler().fit_transform(data)
-    elif preProcessing == "normalize":
-        X = preprocessing.normalize(data, norm='l2')
-    elif preProcessing == "nothing":
-        X = data
-    return X
-
 def getSubLists(l, method, values, vec, preProcessing):
     result = defaultdict(list)
 
@@ -102,7 +89,7 @@ def getSubLists(l, method, values, vec, preProcessing):
                 result[i].append(subList[int((len(subList) - 1) * (v/100.0))].toDict())
                 #print len(subList), v, int(len(subList) * (v/100.0) )
 
-    return [applyPreProcessing(vec.fit_transform(result[l]).toarray(), preProcessing) for l in result]
+    return [preProcessing(vec.fit_transform(result[l]).toarray(), preProcessing) for l in result]
 
 def runClassify(preProcessing, forceBalance, proportional, minNumberOfQueries, nseed, useIntegral):
    

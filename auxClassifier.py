@@ -59,7 +59,6 @@ def vectorizeData(listOfDicts):
     from sklearn.feature_extraction import DictVectorizer
     vec = DictVectorizer()
     X_noProcess = vec.fit_transform(listOfDicts).toarray()
-    print vec.get_feature_names()
     return vec, X_noProcess
 
 def hasherData(listOfDicts):

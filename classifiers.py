@@ -1,3 +1,4 @@
+import logging
 #Report
 from sklearn import cross_validation
 from sklearn.metrics import classification_report, f1_score, accuracy_score, precision_recall_curve, auc, roc_curve
@@ -7,17 +8,19 @@ from sklearn.grid_search import GridSearchCV
 from collections import Counter, defaultdict
 from auxClassifier import ResultMetrics
 
-def makeIncrementalReport(X, y, listOfYs, accBaseline, sf1Baseline, wf1Baseline, mf1Baseline):
+moduleL = logging.getLogger("classifiers.py")
+
+def makeIncrementalReport(y, listOfYs, baselines):
     a, f, wf, mf = [], [], [], []
     for i in listOfYs:
         print "Partition ", i
         print len(listOfYs[i])
         #print listOfYs[i]
-        acc, sf1, wf1, mf1 = makeReport(X, y, listOfYs[i], accBaseline, sf1Baseline, wf1Baseline, mf1Baseline)
-        a, f, wf, mf = a + [acc], f + [sf1], wf + [wf1], mf + [mf1]
-    return a, f, wf, mf
+        tempR = makeReport(y, listOfYs[i], baselines)
+        a, f, mf, wf = a + [tempR.acc], f + [tempR.sf1], mf + [tempR.mf1], wf + [tempR.wf1]
+    return ResultMetrics(a, f, mf, wf)
 
-def makeReport(X, y, y_pred, baselines, target_names=['Layman', 'Specialist']):
+def makeReport(y, y_pred, baselines, target_names=['Layman', 'Specialist']):
     # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html#sklearn.metrics.classification_report
     
     acc = accuracy_score(y, y_pred)
@@ -54,7 +57,11 @@ def convertToSingleList(listOfLists):
         result += list(l)
     return result
 
-def runClassifier(clf, X, y, CV, nJobs, others={}):
+def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None):
+ 
+    if incrementalData:
+        moduleL.info("Using incremental data!")
+        return runIncrementalClassifier(clf, X, incrementalData, y, CV, nJobs, others)
 
     tryToMeasureFeatureImportance = False if "tryToMeasureFeatureImportance" not in others else others["tryToMeasureFeatureImportance"]
     featureNames = None if "featureNames" not in others else others["featureNames"]
@@ -67,7 +74,7 @@ def runClassifier(clf, X, y, CV, nJobs, others={}):
         print "Disabling feature importance"
         tryToMeasureFeatureImportance = False
 
-    print "OTHERS ==> ", others
+    moduleL.info("OTHERS ==> %s", others)
     print clf
     originalClf = clf
     if useGridSearch:
@@ -102,15 +109,22 @@ def runClassifier(clf, X, y, CV, nJobs, others={}):
     if tryToMeasureFeatureImportance:
         measureFeatureImportance(originalClf, featureNames)
 
-    print "Done"
+    moduleL.info("Done")
     return y_pred, y_probas
 
-def classify(clf, label, X, y, nCV, nJobs, baselines, options={}):
-    print "Running ", label
-    y_ ,probas_ = runClassifier(clf, X, y, nCV, nJobs, options)
-    resultMetrics = makeReport(X, y, y_, baselines)
-    precRecall = getPrecisionRecall(y, probas_)
-    roc = getROC(y, probas_)
+def classify(clf, label, X, y, nCV, nJobs, baselines, options={}, incremental=None):
+    moduleL.info("Running: %s", label)
+       
+    y_ , probas_ = runClassifier(clf, X, y, nCV, nJobs, options, incremental)
+    
+    if incremental:
+        resultMetrics = makeIncrementalReport(y, y_, baselines)
+        precRecall = []
+        roc = []
+    else:
+        resultMetrics = makeReport(y, y_, baselines)
+        precRecall = getPrecisionRecall(y, probas_)
+        roc = getROC(y, probas_)
     return (label, resultMetrics, precRecall, roc)
 
 def parallelClassify(pars):
@@ -123,32 +137,53 @@ def parallelClassify(pars):
         return classify(pars[0], pars[1], pars[2], pars[3], pars[4], pars[5], pars[6], {})
 
 #llq -> listOfListOfQueries
-def classifyIncremental(clf, X, listOfLists, y, CV, nJobs, tryToMeasureFeatureImportance=False, featureNames=None):
+def runIncrementalClassifier(clf, _, listOfLists, y, CV, nJobs, others):
     
+    tryToMeasureFeatureImportance = False if "tryToMeasureFeatureImportance" not in others else others["tryToMeasureFeatureImportance"]
+    featureNames = None if "featureNames" not in others else others["featureNames"]
+    useGridSearch= False if "useGridSearch" not in others else others["useGridSearch"]
+    gridParameters= None if "gridParameters" not in others else others["gridParameters"]
+    gridScore= "f1" if "gridScore" not in others else others["gridScore"]
+     
+    if tryToMeasureFeatureImportance and useGridSearch:
+        print "Using Grid search and feature importance at the same time is not a good idea"
+        print "Disabling feature importance"
+        tryToMeasureFeatureImportance = False
+
+    moduleL.info("OTHERS ==> %s", others)
     print clf
-    nSamples, nFeatures = X.shape
+    originalClf = clf
+    if useGridSearch:
+        print "Using grid search"
+        clf = GridSearchCV(clf, gridParameters, cv=CV, scoring=gridScore, n_jobs=nJobs)
+   
+    #nSamples, nFeatures = X.shape
+    nSamples = y.shape[0]
 
     for l in listOfLists:
-        print "l = ",l.shape
-    print "x = ", X.shape
+        moduleL.info("l = %s",l.shape)
+
+    #print "x = ", X.shape
     print "y = ", y.shape
 
     kFold = cross_validation.KFold(n=nSamples, n_folds=CV, indices=True)
 
     # Run classifier
     #lists = [clf.fit(X[train], y[train]).predict(X[test]) for train, test in kFold]
-    results = defaultdict(list)
+    preds = defaultdict(list)
+    probas = defaultdict(list)
+
     for train, test in kFold:
         for i, l in zip(range(len(listOfLists)), listOfLists):
-            results[i] += list(clf.fit(X[train], y[train]).predict(l[test]))
+            #print " i = ", i, " l =", len(l)
+            preds[i] += list(clf.fit(l[train], y[train]).predict(l[test]))
+            probas[i] += list( clf.fit(l[train], y[train]).predict_proba(l[test]) )
 
-    scores = cross_validation.cross_val_score(clf, X, y, cv=CV, n_jobs=nJobs) #, scoring="f1") 
     if tryToMeasureFeatureImportance:
-        measureFeatureImportance(clf, featureNames)
+        measureFeatureImportance(originalClf, featureNames)
 
-    print "Result size = ", len(results)
-    print "Done"
-    return results
+    moduleL.info("Done")
+    return preds, probas
 
 def plotGraph(precRecallDict, fileName, xlabel, ylabel, generatePickle=True, hasPlotLibs=False):
     if generatePickle:

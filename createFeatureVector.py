@@ -16,266 +16,344 @@ pathToData = "../logAnalysisDataSets/"
 honAug = True
 aolClean = True
 usingAdam = True
-toyExample = False
 
 acronymsSet = createAcronymSet(usingAdam)
 ### HOW TO USE:
 #   python createFeatureVector.py minimalNumberOfQueries 
 
 class userClass:
-    def __init__(self, id, label, nc, nq, ns, mmd, unl, mwpq, ttps, uab, usy, usc, usrd, usnm, expa, shri, refo, expshr, expref, shrref, expshrref,\
-                chv=[], wpu=0, cslq=0, wslq=0, tls=0, nqls=0, modi=0, usem=0, lofs=[], soas=set(),\
-                lofc=[], soac=set(), tags=[]):
+    def __init__(self, id, label, nq, nc, wpu, unl, uab, ns, ttps, expa, shri, modi, keeps, usy, usc, usrd, usnm, lum, mmd, lofs, soas, lofc, soac,\
+                chvd, chvf, umls, chvm, chvs, tags):
+        #General 
         self.id = id
         self.label = label
-        self.numberOfChars = nc
         self.numberOfQueries = nq
-        self.numberOfSessions = ns
-        self.meanWordsPerQuery = mwpq
-        self.totalTimePerSession = ttps
+        
+        #Group 1
+        self.numberOfChars = nc
+        self.numberOfWords = wpu
+        self.useOfNL = unl
+        self.useOfMedAbb = uab
 
+        #Group 2
+        self.startedSessions = ns
+        self.timePerSession = ttps
+
+        #Group 3
+        self.expansions = expa
+        self.reductions = shri
+        self.modifications = modi
+        self.keeps = keeps
+        
+        #Group 4
         self.symptoms = usy
         self.causes = usc
         self.remedies = usrd
         self.notMedical = usnm
 
-        self.expansions = expa
-        self.shrinkages = shri
-        self.reformulations = refo
-        self.expshr = expshr
-        self.expref = expref
-        self.shrref = shrref
-        self.expshrref = expshrref
-        self.modifications = modi
-        
-        self.numberOfWords = wpu
-        self.useOfNL = unl
-        self.useOfMedAbb = uab
-        
-        self.charsInLastQuery = cslq
-        self.wordsInLastQuery = wslq
-        self.timeInLastSession = tls
-        self.numberOfQueriesInLastSession = nqls
-
+        #Group 5
+        self.listNumberOfMeshConcepts = lum
         self.listMeshDepth = mmd
-        self.listNumberOfMeshConcepts = usem
-
         self.listOfSources = lofs
-        self.setOfAllSources = soas
-        
+        self.accSetOfSources = soas
         self.listOfConcepts = lofc
-        self.setOfAllConcepts = soac
+        self.accSetOfConcepts = soac
         
-        allTags = []
-        for tag in tags:
-            allTags.extend(tag)
-        
-        self.countTags = Counter(allTags)
+        #Group 6
+        self.chvdata = chvd
+        self.chvf = chvf
+        self.umls = umls
+        self.chvMisspelled = chvm
+        self.comboScore = chvs
 
-        self.chv = chv
-        lenchv = len(self.chv)
-        self.chvdata, self.chvf, self.umls, self.chvMisspelled, self.comboScore = 0,0,0,0,0
-        for row in self.chv:
-            self.chvdata += row[0] 
-            self.chvf += row[0] 
-            self.umls += row[1]
-            self.chvMisspelled += row[2]
-            self.comboScore += row[3]
-        self.chvdata = self.chvdata / lenchv
-        self.chvf = self.chvf / lenchv
-        self.umls = self.umls / lenchv
-        self.chvMisspelled = self.chvMisspelled / lenchv
-        self.comboScore = self.comboScore / lenchv
-    
-    def toDict(self, groups):
+        #Group 7
+        self.accTags = tags
+
+    def toDict(self, idxq, groups):
+        # Idxq varies from 0 to (numberOfQueries - 1)
+
         featuresToUse = {}
         counter = 0
+        if idxq >= self.numberOfQueries:
+            print "ERROR ---- idxq > numberOfQueries. idxq = %d, numberOfQueries = %d" % (idxq, self.numberOfQueries)
+            exit(0)
 
         if "g1" in groups:
-            featuresToUse["%02d.AvgCharsPerQuery" % (counter) ] = self.numberOfChars /  self.numberOfQueries
+            featuresToUse["%02d.AvgCharsPerQuery" % (counter) ] = sum(self.numberOfChars[0:(idxq+1)])/(idxq+1)
             counter+=1
-            featuresToUse["%02d.CharsInLastQuery" % (counter) ] = self.charsInLastQuery
+            featuresToUse["%02d.AvgWordsPerQuery" % (counter) ] = sum(self.numberOfWords[0:(idxq+1)])/(idxq+1)
             counter+=1
-            featuresToUse["%02d.AvgWordsPerQuery" % (counter) ] = self.numberOfWords / self.numberOfQueries
+            featuresToUse["%02d.AvgUseOfNL" % (counter) ] = sum(self.useOfNL[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.WordsInLastQuery" % (counter) ] = self.wordsInLastQuery
+            featuresToUse["%02d.AnyPastUseOfNL" % (counter) ] = any(self.useOfNL[0:(idxq+1)])
             counter+=1
-            featuresToUse["%02d.AvgUseOfNL" % (counter) ] = sum(self.useOfNL) / self.numberOfQueries
+            featuresToUse["%02d.AvgUseOfMedAbb" % (counter) ] = sum(self.useOfMedAbb[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AnyPastUseOfNL" % (counter) ] = any(self.useOfNL)
+            featuresToUse["%02d.AnyPastUseOfMedAbb" % (counter) ] = any(self.useOfMedAbb[0:(idxq+1)])
             counter+=1
-            featuresToUse["%02d.UsedNLLastQuery" % (counter) ] = (self.useOfNL[-1] == 1)
+            #Features related to the actual query:
+            featuresToUse["%02d.CharsInQuery" % (counter) ] = self.numberOfChars[idxq]
             counter+=1
-            featuresToUse["%02d.AvgUseOfMedAbb" % (counter) ] = sum(self.useOfMedAbb) / self.numberOfQueries
+            featuresToUse["%02d.WordsInQuery" % (counter) ] = self.numberOfWords[idxq]
             counter+=1
-            featuresToUse["%02d.AnyPastUseOfMedAbb" % (counter) ] = any(self.useOfMedAbb)
+            featuresToUse["%02d.UsedNLQuery" % (counter) ] = self.useOfNL[idxq] == 1
             counter+=1
-            featuresToUse["%02d.UsedMedAbbLastQuery" % (counter) ] = (self.useOfMedAbb[-1] == 1)
+            featuresToUse["%02d.UsedMedAbbQuery" % (counter) ] = self.useOfMedAbb[idxq] == 1
             counter+=1
 
         if "g2" in groups:
-            featuresToUse["%02d.AvgQueriesPerSession" % (counter) ] =  self.numberOfQueries / self.numberOfSessions
+            sessionsSoFar = sum(self.startedSessions[0:(idxq+1)])
+            featuresToUse["%02d.AvgQueriesPerSession" % (counter) ] = 0 if sessionsSoFar == 0 else (idxq+1) / sessionsSoFar
             counter+=1
-            featuresToUse["%02d.NumberOfQueriesInLastSession" % (counter) ] = self.numberOfQueriesInLastSession
-            counter+=1
-            featuresToUse["%02d.AvgTimePerSession" % (counter) ] = self.totalTimePerSession / self.numberOfSessions
-            counter+=1
-            featuresToUse["%02d.TimeInLastSession" % (counter) ] = self.timeInLastSession
+            featuresToUse["%02d.AvgTimePerSession" % (counter) ] = 0 if sessionsSoFar == 0 else sum(self.timePerSession[0:(idxq+1)]) / sessionsSoFar
             counter+=1
         
         if "g3" in groups:
-            featuresToUse["%02d.AvgNumberOfExpansions" % (counter) ] = self.expansions / self.modifications 
+            featuresToUse["%02d.AvgNumberOfExpansions" % (counter) ] = sum(self.expansions[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AnyPastExpansion" % (counter) ] = (self.expansions > 0)
+            featuresToUse["%02d.AnyPastExpansion" % (counter) ] = any(self.expansions[0:(idxq+1)])
             counter+=1
-            #TODO:
-            #featuresToUse["%02d.ExpandedLastQuery" % (counter) ] = 
-            #counter+=1
-            featuresToUse["%02d.AvgNumberOfReduction" % (counter) ] = self.shrinkages / self.modifications 
+            featuresToUse["%02d.ExpandedQuery" % (counter) ] = self.expansions[idxq]
             counter+=1
-            featuresToUse["%02d.AnyPastReduction" % (counter) ] = (self.shrinkages > 0)
+            featuresToUse["%02d.AvgNumberOfReductions" % (counter) ] = sum(self.reductions[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AvgNumberOfReformulation" % (counter) ] = self.reformulations / self.modifications 
+            featuresToUse["%02d.AnyPastReductions" % (counter) ] = any(self.reductions[0:(idxq)])
             counter+=1
-            featuresToUse["%02d.AnyPastRefomulation" % (counter) ] = (self.reformulations > 0)
+            featuresToUse["%02d.ReductedQuery" % (counter) ] = self.reductions[idxq]
             counter+=1
-            featuresToUse["%02d.AvgNumberOfExpRed" % (counter) ] = self.expshr / self.modifications 
+            featuresToUse["%02d.AvgNumberOfModifications" % (counter) ] = sum(self.modifications[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AnyPastExpRed" % (counter) ] = (self.expshr > 0)
+            featuresToUse["%02d.AnyPastModification" % (counter) ] = any(self.modifications[0:(idxq+1)])
             counter+=1
-            featuresToUse["%02d.AvgNumberOfExpRef" % (counter) ] = self.expref / self.modifications 
+            featuresToUse["%02d.ModifiedQuery" % (counter) ] = self.modifications[idxq]
             counter+=1
-            featuresToUse["%02d.AnyPastExpRef" % (counter) ] = (self.expref > 0)
+            featuresToUse["%02d.AvgNumberOfKeeps" % (counter) ] = sum(self.keeps[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AvgNumberOfRedRef" % (counter) ] = self.shrref / self.modifications 
+            featuresToUse["%02d.AnyPastKeep" % (counter) ] = any(self.keeps[0:(idxq+1)])
             counter+=1
-            featuresToUse["%02d.AnyPastRedRef" % (counter) ] = (self.shrref > 0)
-            counter+=1
-            featuresToUse["%02d.AvgNumberOfExpRedRef" % (counter) ] = self.expshrref / self.modifications 
-            counter+=1
-            featuresToUse["%02d.AnyPastExpRedRef" % (counter) ] = (self.expshrref > 0)
+            featuresToUse["%02d.KeptQuery" % (counter) ] = self.keeps[idxq]
             counter+=1
         
         if "g4" in groups:
-            featuresToUse["%02d.AvgSymptomsPerQuery" % (counter) ] = sum(self.symptoms) / self.numberOfQueries
+            featuresToUse["%02d.AvgSymptomsPerQuery" % (counter) ] = sum(self.symptoms[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AnyPastSearchForSymptoms" % (counter) ] = any(self.symptoms) 
+            featuresToUse["%02d.AnyPastSearchForSymptoms" % (counter) ] = any(self.symptoms[0:(idxq+1)]) 
             counter+=1
-            featuresToUse["%02d.SearchSymptomPreviousQuery" % (counter) ] = (self.symptoms[-1] == 1)
+            featuresToUse["%02d.AvgCausesPerQuery" % (counter) ] = sum(self.causes[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AvgCausesPerQuery" % (counter) ] = sum(self.causes) / self.numberOfQueries
+            featuresToUse["%02d.AnyPastSearchForCauses" % (counter) ] = any(self.causes[0:(idxq+1)])
             counter+=1
-            featuresToUse["%02d.AnyPastSearchForCauses" % (counter) ] = any(self.causes)
+            featuresToUse["%02d.AvgRemediesPerQuery" % (counter) ] = sum(self.remedies[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.SearchCausePreviousQuery" % (counter) ] = (self.causes[-1] == 1)
+            featuresToUse["%02d.AnyPastSearchForRemedies" % (counter) ] = any(self.remedies[0:(idxq+1)])
             counter+=1
-            featuresToUse["%02d.AvgRemediesPerQuery" % (counter) ] = sum(self.remedies) / self.numberOfQueries 
+            featuresToUse["%02d.AvgNonSymCauseRemedyTypesPerQuery" % (counter) ] = sum(self.notMedical[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AnyPastSearchForRemedies" % (counter) ] = any(self.remedies)
+            featuresToUse["%02d.AnyPastSearchForNonSymCauseRemedyTypes" % (counter) ] = any(self.notMedical[0:(idxq+1)])
             counter+=1
-            featuresToUse["%02d.SearchRemedyPreviousQuery" % (counter) ] = (self.remedies[-1] == 1)
+            #Features related to the actual query:
+            featuresToUse["%02d.SearchedSymptomQuery" % (counter) ] = (self.symptoms[idxq] == 1)
             counter+=1
-            featuresToUse["%02d.AvgNonSymCauseRemedyTypesPerQuery" % (counter) ] = sum(self.notMedical) / self.numberOfQueries
+            featuresToUse["%02d.SearchedCauseQuery" % (counter) ] =   (self.causes[idxq] == 1)
             counter+=1
-            featuresToUse["%02d.AvgTop5NonMedicalSemanticTypesPerQuery" % (counter) ] = any(self.notMedical)
+            featuresToUse["%02d.SearchedRemedyQuery" % (counter) ] =   (self.remedies[idxq] == 1)
             counter+=1
-            featuresToUse["%02d.AvgTop5NonMedicalSemanticTypesPerQuery" % (counter) ] = (self.notMedical[-1] == 1)
+            featuresToUse["%02d.SearchedForNonSymCauseRemedyQuery" % (counter) ] = (self.notMedical[idxq] == 1)
             counter+=1
  
         if "g5" in groups:
             ###------------------------- Mesh features --------------------------###
-            featuresToUse["%02d.AvgQueriesUsingMeSH" % (counter) ] = len(self.listNumberOfMeshConcepts) / self.numberOfQueries
+            featuresToUse["%02d.AvgQueriesUsingMeSH" % (counter) ] = sum([1 for m in self.listNumberOfMeshConcepts[0:(idxq+1)] if m > 0]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AvgNumberOfMeSHPerQuery" % (counter) ] = sum(self.listNumberOfMeshConcepts) / self.numberOfQueries
+            featuresToUse["%02d.AvgNumberOfMeSHPerQuery" % (counter) ] = sum(self.listNumberOfMeshConcepts[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.NumberOfMeshInLastQuery" % (counter) ] = 0 if len(self.listNumberOfMeshConcepts) == 0 else self.listNumberOfMeshConcepts[-1]
+            featuresToUse["%02d.AvgMeSHDepth" % (counter) ] = sum(self.listMeshDepth[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AvgMeSHDepth" % (counter) ] =  sum(self.listMeshDepth) / self.numberOfQueries
+            featuresToUse["%02d.HasUsedMeSHBefore" % (counter) ] = False if sum(self.listMeshDepth[0:(idxq+1)]) == 0 else True   
             counter+=1
-            featuresToUse["%02d.MeSHDepthInLastQuery" % (counter) ] = 0 if len(self.listMeshDepth) == 0 else self.listMeshDepth[-1]
+            #Features related to the actual query:
+            featuresToUse["%02d.NumberOfMeshInQuery" % (counter) ] = self.listNumberOfMeshConcepts[idxq]
             counter+=1
-            featuresToUse["%02d.HasUsedMeSHBefore" % (counter) ] = False if len(self.listMeshDepth) == 0 else True   
+            featuresToUse["%02d.MeSHDepthInQuery" % (counter) ] = self.listMeshDepth[idxq]
             counter+=1
             ###------------------------- Souce features --------------------------###
             #Number of different sources in metamap: 169  (http://www.nlm.nih.gov/research/umls/sourcereleasedocs/index.html)
-            featuresToUse["%02d.AvgQueriesUsingSources" % (counter) ] = len(self.listOfSources) / self.numberOfQueries 
+            featuresToUse["%02d.AvgQueriesUsingSources" % (counter) ] = sum([1 for s in self.listOfSources[0:(idxq+1)] if s > 0]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AvgNumberOfSourcesPerQuery" % (counter) ] = sum(self.listOfSources) / self.numberOfQueries 
+            featuresToUse["%02d.AvgNumberOfSourcesPerQuery" % (counter) ] = sum(self.listOfSources[0:(idxq+1)]) / (idxq+1) 
             counter+=1
-            featuresToUse["%02d.TotalNumberOfDifferentSourcesUsed" % (counter) ] = len(self.setOfAllSources) / 169.0
+            featuresToUse["%02d.TotalNumberOfDifferentSourcesUsed" % (counter) ] = len(self.accSetOfSources[idxq]) / 169.0
             counter+=1
-            featuresToUse["%02d.NumberOfSourcesInLastQuery" % (counter) ] = 0 if len(self.listOfSources) == 0 else self.listOfSources[-1]
+            #Features related to the actual query:
+            featuresToUse["%02d.NumberOfSourcesInQuery" % (counter) ] = self.listOfSources[idxq]
             counter+=1
             ###------------------------- Concepts --------------------------###
-            featuresToUse["%02d.AvgQueriesUsingConcepts" % (counter) ] = len(self.listOfConcepts) / self.numberOfQueries 
+            featuresToUse["%02d.AvgQueriesUsingConcepts" % (counter) ] = sum([1 for c in self.listOfConcepts[0:(idxq+1)] if c > 0]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AvgNumberOfConceptsPerQuery" % (counter) ] = sum(self.listOfConcepts) / self.numberOfQueries 
+            featuresToUse["%02d.AvgNumberOfConceptsPerQuery" % (counter) ] = sum(self.listOfConcepts[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.TotalNumberOfDifferentConceptsUsed" % (counter) ] = len(self.setOfAllConcepts) 
+            featuresToUse["%02d.TotalNumberOfDifferentConceptsUsed" % (counter) ] = len(self.accSetOfConcepts[idxq])
             counter+=1
-            featuresToUse["%02d.NumberOfConceptsInLastQuery" % (counter) ] = 0 if len(self.listOfConcepts) == 0 else self.listOfConcepts[-1]
+            #Features related to the query:
+            featuresToUse["%02d.NumberOfConceptsInQuery" % (counter) ] = self.listOfConcepts[idxq]
             counter+=1
 
         if "g6" in groups:
-            featuresToUse["%02d.AvgNumberOfCHVDataFound" % (counter) ] =  self.chvdata
+            featuresToUse["%02d.AvgNumberOfCHVDataFound" % (counter) ] =  sum(self.chvdata[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.NumberOfCHVDataLastQuery" % (counter) ] = self.chv[-1][0] 
+            featuresToUse["%02d.AnyCHVDataInPast" % (counter) ] = any(self.chvdata[0:(idxq+1)]) 
             counter+=1
-            featuresToUse["%02d.AnyCHVDataInPast" % (counter) ] = (self.chvdata > 0.0) 
+            featuresToUse["%02d.AvgNumberOfCHVFound" % (counter) ] = sum(self.chvf[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AvgNumberOfCHVFound" % (counter) ] =  self.chvf
+            featuresToUse["%02d.AnyCHVInPast" % (counter) ] = any(self.chvf[0:(idxq+1)])
             counter+=1
-            featuresToUse["%02d.NumberOfCHVLastQuery" % (counter) ] = self.chv[-1][1] 
+            featuresToUse["%02d.AvgNumberOfUMLSFound" % (counter) ] = sum(self.umls[0:(idxq+1)])/(idxq+1)
             counter+=1
-            featuresToUse["%02d.AnyCHVInPast" % (counter) ] = self.chvf > 0.0 
+            featuresToUse["%02d.AnyUMLSInPast" % (counter) ] = any(self.umls[0:(idxq+1)])
             counter+=1
-            featuresToUse["%02d.AvgNumberOfUMLSFound" % (counter) ] =  self.umls
+            featuresToUse["%02d.AvgNumberOfCHVMisspelledFound" % (counter) ] = sum(self.chvMisspelled[0:(idxq+1)])/(idxq+1)
             counter+=1
-            featuresToUse["%02d.NumberOfUMLSLastQuery" % (counter) ] = self.chv[-1][2] 
+            featuresToUse["%02d.AnyCHVMisspelledInPast" % (counter) ] = any(self.chvMisspelled[0:(idxq+1)]) 
             counter+=1
-            featuresToUse["%02d.AnyUMLSInPast" % (counter) ] = self.umls > 0.0 
+            featuresToUse["%02d.AvgNumberOfComboScoreFound" % (counter) ] =  sum(self.comboScore[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AvgNumberOfCHVMisspelledFound" % (counter) ] =  self.chvMisspelled
+            #Features related to the actual query:
+            featuresToUse["%02d.NumberOfCHVDataQuery" % (counter) ] = self.chvdata[idxq]
             counter+=1
-            featuresToUse["%02d.NumberOfCHVMisspelledLastQuery" % (counter) ] = self.chv[-1][3] 
+            featuresToUse["%02d.NumberOfCHVQuery" % (counter) ] = self.chvf[idxq]
             counter+=1
-            featuresToUse["%02d.AnyCHVMisspelledInPast" % (counter) ] = self.chvMisspelled > 0.0 
+            featuresToUse["%02d.NumberOfUMLSQuery" % (counter) ] = self.umls[idxq]
             counter+=1
-            featuresToUse["%02d.AvgNumberOfComboScoreFound" % (counter) ] =  self.comboScore
+            featuresToUse["%02d.NumberOfCHVMisspelledQuery" % (counter) ] = self.chvMisspelled[idxq]
             counter+=1
-            featuresToUse["%02d.NumberOfComboScoreLastQuery" % (counter) ] = self.chv[-1][4] 
+            featuresToUse["%02d.NumberOfComboScoreQuery" % (counter) ] = self.comboScore[idxq]
             counter+=1
-           
+
         if "g7" in groups:
             ###------------------------- TAGS --------------------------###
-            numberOfTags = sum(self.countTags.values())
-            numberOfTags = 1.0 if numberOfTags == 0 else numberOfTags
+            nTags = sum(self.accTags[idxq].values())
+            nTags = 1.0 if nTags == 0 else nTags
+            keys = self.accTags[idxq].keys()
 
-            featuresToUse["%02d.PercentageOfNouns" % (counter) ] = 0.0 if 'noun' not in self.countTags.keys() else self.countTags['noun'] / numberOfTags 
+            featuresToUse["%02d.PercentageOfNouns" % (counter) ] = 0.0 if 'noun' not in keys else self.accTags[idxq]['noun'] / nTags 
             counter+=1
-            featuresToUse["%02d.PercentageOfAdjectives" % (counter) ] = 0.0 if 'adj' not in self.countTags.keys() else self.countTags['adj'] / numberOfTags 
+            featuresToUse["%02d.PercentageOfAdjectives" % (counter) ] = 0.0 if 'adj' not in keys else self.accTags[idxq]['adj'] / nTags 
             counter+=1
-            featuresToUse["%02d.PercentageOfConjuctions" % (counter) ] = 0.0 if 'conj' not in self.countTags.keys() else self.countTags['conj'] / numberOfTags 
+            featuresToUse["%02d.PercentageOfConjuctions" % (counter) ] = 0.0 if 'conj' not in keys else self.accTags[idxq]['conj'] / nTags 
             counter+=1
-            featuresToUse["%02d.PercentageOfVerbs" % (counter) ] = 0.0 if 'verb' not in self.countTags.keys() else self.countTags['verb'] / numberOfTags 
+            featuresToUse["%02d.PercentageOfVerbs" % (counter) ] = 0.0 if 'verb' not in keys else self.accTags[idxq]['verb'] / nTags 
             counter+=1
-            featuresToUse["%02d.PercentageOfShapes" % (counter) ] = 0.0 if 'shape' not in self.countTags.keys() else self.countTags['shape'] / numberOfTags 
+            featuresToUse["%02d.PercentageOfShapes" % (counter) ] = 0.0 if 'shape' not in keys else self.accTags[idxq]['shape'] / nTags 
             counter+=1
-            featuresToUse["%02d.PercentageOfPunctuations" % (counter) ] = 0.0 if 'punc' not in self.countTags.keys() else self.countTags['punc'] / numberOfTags 
+            featuresToUse["%02d.PercentageOfPunctuations" % (counter) ] = 0.0 if 'punc' not in keys else self.accTags[idxq]['punc'] / nTags
             counter+=1
-            featuresToUse["%02d.PercentageOfAdverbs" % (counter) ] = 0.0 if 'adv' not in self.countTags.keys() else self.countTags['adv'] / numberOfTags 
+            featuresToUse["%02d.PercentageOfAdverbs" % (counter) ] = 0.0 if 'adv' not in keys else self.accTags[idxq]['adv'] / nTags 
             counter+=1
-            featuresToUse["%02d.PercentageOfDeterminers" % (counter) ] = 0.0 if 'det' not in self.countTags.keys() else self.countTags['det'] / numberOfTags 
+            featuresToUse["%02d.PercentageOfDeterminers" % (counter) ] = 0.0 if 'det' not in keys else self.accTags[idxq]['det'] / nTags 
             counter+=1
-            featuresToUse["%02d.PercentageOfAuxiliars" % (counter) ] = 0.0 if 'aux' not in self.countTags.keys() else self.countTags['aux'] / numberOfTags 
+            featuresToUse["%02d.PercentageOfAuxiliars" % (counter) ] = 0.0 if 'aux' not in keys else self.accTags[idxq]['aux'] / nTags 
             counter+=1
-            featuresToUse["%02d.PercentageOfPrepositions" % (counter) ] = 0.0 if 'prep' not in self.countTags.keys() else self.countTags['prep'] / numberOfTags 
+            featuresToUse["%02d.PercentageOfPrepositions" % (counter) ] = 0.0 if 'prep' not in keys else self.accTags[idxq]['prep']/ nTags 
             counter+=1
-            featuresToUse["%02d.PercentageOfPronotuns" % (counter) ] = 0.0 if 'pron' not in self.countTags.keys() else self.countTags['pron'] / numberOfTags 
+            featuresToUse["%02d.PercentageOfPronotuns" % (counter) ] = 0.0 if 'pron' not in keys else self.accTags[idxq]['pron'] / nTags 
             counter+=1
-            ### TODO: more tags and last query tags
+            # Related to actual query
+            featuresToUse["%02d.hasNouns" % (counter) ] = False if 'noun' not in keys else self.accTags[idxq]['noun'] > 0
+            counter+=1
+            featuresToUse["%02d.hasAdjectives" % (counter) ] = False if 'adj' not in keys else self.accTags[idxq]['adj'] > 0 
+            counter+=1
+            featuresToUse["%02d.hasConjuctions" % (counter) ] = False if 'conj' not in keys else self.accTags[idxq]['conj'] > 0 
+            counter+=1
+            featuresToUse["%02d.hasVerbs" % (counter) ] = False if 'verb' not in keys else self.accTags[idxq]['verb'] > 0
+            counter+=1
+            featuresToUse["%02d.hasOfShapes" % (counter) ] = False if 'shape' not in keys else self.accTags[idxq]['shape'] > 0
+            counter+=1
+            featuresToUse["%02d.hasOfPunctuations" % (counter) ] = False if 'punc' not in keys else self.accTags[idxq]['punc'] > 0
+            counter+=1
+            featuresToUse["%02d.hasOfAdverbs" % (counter) ] = False if 'adv' not in keys else self.accTags[idxq]['adv'] > 0
+            counter+=1
+            featuresToUse["%02d.hasOfDeterminers" % (counter) ] = False if 'det' not in keys else self.accTags[idxq]['det'] > 0
+            counter+=1
+            featuresToUse["%02d.hasOfAuxiliars" % (counter) ] = False if 'aux' not in keys else self.accTags[idxq]['aux'] > 0
+            counter+=1
+            featuresToUse["%02d.hasOfPrepositions" % (counter) ] = False if 'prep' not in keys else self.accTags[idxq]['prep'] > 0
+            counter+=1
+            featuresToUse["%02d.hasOfPronotuns" % (counter) ] = False if 'pron' not in keys else self.accTags[idxq]['pron'] > 0
+            counter+=1
 
-        print featuresToUse
+
+        if "gn" in groups:
+            # Group of features that contains last in the name
+            #Group 1:
+            featuresToUse["%02d.CharsInQuery" % (counter) ] = self.numberOfChars[idxq]
+            counter+=1
+            featuresToUse["%02d.WordsInQuery" % (counter) ] = self.numberOfWords[idxq]
+            counter+=1
+            featuresToUse["%02d.UsedNLQuery" % (counter) ] = self.useOfNL[idxq] == 1
+            counter+=1
+            featuresToUse["%02d.UsedMedAbbQuery" % (counter) ] = self.useOfMedAbb[idxq] == 1
+            counter+=1
+            #Group 4:
+            featuresToUse["%02d.SearchedSymptomQuery" % (counter) ] = (self.symptoms[idxq] == 1)
+            counter+=1
+            featuresToUse["%02d.SearchedCauseQuery" % (counter) ] =   (self.causes[idxq] == 1)
+            counter+=1
+            featuresToUse["%02d.SearchedRemedyQuery" % (counter) ] =   (self.remedies[idxq] == 1)
+            counter+=1
+            featuresToUse["%02d.SearchedForNonSymCauseRemedyQuery" % (counter) ] = (self.notMedical[idxq] == 1)
+            counter+=1
+           
+            #Group 5:
+            featuresToUse["%02d.NumberOfMeshInQuery" % (counter) ] = self.listNumberOfMeshConcepts[idxq]
+            counter+=1
+            featuresToUse["%02d.MeSHDepthInQuery" % (counter) ] = self.listMeshDepth[idxq]
+            counter+=1
+            featuresToUse["%02d.NumberOfSourcesInQuery" % (counter) ] = self.listOfSources[idxq]
+            counter+=1
+            featuresToUse["%02d.NumberOfConceptsInQuery" % (counter) ] = self.listOfConcepts[idxq]
+            counter+=1
+
+            #Group 6:
+            featuresToUse["%02d.NumberOfCHVDataQuery" % (counter) ] = self.chvdata[idxq]
+            counter+=1
+            featuresToUse["%02d.NumberOfCHVQuery" % (counter) ] = self.chvf[idxq]
+            counter+=1
+            featuresToUse["%02d.NumberOfUMLSQuery" % (counter) ] = self.umls[idxq]
+            counter+=1
+            featuresToUse["%02d.NumberOfCHVMisspelledQuery" % (counter) ] = self.chvMisspelled[idxq]
+            counter+=1
+            featuresToUse["%02d.NumberOfComboScoreQuery" % (counter) ] = self.comboScore[idxq]
+            counter+=1
+
+            #Group 7
+            keys = self.accTags[idxq].keys()
+            featuresToUse["%02d.hasNouns" % (counter) ] = False if 'noun' not in keys else self.accTags[idxq]['noun'] > 0
+            counter+=1
+            featuresToUse["%02d.hasAdjectives" % (counter) ] = False if 'adj' not in keys else self.accTags[idxq]['adj'] > 0 
+            counter+=1
+            featuresToUse["%02d.hasConjuctions" % (counter) ] = False if 'conj' not in keys else self.accTags[idxq]['conj'] > 0 
+            counter+=1
+            featuresToUse["%02d.hasVerbs" % (counter) ] = False if 'verb' not in keys else self.accTags[idxq]['verb'] > 0
+            counter+=1
+            featuresToUse["%02d.hasOfShapes" % (counter) ] = False if 'shape' not in keys else self.accTags[idxq]['shape'] > 0
+            counter+=1
+            featuresToUse["%02d.hasOfPunctuations" % (counter) ] = False if 'punc' not in keys else self.accTags[idxq]['punc'] > 0
+            counter+=1
+            featuresToUse["%02d.hasOfAdverbs" % (counter) ] = False if 'adv' not in keys else self.accTags[idxq]['adv'] > 0
+            counter+=1
+            featuresToUse["%02d.hasOfDeterminers" % (counter) ] = False if 'det' not in keys else self.accTags[idxq]['det'] > 0
+            counter+=1
+            featuresToUse["%02d.hasOfAuxiliars" % (counter) ] = False if 'aux' not in keys else self.accTags[idxq]['aux'] > 0
+            counter+=1
+            featuresToUse["%02d.hasOfPrepositions" % (counter) ] = False if 'prep' not in keys else self.accTags[idxq]['prep'] > 0
+            counter+=1
+            featuresToUse["%02d.hasOfPronotuns" % (counter) ] = False if 'pron' not in keys else self.accTags[idxq]['pron'] > 0
+            counter+=1
+
+
+        #TODO: reference to the last query
+        #if "gl" in groups:
+        #print featuresToUse
 
         return featuresToUse
 
@@ -285,129 +363,145 @@ class userClass:
 
 def createDictOfUsers(data, label):
     userDict = dict()
-
     users = set( (member.userId for member in data) )
+    #General
     countingNumberOfQueriesPerUser = calculateNumberOfQueriesPerUser(data)
-    countingNumberOfCharsPerUser, countingLastCharsPerUser = calculateNumberOfCharsPerUser(data)
-    countingMeshDepthPerUser, countingUseMeshPerUser = calculateMeshDepthPerUser(data)
+    #Group 1
+    countingNumberOfCharsPerUser = calculateNumberOfCharsPerUser(data)
+    countingWordsPerUser = calculateWordsPerUser(data)
     countingNLPerUser = calculateNLPerUser(data)
-    countingWordsPerQuery = calculateMeanWordsPerQuery(data)
-    countingTotalTimePerSession, countingNumberOfSessionsPerUser, countingTimeLastSession, countingNumberOfQueriesLastSession = calculateTimePerSession(data)
     countingMedicalAbbreviations = calculateMedicalAbbreviations(data)
+    #Group 2
+    countingTotalTimePerSession, countingNumberOfSessionsPerUser = calculateTimePerSession(data)
+    #Group 3
+    countingUserExpa, countingUserShri, countingUserModi, countingUserKeep = calculateUserBehavior(data)
+    #Group 4
     countingSymptoms = calculateUsingSemantic(data, symptomTypes())
     countingCause = calculateUsingSemantic(data, causeTypes())
     countingRemedy = calculateUsingSemantic(data, remedyTypes())
     countingNotMedical = calculateUsingSemantic(data, noMedicalTypes())
-    countingUserBehavior, numberOfModifications = calculateUserBehavior(data)
-    countingWordsPerUser, countingLastWordsPerUser = calculateWordsPerUser(data)
+    #Group 5
+    countingListUseMeshPerUser, countingMeshDepthPerUser = calculateMeshDepthPerUser(data)
     countingSources, setOfAllSources = calculateSources(data)
     countingConcetps, setOfAllConcepts = calculateConcepts(data)
+    #Group 6
+    countingCHVD, countingCHVF, countingUMLS, countingCHVM, countingCHVS = calculateCHV(data)
+    #Group 7
     countingTags = calculateTags(data)
-    countingCHV = calculateCHV(data)
 
     for user in users:
-        if user not in countingNumberOfQueriesPerUser or \
-           user not in countingNumberOfSessionsPerUser or \
-           user not in countingNLPerUser or\
-           user not in countingWordsPerQuery:
-            
-            print "User is not present. It should be...User ID = ", user
-            print "Number of queries -> ", user in countingNumberOfQueriesPerUser
-            print "Number of sessions -> ", user in countingNumberOfSessionsPerUser
-            print "NL -> ", user in countingNLPerUser
-            print "WordsPerQuery-> ", user in countingWordsPerQuery
-
-            sys.exit(0)
-            continue
-
-        nc = countingNumberOfCharsPerUser[user]
+        # General 
         nq = countingNumberOfQueriesPerUser[user]
-        ns = countingNumberOfSessionsPerUser[user]
-        mwpq = countingWordsPerQuery[user]
-        ttps = countingTotalTimePerSession[user]
+        # Group 1
+        nc = countingNumberOfCharsPerUser[user]
+        wpu = countingWordsPerUser[user]
         uab = countingMedicalAbbreviations[user]
         unl = countingNLPerUser[user]
-
+        #Group 2
+        ttps = countingTotalTimePerSession[user]
+        ns = countingNumberOfSessionsPerUser[user]
+        #Group 3
+        expa = countingUserExpa[user]
+        shri = countingUserShri[user]
+        modi = countingUserModi[user]
+        keeps = countingUserKeep[user] 
+        #Group 4
         usy = countingSymptoms[user]
         usc = countingCause[user]
         usrd = countingRemedy[user]
         usnm = countingNotMedical[user]
-        
-        expa, shri, refo, expshr, expref, shrref, expshrref = countingUserBehavior[user]
-        modi = numberOfModifications
-        wpu = countingWordsPerUser[user]
-        wslq = countingLastWordsPerUser[user]
-        cslq = countingLastCharsPerUser[user]
-        tls = countingTimeLastSession[user]
-        nqls = countingNumberOfQueriesLastSession[user]
-
+        #Group 5
         mmd = [] if user not in countingMeshDepthPerUser else countingMeshDepthPerUser[user]
-        usem = countingUseMeshPerUser[user]
-
+        lum = countingListUseMeshPerUser[user]
         lofs = countingSources[user]
         soas = setOfAllSources[user]
-    
         lofc = countingConcetps[user]
         soac = setOfAllConcepts[user]
-
+        #Group 6
+        chvd = countingCHVD[user]
+        chvf = countingCHVF[user]
+        umls = countingUMLS[user]
+        chvm = countingCHVM[user]
+        chvs = countingCHVS[user]
+        #Group 7
         tags = countingTags[user]
         
-        chv = countingCHV[user]
-        
-        userDict[user] = userClass(user, label, nc=nc, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, ttps=ttps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
-                                   expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref, chv=chv,\
-                                   wpu=wpu, wslq=wslq, tls=tls, nqls=nqls,\
-                                  modi=modi, usem=usem, lofs=lofs, soas=soas, lofc=lofc, soac=soac, tags=tags)
+        userDict[user] = userClass(user, label, nq=nq, nc=nc, wpu=wpu, unl=unl, uab=uab, ns=ns, ttps=ttps,\
+                                   expa=expa, shri=shri, modi=modi, keeps=keeps,\
+                                   usy=usy, usc=usc, usrd=usrd, usnm=usnm, lum=lum, mmd=mmd, lofs=lofs, soas=soas, lofc=lofc, soac=soac,\
+                                   chvd=chvd, chvf=chvf, umls=umls, chvm=chvm, chvs=chvs,tags=tags)
 
     return userDict
 
 #### ========================= METRICS ============================ #####
 def calculateTags(data):
     mapUserListOfTags = defaultdict(list)
-    
-    userIds = sorted( (member.userId, member.postags) for member in data)
-    for (userId, tags) in userIds:
+    userIds = sorted( (member.userId, member.datetime, member.postags) for member in data)
+
+    for (userId, _, tags) in userIds:
+        lastQ = Counter([])
         if tags:
-            mapUserListOfTags[userId].append( [t for t in tags] )
+            c = Counter( [t for t in tags] )
+            
+            if userId in mapUserListOfTags:
+                lastQ = mapUserListOfTags[userId][-1]
+            mapUserListOfTags[userId].append(lastQ + c)
+        else:
+            mapUserListOfTags[userId].append(lastQ)
     
     return mapUserListOfTags
     
-
 def calculateConcepts(data):
     mapUserConcepts = defaultdict(list)
-    setOfConcepts = defaultdict(set)
+    accSetOfConcepts = defaultdict(list)
     
-    userIds = sorted( (member.userId, member.concepts) for member in data)
-    for (userId, concepts) in userIds:
+    userIds = sorted( (member.userId, member.datetime,  member.concepts) for member in data)
+    for (userId, _, concepts) in userIds:
+        accSet = set()
+        if len(accSetOfConcepts[userId]) > 0:
+            accSet = set(accSetOfConcepts[-1])
+        
         if concepts:
             mapUserConcepts[userId].append( len(concepts) )
-            setOfConcepts[userId].update( {s for s in concepts } )
+            accSetOfConcepts[userId].append( set(concepts).union(accSet) )
+        else:
+            mapUserConcepts[userId].append(0)
+            accSetOfConcepts[userId].append(accSet)
         
-        #print userId, concept
-    return mapUserConcepts, setOfConcepts
+    return mapUserConcepts, accSetOfConcepts
 
 def calculateSources(data):
     mapUserSource = defaultdict(list)
-    setOfSources = defaultdict(set)
+    accSetOfSources = defaultdict(list)
     
-    userIds = sorted( (member.userId, member.sourceList) for member in data)
+    userIds = sorted( (member.userId, member.datetime, member.sourceList) for member in data)
 
-    for (userId, sourceList) in userIds:
-        if sourceList is not None:
+    for (userId, _, sourceList) in userIds:
+        accSet = set()
+        if len(accSetOfSources[userId]) > 0:
+            accSet = set(accSetOfSources[-1])
+     
+        if sourceList:
             mapUserSource[userId].append( len(sourceList) )
-            setOfSources[userId].update( {s for s in sourceList } )
+            accSetOfSources[userId].append( set(sourceList).union(accSet) )
+        else:
+            mapUserSource[userId].append( 0 )
+            accSetOfSources[userId].append( accSet )
 
-        #print "ROW --- ", userId, sourceList
-        #print "MAP --", mapUserSource 
-        #print "SET --", setOfSources
-    return mapUserSource, setOfSources
+    #for k, v in mapUserSource.iteritems():
+    #    print k, v
+    
+    #for k, v in accSetOfSources.iteritems():
+    #    print k, v
+
+    return mapUserSource, accSetOfSources
 
 def calculateNLPerUser(data):
     mapUserNL = defaultdict(list)
     
-    userIds = sorted( (member.userId, member.keywords) for member in data )
+    userIds = sorted( (member.userId, member.datetime, member.keywords) for member in data )
     
-    for (userId, keywords) in userIds:
+    for (userId, _, keywords) in userIds:
         mapUserNL[userId].append( 1 if hasNLword(keywords) else 0 )
 
     #print "mapUserNL ---> ", mapUserNL
@@ -420,9 +514,9 @@ def hasNLword(words):
 def calculateMedicalAbbreviations(data):
     mapUserAbb = defaultdict(list)
     
-    userIds = sorted( (member.userId, member.keywords) for member in data )
+    userIds = sorted( (member.userId, member.datetime, member.keywords) for member in data )
     
-    for (userId, keywords) in userIds:
+    for (userId, _, keywords) in userIds:
         mapUserAbb[userId].append(1 if hasAbbreviation(keywords) else 0)
 
     #print "mapUserAbb ---> ", mapUserAbb
@@ -436,30 +530,33 @@ def calculateMeshDepthPerUser(data):
     mapUserNumberOfMeshConcepts = defaultdict(list)
     mapUserDepthOfMesh = defaultdict(list)
 
-    userIds = sorted( (member.userId, member.mesh) for member in data )
+    userIds = sorted( (member.userId, member.datetime, member.mesh) for member in data )
     
-    for (userId, mesh) in userIds:
+    for (userId, _, mesh) in userIds:
         if mesh is not None:
             mapUserNumberOfMeshConcepts[userId].append(len(mesh))
             mapUserDepthOfMesh[userId].append( sum( [ len(m.split(".")) for m in mesh ] ) / len(mesh) )
-
+        else:
+            mapUserNumberOfMeshConcepts[userId].append(0)
+            mapUserDepthOfMesh[userId].append(0)
+        
             #print mesh, len(mesh),  sum( [ len(m.split(".")) for m in mesh ] ) / len(mesh)
     
     return mapUserNumberOfMeshConcepts, mapUserDepthOfMesh
     #return mapUserTotalMeshDepth, mapUserTimesUsingMesh, mapUserMeshIds, mapUserNumberOfMeshLastQuery, mapUserDepthLastQuery
 
 def calculateNumberOfCharsPerUser(data):
-    mapUserChars = defaultdict(int)
-    mapUserLastChar = defaultdict(int)
+    mapUserChars = defaultdict(list)
 
-    userWords = [ (member.userId, member.keywords) for member in data ]
-    queryInChars = [(userId, sum(len(q) for q in query)) for (userId, query) in userWords]
+    userWords = [ (member.userId, member.datetime, member.keywords) for member in data ]
+    queryInChars = [(userId, sum(len(q) for q in query)) for (userId, _, query) in userWords]
 
     for (userId, lenght) in queryInChars:
-        mapUserChars[userId] += lenght
-        mapUserLastChar[userId] = lenght
+        mapUserChars[userId].append(lenght)
 
-    return mapUserChars, mapUserLastChar
+    #for k,v in mapUserChars.iteritems():
+    #    print k, v
+    return mapUserChars
 
 def calculateNumberOfQueriesPerUser(data):
     userIds = sorted( [member.userId for member in data ] ) 
@@ -471,35 +568,15 @@ def calculateNumberOfQueriesPerUser(data):
     return mapUserQueries
 
 def calculateWordsPerUser(data):
-    mapUserWords = dict()
-    mapUserLastWords = dict()
-    userWords = [ (member.userId, len(member.keywords)) for member in data ]
+    mapUserWords = defaultdict(list)
+    userWords = sorted( [(member.userId, member.datetime, len(member.keywords)) for member in data ] )
     
-    tempMap = defaultdict(list)
-    for (userId, lenght) in userWords:
-        tempMap[userId].append(lenght)
-
-    for (userId, listOfLenghts) in tempMap.iteritems():
-        mapUserWords[userId] = sum(listOfLenghts)
-        mapUserLastWords[userId] = listOfLenghts[-1]
+    for (userId, _, lenght) in userWords:
+        mapUserWords[userId].append(lenght)
     
-    return mapUserWords, mapUserLastWords
-
-def calculateMeanWordsPerQuery(data):
-    mapUserMeanWords = dict()
-    userWords = [ (member.userId, len(member.keywords)) for member in data ]
-    #print userWords
-    
-    tempMap = defaultdict(list)
-    for (userId, lenght) in userWords:
-        tempMap[userId].append(lenght)
-
-    for (userId, listOfLenghts) in tempMap.iteritems():
-        meanSize = sum(listOfLenghts)/len(listOfLenghts)
-        #print userId, " ---> ",meanSize
-        mapUserMeanWords[userId] = meanSize
-
-    return mapUserMeanWords
+    #for k,v in mapUserWords.iteritems():
+    #    print k, v
+    return mapUserWords
 
 def hasSemanticType(words, semanticSet):
     if words is None:
@@ -509,24 +586,24 @@ def hasSemanticType(words, semanticSet):
 def calculateUsingSemantic(data, semanticType):
     mapUserSemantic = defaultdict(list)
 
-    userIds = sorted( (member.userId, member.semanticTypes) for member in data )
-    for (userId, st) in userIds:
+    userIds = sorted( (member.userId, member.datetime, member.semanticTypes) for member in data )
+    for (userId, _, st) in userIds:
         mapUserSemantic[userId].append(1 if hasSemanticType(st, semanticType) else 0)
     return mapUserSemantic
 
 
 def calculateTimePerSession(data):
-    mapUserTotalTimePerSession = dict()
-    mapUserNumberOfSessions = dict()
-    mapUserTimeLastSession = dict()
-    mapUserQueriesLastSession = dict()
+    mapUserTotalTimePerSession = defaultdict(list)
+    mapUserNumberOfSessions = defaultdict(list)
+    #mapUserTimeLastSession = dict()
+    #mapUserQueriesLastSession = dict()
 
-    userDateBool = [ ( member.userId, member.datetime , member.previouskeywords is None, member.keywords) for member in data ] # (user, date, newSession?, keywords)
+    userDateBool =  sorted( (member.userId, member.datetime , member.previouskeywords is None) for member in data ) # (user, date, newSession?)
 
     tempMap = defaultdict(list)
 
-    for (user, date, newSession, keywords) in userDateBool:
-        tempMap[user].append( (date, newSession, keywords) )
+    for (user, date, newSession) in userDateBool:
+        tempMap[user].append( (date, newSession) )
         #print user, date, newSession
 
     for (user, dateNewSession) in tempMap.iteritems():
@@ -537,11 +614,13 @@ def calculateTimePerSession(data):
         startDate = dateNewSession[0][0]
         endDate = startDate
         #print "User ---> ", user, " Start --> ", startDate
-        
-        for date, newSession, _ in dateNewSession[1:]:
+
+        for date, newSession in dateNewSession[1:]:
             #Seeks the next session
             if not newSession:
                 endDate = date
+                mapUserNumberOfSessions[user].append(0)
+                mapUserTotalTimePerSession[user].append(0)
                 continue
             
             # It is a new session:
@@ -553,79 +632,75 @@ def calculateTimePerSession(data):
                 startDate = date
                 endDate = date
                 
-                totalSeconds += seconds
-                numberOfSessions += 1
+                #totalSeconds += seconds
+                #numberOfSessions += 1
+                
+                mapUserNumberOfSessions[user].append(1)
+                mapUserTotalTimePerSession[user].append(seconds)
         
         #the last session
         seconds = (endDate - startDate).total_seconds()
         #print "SECONDS --> ", seconds 
+       
+        #It is the end of the last session
+        #totalSeconds += seconds
+        #numberOfSessions += 1
         
-        totalSeconds += seconds
-        numberOfSessions += 1
-        keywords = dateNewSession[-1][-1]
+        mapUserNumberOfSessions[user].append(1)
+        mapUserTotalTimePerSession[user].append(seconds)
 
-        mapUserTimeLastSession[user] = seconds
-        mapUserTotalTimePerSession[user] = totalSeconds
-        mapUserNumberOfSessions[user] = numberOfSessions
-        mapUserQueriesLastSession[user] = len(keywords)
+        #for k,v in mapUserNumberOfSessions.iteritems():
+        #    print k, v
+        #for k,v in mapUserTotalTimePerSession.iteritems():
+        #    print k, v
+        
         #print "User = ", user, " MeanTime =", mapUserMeanTimePerSession[user]
     
-    return mapUserTotalTimePerSession, mapUserNumberOfSessions, mapUserTimeLastSession, mapUserQueriesLastSession
+    return mapUserTotalTimePerSession, mapUserNumberOfSessions
 
 def calculateUserBehavior(data):
-    mapUserBehavior = dict()
-    sessions = createSessions(data)
-    numberOfModifications = 0
     
-    for user, session in sessions.iteritems():
-        vOMS = [0]*8
-        for subSession in session.values():
+    mapUserExpa = defaultdict(list)
+    mapUserModi = defaultdict(list)
+    mapUserShri = defaultdict(list)
+    mapUserKeep = defaultdict(list)
+    tmpMap = defaultdict(list)
+    
+    userBehavior = sorted( (member.userId, member.datetime, member.keywords) for member in data )
 
-            modifiedSubSession = False
-            previousQuery = subSession[0]
-            subQueryE, subQueryS, subQueryRef, subQueryRep = 0, 0, 0, 0
-            
-            for query in subSession[1:]:
-                e, s, ref, _ = compareSets( set(previousQuery[1]), set(query[1]) )
-                subQueryE, subQueryS, subQueryRef, = subQueryE + e, subQueryS + s, subQueryRef + ref
-                
-                #print "Session === ", subSession, "\n"
-                #print "Q1  = ", set(previousQuery[1]), " Q2 = ", set(query[1])
-                #print " numberOfExpansions = ", numberOfExpansions, " numberOfShrinkage = ", numberOfShrinkage, " numberOfReformulations = ", numberOfReformulations, " numberOfRepetitions = ", numberOfRepetitions
-                #print 
-
-                # If a repetition occurs, we do not consider it as a modified session
-                if e > 0 or s > 0 or ref > 0:
-                    modifiedSubSession = True 
-                previousQuery = query
-                
-            if modifiedSubSession:
-                numberOfModifications += 1
-                be, bs, bref, brep = 0 if subQueryE == 0 else 1, 0 if subQueryS == 0 else 1, 0 if subQueryRef == 0 else 1, 0 if subQueryRep == 0 else 1
-                indexVal =  int( str(be) + str(bs) + str(bref), 2) 
-
-                #print "INDEX = ", indexVal, " exp : ", be, " shr: ", bs, " ref:", bref
-                vOMS[indexVal] += 1
-            
-        #print "indice 0 => ", vOMS[0]
-        mapUserBehavior[user] = (vOMS[4], vOMS[2], vOMS[1], vOMS[6], vOMS[5], vOMS[3], vOMS[7])
+    for user, _, keywords in userBehavior:
+        tmpMap[user].append(keywords)
         
-    return mapUserBehavior, numberOfModifications
+    for user, keywordsList in tmpMap.iteritems():
+        previous = []
+        for keywords in keywordsList:
+            expa, shri, modi, keep = compareSets(set(previous), set(keywords))
+            mapUserExpa[user].append(expa)
+            mapUserShri[user].append(shri)
+            mapUserModi[user].append(modi)
+            mapUserKeep[user].append(keep)
+            previous = keywords
+    
+    return mapUserExpa, mapUserShri, mapUserModi, mapUserKeep
 
 def calculateCHV(data):
 
-    mapCHV = defaultdict(list)
+    tmpCHV = sorted((member.userId, member.datetime, member.CHVFound, 1 if member.hasCHV == True else 0, 1 if member.hasUMLS == True else 0,\
+                     1 if member.hasCHVMisspelled == True else 0, float(member.comboScore)) for member in data)
+    mapCHVD = defaultdict(list)
+    mapCHVF = defaultdict(list)
+    mapUMLS = defaultdict(list)
+    mapCHVM = defaultdict(list)
+    mapCHVS = defaultdict(list)
 
-    for item in [( member.userId, member.CHVFound, \
-                  1 if member.hasCHV == True else 0, 
-                  1 if member.hasUMLS == True else 0,\
-                  1 if member.hasCHVMisspelled == True else 0,\
-                  float(member.comboScore)
-                 ) for member in data]:
-
-        mapCHV[item[0]].append([item[1], item[2], item[3], item[4], item[5]])
+    for (user, _, chvfound, hasCHV, hasUMLS, chvMisspelled, comboScore) in tmpCHV:
+         mapCHVD[user].append(chvfound)
+         mapCHVF[user].append(hasCHV)
+         mapUMLS[user].append(hasUMLS)
+         mapCHVM[user].append(chvMisspelled)
+         mapCHVS[user].append(comboScore)
     
-    return mapCHV
+    return mapCHVD, mapCHVF, mapUMLS, mapCHVM, mapCHVS
 
 ##### ========================================================================================== #####
 
@@ -709,12 +784,7 @@ def regularMedicalUsers(minimalNumberOfQueries, maxNumberOfQueries, explanation)
     ### Load Datasets
     ##
     #
-    if toyExample:
-        honFV, goldMinerFV = {}, {}
-        aolHealthFV = createFV("v6", 0, 0, 100)
-        tripFV = createFV("v6", 1, 0, 100)
-                               
-    elif simpleTest:
+    if simpleTest:
         # 1 or 10% of the dataset only
         honFV = createFV(pathToData + "/hon/honAugEnglish."+ formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
         aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthClean." + formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
@@ -760,8 +830,8 @@ def regularMedicalUsers(minimalNumberOfQueries, maxNumberOfQueries, explanation)
 def testing(minNumberOfQueries, maxNumberOfQueries, explanation):
     testA, testB = {},{}
     for i in range(0,10):
-        testA_ = createFV( "in50", 0, minNumberOfQueries, maxNumberOfQueries)
-        testB_ = createFV( "in50", 1, minNumberOfQueries, maxNumberOfQueries)
+        testA_ = createFV( "v62", 0, minNumberOfQueries, maxNumberOfQueries)
+        testB_ = createFV( "v63", 1, minNumberOfQueries, maxNumberOfQueries)
         testA = mergeFVs(testA, testA_)
         testB = mergeFVs(testB, testB_)
     

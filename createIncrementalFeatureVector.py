@@ -1,7 +1,8 @@
 from __future__ import division
 from itertools import groupby
 from collections import Counter, defaultdict 
-import sys
+from optparse import OptionParser
+import sys, pickle
 
 #My classes
 from readCSV import readMyFormat
@@ -9,53 +10,217 @@ from auxiliarFunctions import NLWords, preProcessData, createAcronymSet, symptom
 from statistics import createSessions
 
 removeStopWords=False
-acronymsSet = createAcronymSet()
-minimalNumberOfQueries = "Invalid number...please enter this parameter!"
-maximalNumberOfQueries = 100
+formatVersion = "v6" #"v5" #"v4"
 simpleTest = True
-formatVersion = "v5" #"v4"
+pathToData = "../logAnalysisDataSets/"
+usingAdam=True
+
+acronymsSet = createAcronymSet(usingAdam)
 
 ### HOW TO USE:
 #   python createFeatureVector.py minimalNumberOfQueries 
 
+def testing(minNumberOfQueries, maxNumberOfQueries, explanation):
+    testA, testB = {},{}
+    for i in range(0,1):
+        testA_ = createFV("v62", 0, minNumberOfQueries, maxNumberOfQueries)
+        testB_ = createFV("v63", 1, minNumberOfQueries, maxNumberOfQueries)
+        testA = mergeFVs(testA, testA_)
+        testB = mergeFVs(testB, testB_)
+
+    regularUserOutputFile = "regularUser-%d-%s.pk" % (minNumberOfQueries, explanation)
+    medicalUserOutputFile = "medicalUser-%d-%s.pk" % (minNumberOfQueries, explanation)
+    with open(regularUserOutputFile, 'wb') as output:
+        pickle.dump(testA, output, pickle.HIGHEST_PROTOCOL)
+    
+    with open(medicalUserOutputFile, 'wb') as output:
+        pickle.dump(testB, output, pickle.HIGHEST_PROTOCOL)
+    print "Created Feature Vectors from test files"
+
 class userClass:
-    def __init__(self, id, label, nq, ns, mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm, expa, shri, refo, expshr, expref, shrref, expshrref,\
-                chvf=0.0, chv=0.0, umls=0.0, chvm=0.0, combo=0.0):
+    def __init__(self, id, label, nc, nq, wpu, unl, uab): #mmd, unl, mwpq, mtps, uab, usy, usc, usrd, usnm, expa, shri, refo, expshr, expref, shrref, expshrref,\
+                #chvf=0.0, chv=0.0, umls=0.0, chvm=0.0, combo=0.0):
+        #General
         self.id = id
         self.label = label
+        # Group 1
+        self.numberOfChars = nc
         self.numberOfQueries = nq
-        self.numberOfSessions = ns
-        self.meanMeshDepth = mmd
-        self.usingNL = unl
-        self.meanWordsPerQuery = mwpq
-        self.meanTimePerSession = mtps
-        self.usingAbbreviation = uab
-        self.usingSymptons = usy
-        self.usingCause = usc
-        self.usingRemedy = usrd
-        self.usingNotMedical = usnm
+        self.numberOfWords = wpu
+        self.useOfNL = unl
+        self.useOfMedAbb = uab
 
-        self.expansion = expa
-        self.shrinkage = shri
-        self.reformulation = refo
-        self.expshr = expshr
-        self.expref = expref
-        self.shrref = shrref
-        self.expshrref = expshrref
+        #self.numberOfQueries = nq
+        #self.numberOfSessions = ns
+        #self.usingNL = unl
         
-        self.chvf = chvf
-        self.chv = chv
-        self.umls = umls
-        self.chvm = chvm
-        self.comboScore = combo
+        #self.meanWordsPerQuery = mwpq
+        #self.meanTimePerSession = mtps
+        #self.usingAbbreviation = uab
+        #self.usingSymptons = usy
+        #self.usingCause = usc
+        #self.usingRemedy = usrd
+        #self.usingNotMedical = usnm
+        
+        #self.meanMeshDepth = mmd
+        #self.expansion = expa
+        #self.shrinkage = shri
+        #self.reformulation = refo
+        #self.expshr = expshr
+        #self.expref = expref
+        #self.shrref = shrref
+        #self.expshrref = expshrref
+        
+        #self.chvf = chvf
+        #self.chv = chv
+        #self.umls = umls
+        #self.chvm = chvm
+        #self.comboScore = combo
 
-    def toDict(self):
-        return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions,'02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref, '15.CHVFound': self.chvf, '16.CHV':self.chv, '17.UMLS':self.umls, '18.CHVMisspelled':self.chvm, '19.ComboScore':self.comboScore}
+    def toDict(self, idxq, groups):
+        featuresToUse = {}
+        counter = 0
+
+        if "g1" in groups:
+            featuresToUse["%02d.AvgCharsPerQuery" % (counter) ] = sum(self.numberOfChars[0:idxq]) / idxq
+            counter+=1
+            print idxq, sum(self.numberOfChars[0:idxq]), sum(self.numberOfChars[0:idxq]) / idxq
+            #featuresToUse["%02d.AvgWordsPerQuery" % (counter) ] = self.numberOfWords / self.numberOfQueries
+            #counter+=1
+            #featuresToUse["%02d.AvgUseOfNL" % (counter) ] = sum(self.useOfNL) / self.numberOfQueries
+            #counter+=1
+            #featuresToUse["%02d.AnyPastUseOfNL" % (counter) ] = any(self.useOfNL)
+            #counter+=1
+            #featuresToUse["%02d.AvgUseOfMedAbb" % (counter) ] = sum(self.useOfMedAbb) / self.numberOfQueries
+            #counter+=1
+            #featuresToUse["%02d.AnyPastUseOfMedAbb" % (counter) ] = any(self.useOfMedAbb)
+            #counter+=1
+            #Features related to the last query:
+            #featuresToUse["%02d.CharsInLastQuery" % (counter) ] = self.charsInLastQuery
+            #counter+=1
+            #featuresToUse["%02d.WordsInLastQuery" % (counter) ] = self.wordsInLastQuery
+            #counter+=1
+            #featuresToUse["%02d.UsedNLLastQuery" % (counter) ] = (self.useOfNL[-1] == 1)
+            #counter+=1
+            #featuresToUse["%02d.UsedMedAbbLastQuery" % (counter) ] = (self.useOfMedAbb[-1] == 1)
+            #counter+=1
+        
+        return featuresToUse
+        #return {'00.numberOfQueries':self.numberOfQueries, '01.numberOfSessions':self.numberOfSessions,'02.usingNL':self.usingNL, '03.meanMeshDepth':self.meanMeshDepth, '04.meanWordsPerQuery': self.meanWordsPerQuery, '05.meanTimePerSession': self.meanTimePerSession, '06.usingMedicalAbbreviation':self.usingAbbreviation, '07.usingSymptonSemanticType':self.usingSymptons, '08.usingCauseSemanticType':self.usingCause, '09.usingRemedySemanticType':self.usingRemedy, '10.usingNotMedicalSemanticTypes':self.usingNotMedical, '11.didExpansion': self.expansion ,'12.didShrinkage': self.shrinkage ,'13.didReformulation': self.reformulation , '14.didExpShrRef':self.expshrref, '15.CHVFound': self.chvf, '16.CHV':self.chv, '17.UMLS':self.umls, '18.CHVMisspelled':self.chvm, '19.ComboScore':self.comboScore}
                 
+def createDictOfUsers(data, label):
+    userDict = defaultdict(list)
 
-'''
-    Boolean feature.
-'''
+    users = set( (member.userId for member in data) )
+    
+    #Group 1
+    countingNumberOfCharsPerUser = calculateNumberOfCharsPerUser(data)
+    countingNumberOfQueriesPerUser = calculateNumberOfQueriesPerUser(data)      
+    countingWordsPerUser = calculateWordsPerUser(data)
+    countingNLPerUser = calculateNLPerUser(data)
+    countingMedicalAbbreviations = calculateMedicalAbbreviations(data)
+    
+    #countingNumberOfSessionsPerUser = calculateNumberOfSessionsPerUser(data)    
+    #countingMeanMeshDepthPerUser = calculateMeanMeshDepthPerUser(data)          
+    #countingNLPerUser = calculateNLPerUser(data)                                
+    #countingWordsPerQuery = calculateMeanWordsPerQuery(data)                    
+    #countingMeanTimePerSession = calculateMeanTimePerSession(data)              
+    #countingUsingAbbreviation = calculateUsingAbbreviation(data)                
+    #countingUsingSymptons = calculateUsingSemantic(data, symptomTypes())        
+    #countingUsingCause = calculateUsingSemantic(data, causeTypes())             
+    #countingUsingRemedy = calculateUsingSemantic(data, remedyTypes())           
+    #countingUsingNotMedical = calculateUsingSemantic(data, noMedicalTypes())    
+    #countingUserBehavior = calculateUserBehavior(data)                          
+    #countingUserCHVFound, countingUserCHV, countingUserUMLS, countingUserMisspelled, countingUserComboScore = calculateCHV(data) # TODO
+
+    users = sorted( (member.userId, member.datetime) for member in data )
+    previousUser = -1
+    
+    for u, _ in users:
+        #if u == previousUser:
+        #    queryCounter += 1
+        #else:
+        #    previousUser = u
+        #    queryCounter = 1
+
+        #user = u + "_" + str(queryCounter).zfill(2)
+
+        nc = countingNumberOfCharsPerUser[u]
+        nq = countingNumberOfCharsPerUser[u] #countingNumberOfQueriesPerUser[user]
+        wpu = 0 #countingWordsPerUser[user]
+        unl = {} #countingNLPerUser[user]
+        uab = {} #countingMedicalAbbreviations[user]
+
+        #nq = countingNumberOfQueriesPerUser[user]
+        #ns = countingNumberOfSessionsPerUser[user]
+        #mmd = 0.0 if user not in countingMeanMeshDepthPerUser else countingMeanMeshDepthPerUser[user]
+        #unl = countingNLPerUser[user]
+        #mwpq = countingWordsPerQuery[user]
+        #mtps = countingMeanTimePerSession[user]
+        #uab = countingUsingAbbreviation[user]
+        #usy = countingUsingSymptons[user]
+        #usc = countingUsingCause[user]
+        #usrd = countingUsingRemedy[user]
+        #usnm = countingUsingNotMedical[user]
+        #expa, shri, refo, expshr, expref, shrref, expshrref = countingUserBehavior[user]
+
+        #CHVFound, CHV    = countingUserCHVFound[user], countingUserCHV[user]
+        #UMLS, CHVMisspelled = countingUserUMLS[user], countingUserMisspelled[user]
+        #comboScore = countingUserComboScore[user]
+
+        #userDict[u].append(userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
+        #                       expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref,\
+        #                          chvf=CHVFound, chv=CHV, umls=UMLS, chvm=CHVMisspelled, combo=comboScore) )
+        #userDict[u].append(userClass(user, label, nc=nc, nq=nq, wpu=wpu, unl=unl, uab=uab))
+        userDict[u] = userClass(u, label, nc=nc, nq=nq, wpu=wpu, unl=unl, uab=uab)
+
+    return userDict
+
+
+#### ------------------------------FEATURES----------------------------------#####
+
+def calculateNumberOfCharsPerUser(data):
+    mapUserChars = defaultdict(list)
+    
+    userWords = [ (member.userId, member.keywords) for member in data ]
+    queryInChars = [(userId, sum(len(q) for q in query)) for (userId, query) in userWords]
+    
+    for (userId, lenght) in queryInChars:
+        mapUserChars[userId].extend([lenght])
+
+
+    for k,v in mapUserChars.items():
+        print k, v
+    
+
+    return mapUserChars
+
+
+def calculateNumberOfCharsPerUser2(data):
+    mapUserChars = dict()
+    processed = set()
+    
+    userWords = [ (member.userId, member.keywords) for member in data ]
+    queryInChars = [(userId, sum(len(q) for q in query)) for (userId, query) in userWords]
+    
+    for (userId, lenght) in queryInChars:
+        if userId not in processed:
+            queryCounter = 1
+            processed.add(userId)
+        else:
+            queryCounter += 1
+        
+        print "row --- ", userId, lenght
+        mapIndex = userId + "_" + str(queryCounter).zfill(2)
+        mapUserChars[mapIndex] = lenght
+    return mapUserChars
+
+def calculateWordsPerUser(data):
+    return {}
+
+def calculateMedicalAbbreviations(data):
+    return {}
+
 def calculateNLPerUser(data):
     tempMapUserNL = dict()
     mapUserNL = dict()
@@ -334,91 +499,11 @@ def calculateUserBehavior(data):
 
     return mapUserBehavior
 
-def createDictOfUsers(data, label):
-    userDict = defaultdict(list)
-
-    users = set( (member.userId for member in data) )
-    countingNumberOfQueriesPerUser = calculateNumberOfQueriesPerUser(data)      # Transformed
-    countingNumberOfSessionsPerUser = calculateNumberOfSessionsPerUser(data)    # Transformed
-    countingMeanMeshDepthPerUser = calculateMeanMeshDepthPerUser(data)          # Transformed
-    countingNLPerUser = calculateNLPerUser(data)                                # Transformed
-    countingWordsPerQuery = calculateMeanWordsPerQuery(data)                    # Transformed 
-    countingMeanTimePerSession = calculateMeanTimePerSession(data)              # Transformed
-    countingUsingAbbreviation = calculateUsingAbbreviation(data)                # Transformed
-    countingUsingSymptons = calculateUsingSemantic(data, symptomTypes())        # Transformed
-    countingUsingCause = calculateUsingSemantic(data, causeTypes())             # Transformed
-    countingUsingRemedy = calculateUsingSemantic(data, remedyTypes())           # Transformed
-    countingUsingNotMedical = calculateUsingSemantic(data, noMedicalTypes())    # Transformed
-    countingUserBehavior = calculateUserBehavior(data)                          # Transformed
-    
-    if formatVersion == "v5":
-        countingUserCHVFound, countingUserCHV, countingUserUMLS, countingUserMisspelled, countingUserComboScore = calculateCHV(data) # TODO
-
-    users = sorted( (member.userId, member.datetime) for member in data )
-    previousUser = -1
-    
-    for u, _ in users:
-        if u == previousUser:
-            queryCounter += 1
-        else:
-            previousUser = u
-            queryCounter = 1
-
-        user = u + "_" + str(queryCounter).zfill(2)
-
-        if user not in countingNumberOfQueriesPerUser or \
-           user not in countingNumberOfSessionsPerUser or \
-           user not in countingNLPerUser or\
-           user not in countingWordsPerQuery or\
-           user not in countingMeanTimePerSession:
-           #user not in countingMeanMeshDepthPerUser 
-            
-            print "User is not present. It should be...User ID = ", user
-            print "Number of queries -> ", user in countingNumberOfQueriesPerUser
-            print "Number of sessions -> ", user in countingNumberOfSessionsPerUser
-            print "Mesh -> ", user in countingMeanMeshDepthPerUser
-            print "NL -> ", user in countingNLPerUser
-            print "WordsPerQuery-> ", user in countingWordsPerQuery
-            print "TimePerSession -> ", user in countingMeanTimePerSession
-
-            #sys.exit(0)
-            continue
-
-        nq = countingNumberOfQueriesPerUser[user]
-        ns = countingNumberOfSessionsPerUser[user]
-        mmd = 0.0 if user not in countingMeanMeshDepthPerUser else countingMeanMeshDepthPerUser[user]
-        unl = countingNLPerUser[user]
-        mwpq = countingWordsPerQuery[user]
-        mtps = countingMeanTimePerSession[user]
-        uab = countingUsingAbbreviation[user]
-        usy = countingUsingSymptons[user]
-        usc = countingUsingCause[user]
-        usrd = countingUsingRemedy[user]
-        usnm = countingUsingNotMedical[user]
-        expa, shri, refo, expshr, expref, shrref, expshrref = countingUserBehavior[user]
-
-        if formatVersion == "v5":
-            CHVFound, CHV    = countingUserCHVFound[user], countingUserCHV[user]
-            UMLS, CHVMisspelled = countingUserUMLS[user], countingUserMisspelled[user]
-            comboScore = countingUserComboScore[user]
-
-            userDict[u].append(userClass(user, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc, usrd=usrd, usnm=usnm,\
-                                   expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref,\
-                                      chvf=CHVFound, chv=CHV, umls=UMLS, chvm=CHVMisspelled, combo=comboScore) )
-
-        else:
-            #list here? userDict[u] -> list
-            userDict[u].append( userClass(u, label, nq=nq, ns=ns, mmd=mmd, unl=unl, mwpq=mwpq, mtps=mtps, uab=uab, usy=usy, usc=usc,\
-                                   usrd=usrd, usnm=usnm,expa=expa, shri=shri, refo=refo, expshr=expshr, expref=expref, shrref=shrref, expshrref=expshrref) )
-            #print "User => ", user, label, queryCounter
-
-    return userDict
-
-def createFV(filename, label):
-    print "min = ", minimalNumberOfQueries, " max = ", maximalNumberOfQueries
+def createFV(filename, label, minNumberOfQueries, maxNumberOfQueries):
+    print "min = ", minNumberOfQueries, " max = ", maxNumberOfQueries
     data = readMyFormat(filename, formatVersion) 
     data = preProcessData(data, removeStopWords)    # Sort the data by user and date
-    data = keepUsersInsideLimiteOfQueires(data, minimalNumberOfQueries, maximalNumberOfQueries)
+    data = keepUsersInsideLimiteOfQueires(data, minNumberOfQueries, maxNumberOfQueries)
     
     userDict = createDictOfUsers(data, label)
     
@@ -474,7 +559,6 @@ def healthNotHealthUsers():
     notHealthUserOutputFile = "notHealthUser-%d.pk" % (minimalNumberOfQueries)
    
     ####### Save and Load the Features
-    import pickle
     with open(healthUserOutputFile, 'wb') as output:
         pickle.dump(healthUserFV, output, pickle.HIGHEST_PROTOCOL)
         print "CREATED FILE: %s" % (healthUserOutputFile)
@@ -483,24 +567,23 @@ def healthNotHealthUsers():
         pickle.dump(notHealthUserFV, output, pickle.HIGHEST_PROTOCOL)
         print "CREATED FILE: %s" % (notHealthUserOutputFile)
 
-def regularMedicalUsers():
+def regularMedicalUsers(minimalNumberOfQueries, maxNumberOfQueries, explanation):
     ####
     ### Load Datasets
     ##
     #
-    if not simpleTest:
-        honFV = createFV("dataSetsOfficials/hon/honEnglish." + formatVersion + ".dataset.gz", 0)
-        aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed4." + formatVersion + ".dataset.gz", 0)
-        goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".dataset.gz", 1)
-        tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".dataset.gz", 1)
-    
     if simpleTest:
-        # 1 or 10% of the dataset only
-        honFV = createFV("dataSetsOfficials/hon/honEnglish."+ formatVersion + ".1.dataset.gz", 0)
-        aolHealthFV = createFV("dataSetsOfficials/aolHealth/aolHealthCompleteFixed4." + formatVersion + ".1.dataset.gz", 0)
-        goldMinerFV = createFV("dataSetsOfficials/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 1)
-        tripFV = createFV("dataSetsOfficials/trip/trip_mod." + formatVersion + ".1.dataset.gz", 1)
-
+        honFV = createFV(pathToData + "/hon/honAugEnglish."+ formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+        aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthClean." + formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
+        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".1.dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
+   
+    else:
+        honFV = createFV(pathToData + "/hon/honAugEnglish." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+        aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthClean." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
+        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
+        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
+    
     ####
     ### Merge Feature sets and transforme them into inputs
     ##
@@ -508,11 +591,10 @@ def regularMedicalUsers():
     regularUserFV = mergeFVs(honFV, aolHealthFV)
     medicalUserFV = mergeFVs(tripFV, goldMinerFV)
 
-    regularUserOutputFile = "regularUser-%d.pk" % (minimalNumberOfQueries)
-    medicalUserOutputFile = "medicalUser-%d.pk" % (minimalNumberOfQueries)
+    regularUserOutputFile = "regularUser-%d-%s.pk" % (minimalNumberOfQueries, explanation)
+    medicalUserOutputFile = "medicalUser-%d-%s.pk" % (minimalNumberOfQueries, explanation)
 
     ####### Save and Load the Features
-    import pickle
     with open(regularUserOutputFile, 'wb') as output:
         pickle.dump(regularUserFV, output, pickle.HIGHEST_PROTOCOL)
         print "CREATED FILE: %s" % (regularUserOutputFile)
@@ -523,6 +605,25 @@ def regularMedicalUsers():
     
 if __name__ == "__main__":
 
-    minimalNumberOfQueries = int(sys.argv[1])
-    regularMedicalUsers()
-    #healthNotHealthUsers()
+    op = OptionParser(version="%prog 1")
+    
+    op.add_option("--minNumberOfQueries", "-m", action="store", type="int", dest="minNumberOfQueries", help="Define the min. number of queries (X) necessary to use a user for classification.  [default: %default]", metavar="X", default=5)
+    op.add_option("--maxNumberOfQueries", "-M", action="store", type="int", dest="maxNumberOfQueries", help="Define the max. number of queries (X) necessary to use\
+                  a user for classification.  [default: %default]", metavar="X", default=100)
+    op.add_option("--explanation", "-e", action="store", type="string", dest="explanation", help="Prefix to include in the created files", metavar="N", default="")
+    op.add_option("--healthUsers", "-u", action="store_true", dest="healthUsers", help="Use if you want to create a health/not health user feature file", default=False)
+    op.add_option("--testingOnly", "-t", action="store_true", dest="testingOnly", help="Just to test some new feature", default=False)
+
+    (opts, args) = op.parse_args()
+    if len(args) > 0:
+        print "This program does not receive parameters this way: use -h to see the options."
+    
+    if opts.testingOnly:
+        testing(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation)
+        sys.exit(0)
+    
+    if opts.healthUsers:
+        healthNotHealthUsers(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation)
+    else:
+        regularMedicalUsers(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation)
+
