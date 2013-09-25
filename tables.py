@@ -96,5 +96,6 @@ def appendBooleanUse(dataName, booleanTerms, numberOfQueries, usersUsingBools, n
     booleanUseRow.append( [dataName, booleanTerms['and'], 100.0 * booleanTerms['and']/numberOfQueries, booleanTerms['or'], 100.0 * booleanTerms['or']/numberOfQueries,booleanTerms['not'], 100.0 * booleanTerms['not'] / numberOfQueries, booleanTerms['any'], 100.0 * booleanTerms['any'] / numberOfQueries, 100 * usersUsingBools/numberOfUsers] )
 
 def appendPOS(dataName, countingPOS, numberOfQueries):
-    postagsRow.append( [dataName, sum(countingPOS.values()) / numberOfQueries, countingPOS["noun"], countingPOS["adj"], countingPOS["prep"], countingPOS["conj"], countingPOS["det"], countingPOS["pron"], countingPOS["verb"], countingPOS["punc"], countingPOS["shape"], countingPOS["adv"] ])
+    totalPOS = sum(countingPOS.values())
+    postagsRow.append( [dataName, totalPOS / numberOfQueries, countingPOS["noun"]/totalPOS, countingPOS["adj"]/totalPOS, countingPOS["prep"]/totalPOS, countingPOS["conj"]/totalPOS, countingPOS["aux"]/totalPOS, countingPOS["det"]/totalPOS, countingPOS["pron"]/totalPOS, countingPOS["verb"]/totalPOS, countingPOS["punc"]/totalPOS, countingPOS["shape"]/totalPOS, countingPOS["adv"]/totalPOS ])
 
