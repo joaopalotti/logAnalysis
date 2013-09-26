@@ -41,13 +41,13 @@ gridDT = [{'criterion': ["gini","entropy"], 'max_features': ["auto", None, "log2
 gridSVM = [{'kernel': ['rbf'], 'gamma': [100, 10, 1, 0, 1e-3, 1e-4, 1e-6], 'C': [1000000]}]
 
 percentageIntervals = [0,10,20,30,40,50,60,70,80,90,100]
+#percentageIntervals = [100]
 
-def transformeInDict(userDict, n=-1, proportional=-1, groupsToUse=None):
+def transformeInDict(userDict, nseed, n=-1, proportional=-1, groupsToUse=None):
     listOfDicts = list()
     listOfLabels = list()
 
-    p = range(len(userDict))
-    random.shuffle(p)
+    p = shuffleIndices(len(userDict), nseed)
     if proportional > 0:
         n = int( int(proportional)/100.0 * len(userDict) )
 
@@ -61,25 +61,19 @@ def transformeInDict(userDict, n=-1, proportional=-1, groupsToUse=None):
         #print udict  #### Check how this features are related with the features calculated by the random tree method
     return listOfDicts, listOfLabels
 
-def transformeInIncrementalDict(userDict, n=-1, proportional=-1, groupsToUse=None, method="percentage", values=[10,20,50,100]):
+def transformeInIncrementalDict(userDict, nseed, n=-1, proportional=-1, groupsToUse=None, method="percentage", values=[10,20,50,100]):
     listOfLastQueries = list() # the last query has the "accumlated value for a user"
     listOfLabels = list()
-    
     mapOfDicts = defaultdict(list)
-    allUserIds = sorted([u for u in userDict])
-
-    p = range(len(allUserIds))
-    random.shuffle(p)
+    
+    p = shuffleIndices(len(userDict), nseed)
     if proportional > 0:
-        n = int( int(proportional)/100.0 * len(allUserIds) )
+        n = int( int(proportional)/100.0 * len(userDict) )
 
     #for v, (key, userId) in zip(p, userDict.iteritems()):
-    for v, userId in zip(p, allUserIds):
+    for v, (userId, userc) in zip(p, userDict.iteritems()):
         if n >= 0 and v >= n:
             continue 
-
-        #print v, userId
-        userc = userDict[userId]
 
         nq = userc.numberOfQueries - 1
         #print userId, nq
@@ -141,8 +135,8 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
 
     logging.info("Transforming datasets into Dictionaries...")
     if usingIncremental:
-        ld1, mapOfListOfQueries1, ll1 = transformeInIncrementalDict(negativeUserFV, forceBalance, proportional, groupsToUse, "percentage", percentageIntervals)
-        ld2, mapOfListOfQueries2, ll2 = transformeInIncrementalDict(positiveUserFV, forceBalance, proportional, groupsToUse, "percentage", percentageIntervals)
+        ld1,mapOfListOfQueries1,ll1 = transformeInIncrementalDict(negativeUserFV, nseed, forceBalance, proportional, groupsToUse, "percentage", percentageIntervals)
+        ld2,mapOfListOfQueries2,ll2 = transformeInIncrementalDict(positiveUserFV, nseed, forceBalance, proportional, groupsToUse, "percentage", percentageIntervals)
        
         lm1 = len(mapOfListOfQueries1)
         if lm1 != len(mapOfListOfQueries2):
@@ -164,8 +158,8 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
         #print "ld -> ", ld1 + ld2
 
     else:
-        ld1, ll1 = transformeInDict(negativeUserFV, forceBalance, proportional, groupsToUse)
-        ld2, ll2 = transformeInDict(positiveUserFV, forceBalance, proportional, groupsToUse)
+        ld1, ll1 = transformeInDict(negativeUserFV, nseed, forceBalance, proportional, groupsToUse)
+        ld2, ll2 = transformeInDict(positiveUserFV, nseed, forceBalance, proportional, groupsToUse)
     logging.info("Transformed")
     
     listOfDicts = ld1 + ld2
@@ -214,6 +208,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     if usingIncremental:
         incrementalFV = [ fv[newIndices] for fv in incrementalFV ]
 
+    logging.debug("X - %s", X)
     # Shuffle samples
     logging.info("Shuffled")
     
@@ -300,7 +295,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
         if usingIncremental:
             for i in range(len(resultMetrics.acc)):
                 fo.write("%s, Partition %d, %.3f, %.3f, %.3f, %.3f\n" % (label, i,100.0*(resultMetrics.acc[i]), 100.0*resultMetrics.sf1[i], 100.0*resultMetrics.mf1[i], 100.0*resultMetrics.wf1[i]))
-                print "%s, Partition %d, %.3f, %.3f, %.3f, %.3f\n" % (label, i,100.0*(resultMetrics.acc[i]), 100.0*resultMetrics.sf1[i], 100.0*resultMetrics.mf1[i], 100.0*resultMetrics.wf1[i])
+                print "%s, Partition %d, %.3f, %.3f, %.3f, %.3f" % (label, i,100.0*(resultMetrics.acc[i]), 100.0*resultMetrics.sf1[i], 100.0*resultMetrics.mf1[i], 100.0*resultMetrics.wf1[i])
             
             print "Means ----- %s, %.3f, %.3f, %.3f, %.3f" % (label, 100.0*(np.mean(resultMetrics.acc)), 100.0*np.mean(resultMetrics.sf1), 100.0*np.mean(resultMetrics.mf1), 100.0*np.mean(resultMetrics.wf1))
         else:
@@ -328,7 +323,7 @@ if __name__ == "__main__":
     op.add_option("--classifiers", "-z", action="store", type="string", dest="classifiers", help="Classifiers to run. Options are dmfc|dsc|duc|nbc|knnc|lrc|dtc|svmc|etc", metavar="cl1|cl2|..", default="dmfc|dsc|duc|nbc|knnc|lrc|dtc|svmc|etc")
     op.add_option("--groupsToUse", "-g", action="store", type="string", dest="groupsToUse", help="Options are: g1 | g2 | ... | g7", metavar="G")
     op.add_option("--usingIncremental", "-i", action="store_true", dest="usingIncremental", help="Use incremental feature vector")
-    op.add_option("--loglevel", "-l", action="store", type="string", dest="loglevel", help="Log level to use (INFO, WARNING, DEBUG, CRITICAL, ERROR", default="INFO")
+    op.add_option("--logFile", "-l", action="store", type="string", dest="logFile", help="Log filename", default="debug.log")
     op.add_option("--outfileName", "-o", action="store", type="string", dest="outfileName", help="Filename to write the classification output", default="classification.out")
 
     (opts, args) = op.parse_args()
@@ -336,8 +331,15 @@ if __name__ == "__main__":
         print "This program does not receive parameters this way: use -h to see the options."
 
     logger = logging.getLogger('runClassify.py')
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s --- %(message)s', level=opts.loglevel.upper())
-
+    formatter = logging.Formatter('%(asctime)s - %(name)-15s: %(levelname)-8s %(message)s') 
+    logging.basicConfig(format='%(asctime)s * %(name)-12s * %(levelname)-8s * %(message)s', datefmt='%m-%d %H:%M', level=logging.DEBUG,\
+                        filename=opts.logFile, filemode='w')
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    console.setFormatter(formatter)
+    logging.getLogger('').addHandler(console)
+    
+    logging.info("Writing DEBUG output in : %s", opts.logFile)
     logging.info("Using Preprocessing: %s", opts.preProcessing)
     logging.info("Minimal number of queries: %d", opts.minNumberOfQueries)
     logging.info("Forcing Balance: %d", opts.forceBalance)
@@ -355,6 +357,9 @@ if __name__ == "__main__":
         op.print_help()
         sys.exit(0)
     listOfGroupsToUse = opts.groupsToUse.split("|")
+
+    #uncomment if it is necessary to see the complete numpy arrays
+    #np.set_printoptions(threshold='nan')
     
     runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.explanation, opts.healthUsers, opts.gridSearch, not opts.ignorePickle, opts.hasPlotLibs, opts.useScoop, opts.njobs, listOfClassifiers, listOfGroupsToUse, opts.usingIncremental, opts.outfileName)
     

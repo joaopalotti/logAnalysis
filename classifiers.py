@@ -51,17 +51,10 @@ def makeReport(y, y_pred, baselines, target_names=['Layman', 'Specialist']):
 
     return ResultMetrics(acc, sf1, mf1, wf1)
 
-def convertToSingleList(listOfLists):
-    result = []
-    for l in listOfLists:
-        result += list(l)
-    return result
-
 def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None):
  
-    if incrementalData:
-        moduleL.info("Using incremental data!")
-        return runIncrementalClassifier(clf, X, incrementalData, y, CV, nJobs, others)
+    moduleL.info("OTHERS ==> %s", others)
+    moduleL.info("Classifier ==> %s", clf)
 
     tryToMeasureFeatureImportance = False if "tryToMeasureFeatureImportance" not in others else others["tryToMeasureFeatureImportance"]
     featureNames = None if "featureNames" not in others else others["featureNames"]
@@ -70,27 +63,37 @@ def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None):
     gridScore= "f1" if "gridScore" not in others else others["gridScore"]
    
     if tryToMeasureFeatureImportance and useGridSearch:
-        print "Using Grid search and feature importance at the same time is not a good idea"
-        print "Disabling feature importance"
+        moduleL.warning("Using Grid search and feature importance at the same time is not a good idea")
+        moduleL.warning("Disabling feature importance")
         tryToMeasureFeatureImportance = False
 
-    moduleL.info("OTHERS ==> %s", others)
-    print clf
     originalClf = clf
     if useGridSearch:
         print "Using grid search"
         clf = GridSearchCV(clf, gridParameters, cv=CV, scoring=gridScore, n_jobs=nJobs)
 
-    nSamples, nFeatures = X.shape
+    nSamples = y.shape[0]
 
     kFold = cross_validation.KFold(n=nSamples, n_folds=CV, indices=True)
 
-    probas = []
-    preds = []
+    if incrementalData:
+        #moduleL.info("Using incremental data!")
+        preds = defaultdict(list)
+        probas = defaultdict(list)
+    else:
+        probas = []
+        preds = []
+
     # Run classifier
     for train, test in kFold:
-        preds.append( clf.fit(X[train], y[train]).predict(X[test]) )
-        probas.append( clf.fit(X[train], y[train]).predict_proba(X[test]) )
+        if incrementalData:
+            for i, l in zip(range(len(incrementalData)), incrementalData):
+                preds[i] += list(clf.fit(l[train], y[train]).predict(l[test]))
+                probas[i] += list(clf.fit(l[train], y[train]).predict_proba(l[test]))
+        else:
+            preds.extend( list(clf.fit(X[train], y[train]).predict(X[test])) )
+            probas.extend( list(clf.fit(X[train], y[train]).predict_proba(X[test])))
+
         if useGridSearch:
             print("Best parameters set found on development set:")
             print()
@@ -102,15 +105,14 @@ def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None):
                 print("%0.3f (+/-%0.03f) for %r" % (mean_score, scores.std() / 2, params))
             print()
 
-    y_probas = convertToSingleList(probas)
-    y_pred = convertToSingleList(preds)
-    
+    logging.debug(preds)
+
     #scores = cross_validation.cross_val_score(clf, X, y, cv=CV, n_jobs=nJobs) #, scoring="f1") 
     if tryToMeasureFeatureImportance:
         measureFeatureImportance(originalClf, featureNames)
 
     moduleL.info("Done")
-    return y_pred, y_probas
+    return preds, probas
 
 def classify(clf, label, X, y, nCV, nJobs, baselines, options={}, incremental=None):
     moduleL.info("Running: %s", label)
@@ -125,6 +127,7 @@ def classify(clf, label, X, y, nCV, nJobs, baselines, options={}, incremental=No
         resultMetrics = makeReport(y, y_, baselines)
         precRecall = getPrecisionRecall(y, probas_)
         roc = getROC(y, probas_)
+
     return (label, resultMetrics, precRecall, roc)
 
 def parallelClassify(pars):
@@ -135,55 +138,6 @@ def parallelClassify(pars):
         return classify(pars[0], pars[1], pars[2], pars[3], pars[4], pars[5], pars[6], pars[7])
     else:
         return classify(pars[0], pars[1], pars[2], pars[3], pars[4], pars[5], pars[6], {})
-
-#llq -> listOfListOfQueries
-def runIncrementalClassifier(clf, _, listOfLists, y, CV, nJobs, others):
-    
-    tryToMeasureFeatureImportance = False if "tryToMeasureFeatureImportance" not in others else others["tryToMeasureFeatureImportance"]
-    featureNames = None if "featureNames" not in others else others["featureNames"]
-    useGridSearch= False if "useGridSearch" not in others else others["useGridSearch"]
-    gridParameters= None if "gridParameters" not in others else others["gridParameters"]
-    gridScore= "f1" if "gridScore" not in others else others["gridScore"]
-     
-    if tryToMeasureFeatureImportance and useGridSearch:
-        print "Using Grid search and feature importance at the same time is not a good idea"
-        print "Disabling feature importance"
-        tryToMeasureFeatureImportance = False
-
-    moduleL.info("OTHERS ==> %s", others)
-    print clf
-    originalClf = clf
-    if useGridSearch:
-        print "Using grid search"
-        clf = GridSearchCV(clf, gridParameters, cv=CV, scoring=gridScore, n_jobs=nJobs)
-   
-    #nSamples, nFeatures = X.shape
-    nSamples = y.shape[0]
-
-    for l in listOfLists:
-        moduleL.info("l = %s",l.shape)
-
-    #print "x = ", X.shape
-    print "y = ", y.shape
-
-    kFold = cross_validation.KFold(n=nSamples, n_folds=CV, indices=True)
-
-    # Run classifier
-    #lists = [clf.fit(X[train], y[train]).predict(X[test]) for train, test in kFold]
-    preds = defaultdict(list)
-    probas = defaultdict(list)
-
-    for train, test in kFold:
-        for i, l in zip(range(len(listOfLists)), listOfLists):
-            #print " i = ", i, " l =", len(l)
-            preds[i] += list(clf.fit(l[train], y[train]).predict(l[test]))
-            probas[i] += list( clf.fit(l[train], y[train]).predict_proba(l[test]) )
-
-    if tryToMeasureFeatureImportance:
-        measureFeatureImportance(originalClf, featureNames)
-
-    moduleL.info("Done")
-    return preds, probas
 
 def plotGraph(precRecallDict, fileName, xlabel, ylabel, generatePickle=True, hasPlotLibs=False):
     if generatePickle:
