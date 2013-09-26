@@ -6,12 +6,10 @@ import sys, pickle
 
 #My classes
 from readCSV import readMyFormat
-from auxiliarFunctions import NLWords, preProcessData, createAcronymSet, symptomTypes, causeTypes, remedyTypes, whereTypes, noMedicalTypes, compareSets
-from statistics import createSessions
+from auxiliarFunctions import NLWords, preProcessData, createAcronymSet, symptomTypes, causeTypes, remedyTypes, noMedicalTypes, compareSets
 
 removeStopWords=False
 formatVersion = "v6"
-simpleTest = True
 pathToData = "../logAnalysisDataSets/"
 honAug = True
 aolClean = True
@@ -737,8 +735,8 @@ def mergeFVs(*fvs):
 
     return newDict
 
-def healthNotHealthUsers(minimalNumberOfQueries, maxNumberOfQueries):
-    if simpleTest:
+def healthNotHealthUsers(minimalNumberOfQueries, maxNumberOfQueries, smallDataset):
+    if smallDataset:
         # 1% of the dataset only
         honFV = createFV(pathToData + "/hon/honEnglish." + formatVersion + ".1.dataset..gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
         aolHealthFV = createFV(pathToData + "/aolHealth/aolHealth." + formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
@@ -779,12 +777,12 @@ def healthNotHealthUsers(minimalNumberOfQueries, maxNumberOfQueries):
         pickle.dump(notHealthUserFV, output, pickle.HIGHEST_PROTOCOL)
         print "CREATED FILE: %s" % (notHealthUserOutputFile)
 
-def regularMedicalUsers(minimalNumberOfQueries, maxNumberOfQueries, explanation):
+def regularMedicalUsers(minimalNumberOfQueries, maxNumberOfQueries, explanation, smallDataset):
     ####
     ### Load Datasets
     ##
     #
-    if simpleTest:
+    if smallDataset:
         # 1 or 10% of the dataset only
         honFV = createFV(pathToData + "/hon/honAugEnglish."+ formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
         aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthClean." + formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
@@ -852,6 +850,7 @@ if __name__ == "__main__":
     op.add_option("--explanation", "-e", action="store", type="string", dest="explanation", help="Prefix to include in the created files", metavar="N", default="")
     op.add_option("--healthUsers", "-u", action="store_true", dest="healthUsers", help="Use if you want to create a health/not health user feature file", default=False)
     op.add_option("--testingOnly", "-t", action="store_true", dest="testingOnly", help="Just to test some new feature", default=False)
+    op.add_option("--1p", "-s", action="store_true", dest="smallDataset", help="Just create the feature vectors based on 1% of the datasets", default=False)
 
     (opts, args) = op.parse_args()
     if len(args) > 0:
@@ -862,7 +861,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if opts.healthUsers:
-        healthNotHealthUsers(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation)
+        healthNotHealthUsers(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation, opts.smallDataset)
     else:
-        regularMedicalUsers(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation)
+        regularMedicalUsers(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation, opts.smallDataset)
 

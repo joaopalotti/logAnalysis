@@ -103,7 +103,7 @@ def transformeInIncrementalDict(userDict, n=-1, proportional=-1, groupsToUse=Non
     return listOfLastQueries, mapOfDicts, listOfLabels
 
 
-def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers, gridSearch, generatePickle, hasPlotLibs, paralled, nJobs, listOfClassifiers, groupsToUse, usingIncremental):
+def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers, gridSearch, generatePickle, hasPlotLibs, paralled, nJobs, listOfClassifiers, groupsToUse, usingIncremental, outfileName):
    
     if healthUsers:
         positiveOutputFile = "healthUser-%d-%s.pk" % (minNumberOfQueries, explanation)
@@ -286,18 +286,23 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
 
     plotGraph(precRecall, fileName="officialPR-DT", xlabel="Recall", ylabel="Precision", generatePickle=generatePickle, hasPlotLibs=hasPlotLibs)
     plotGraph(roc, fileName="officialROC-DT", xlabel="False Positive Rate", ylabel="True Positive Rate", generatePickle=generatePickle, hasPlotLibs=hasPlotLibs)
-    
+   
+    fo = open(outfileName, "w")
+
     for r in results:
         label = r[0]
         resultMetrics = r[1]
         if usingIncremental:
             for i in range(len(resultMetrics.acc)):
-                print "Partition %d, %s, %.3f, %.3f, %.3f, %.3f" % (i, label, 100.0*(resultMetrics.acc[i]), 100.0*resultMetrics.sf1[i], 100.0*resultMetrics.mf1[i], 100.0*resultMetrics.wf1[i])
+                fo.write("%s, Partition %d, %.3f, %.3f, %.3f, %.3f\n" % (label, i,100.0*(resultMetrics.acc[i]), 100.0*resultMetrics.sf1[i], 100.0*resultMetrics.mf1[i], 100.0*resultMetrics.wf1[i]))
+                print "%s, Partition %d, %.3f, %.3f, %.3f, %.3f\n" % (label, i,100.0*(resultMetrics.acc[i]), 100.0*resultMetrics.sf1[i], 100.0*resultMetrics.mf1[i], 100.0*resultMetrics.wf1[i])
             
             print "Means ----- %s, %.3f, %.3f, %.3f, %.3f" % (label, 100.0*(np.mean(resultMetrics.acc)), 100.0*np.mean(resultMetrics.sf1), 100.0*np.mean(resultMetrics.mf1), 100.0*np.mean(resultMetrics.wf1))
         else:
+            fo.write("%s, %.3f, %.3f, %.3f, %.3f\n" % (label, 100.0*resultMetrics.acc, 100.0*resultMetrics.sf1, 100.0*resultMetrics.mf1, 100.0*resultMetrics.wf1))
             print "%s, %.3f, %.3f, %.3f, %.3f" % (label, 100.0*resultMetrics.acc, 100.0*resultMetrics.sf1, 100.0*resultMetrics.mf1, 100.0*resultMetrics.wf1)
 
+    fo.close()
     logging.info("Done")
 
 if __name__ == "__main__":
@@ -319,11 +324,11 @@ if __name__ == "__main__":
     op.add_option("--groupsToUse", "-d", action="store", type="string", dest="groupsToUse", help="Options are: g1 | g2 | ... | g7", metavar="G")
     op.add_option("--usingIncremental", "-i", action="store_true", dest="usingIncremental", help="Use incremental feature vector")
     op.add_option("--loglevel", "-l", action="store", type="string", dest="loglevel", help="Log level to use (INFO, WARNING, DEBUG, CRITICAL, ERROR", default="INFO")
+    op.add_option("--outfileName", "-o", action="store", type="string", dest="outfileName", help="Filename to write the classification output", default="classification.out")
 
     (opts, args) = op.parse_args()
     if len(args) > 0:
         print "This program does not receive parameters this way: use -h to see the options."
-   
 
     logger = logging.getLogger('runClassify.py')
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s --- %(message)s', level=opts.loglevel.upper())
@@ -346,5 +351,6 @@ if __name__ == "__main__":
         sys.exit(0)
     listOfGroupsToUse = opts.groupsToUse.split("|")
     
-    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.explanation, opts.healthUsers, opts.gridSearch, not opts.ignorePickle, opts.hasPlotLibs, opts.useScoop, opts.njobs, listOfClassifiers, listOfGroupsToUse, opts.usingIncremental)
+    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.explanation, opts.healthUsers, opts.gridSearch, not opts.ignorePickle, opts.hasPlotLibs, opts.useScoop, opts.njobs, listOfClassifiers, listOfGroupsToUse, opts.usingIncremental, opts.outfileName)
+    
 

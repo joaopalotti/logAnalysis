@@ -1,8 +1,9 @@
 import csv, sys, gzip
-from DataSet import DataSet
 from datetime import datetime
 from time import time
-#from auxiliarFunctions import openZip
+# My classed:
+from DataSet import DataSet
+
 
 def openZip(filename):
     if filename.endswith(".gz"):

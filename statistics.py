@@ -2,7 +2,7 @@ from __future__ import division
 from collections import defaultdict, Counter
 import operator
 from datetime import datetime
-
+#My classes
 from latexTools import latexPrinter
 from auxiliarFunctions import *
 from tables import *
