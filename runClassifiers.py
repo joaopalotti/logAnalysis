@@ -18,7 +18,7 @@ from sklearn.dummy import DummyClassifier
 
 #My classes
 from classifiers import classify, plotGraph, parallelClassify, getCurves
-from auxClassifier import preprocessing, shuffleData, vectorizeData, calculateBaselines #, getSubLists
+from auxClassifier import preprocessing, shuffleIndices, vectorizeData, calculateBaselines #, getSubLists
 from createFeatureVector import userClass
 
 ### HOW TO USE:
@@ -208,7 +208,12 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     #
     
     logging.info("Shuffling the data...")
-    X, y = shuffleData(X, y, nseed, n_samples)
+    newIndices = shuffleIndices(n_samples, nseed)
+    X = X[newIndices]
+    y = y[newIndices]
+    if usingIncremental:
+        incrementalFV = [ fv[newIndices] for fv in incrementalFV ]
+
     # Shuffle samples
     logging.info("Shuffled")
     
@@ -315,13 +320,13 @@ if __name__ == "__main__":
     op.add_option("--nseed", "-n", action="store", type="int", dest="nseed", help="Seed used for random processing during classification.  [default: %default]", metavar="X", default=29)
     op.add_option("--explanation", "-e", action="store", type="string", dest="explanation", help="Prefix to include in the created files", metavar="TEXT", default="")
     op.add_option("--healthUsers", "-u", action="store_true", dest="healthUsers", help="Use if you want to create a health/not health user feature file", default=False)
-    op.add_option("--gridSearch", "-g", action="store_true", dest="gridSearch", help="Use if you want to use grid search to find the best hyperparameters", default=False)
+    op.add_option("--gridSearch", "-s", action="store_true", dest="gridSearch", help="Use if you want to use grid search to find the best hyperparameters", default=False)
     op.add_option("--hasPlotLibs", "-c", action="store_true", dest="hasPlotLibs", help="Use if you want to plot Precision Vs Recall and ROC curves", default=False)
     op.add_option("--ignorePickle", "-k", action="store_true", dest="ignorePickle", help="Don't Generate Pickle of plots", default=False)
-    op.add_option("--useScoop", "-s", action="store_true", dest="useScoop", help="Use Scoop to run classifier in parallel", default=False)
+    op.add_option("--useScoop", "-r", action="store_true", dest="useScoop", help="Use Scoop to run classifier in parallel", default=False)
     op.add_option("--njobs", "-j", action="store", type="int", dest="njobs", help="Number of parallel jobs to run.", metavar="X", default=2)
     op.add_option("--classifiers", "-z", action="store", type="string", dest="classifiers", help="Classifiers to run. Options are dmfc|dsc|duc|nbc|knnc|lrc|dtc|svmc|etc", metavar="cl1|cl2|..", default="dmfc|dsc|duc|nbc|knnc|lrc|dtc|svmc|etc")
-    op.add_option("--groupsToUse", "-d", action="store", type="string", dest="groupsToUse", help="Options are: g1 | g2 | ... | g7", metavar="G")
+    op.add_option("--groupsToUse", "-g", action="store", type="string", dest="groupsToUse", help="Options are: g1 | g2 | ... | g7", metavar="G")
     op.add_option("--usingIncremental", "-i", action="store_true", dest="usingIncremental", help="Use incremental feature vector")
     op.add_option("--loglevel", "-l", action="store", type="string", dest="loglevel", help="Log level to use (INFO, WARNING, DEBUG, CRITICAL, ERROR", default="INFO")
     op.add_option("--outfileName", "-o", action="store", type="string", dest="outfileName", help="Filename to write the classification output", default="classification.out")

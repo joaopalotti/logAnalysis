@@ -48,12 +48,12 @@ def preprocessing(X_noProcess, method):
         exit(0)
     return X
 
-def shuffleData(X, y, nSeed, nSamples):
+def shuffleIndices(nSamples, nSeed):
     import random
     p = range(nSamples) 
     random.seed(nSeed)
     random.shuffle(p)
-    return X[p], y[p]
+    return p
 
 def vectorizeData(listOfDicts):
     from sklearn.feature_extraction import DictVectorizer
