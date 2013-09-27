@@ -369,6 +369,9 @@ if __name__ == "__main__":
         sys.exit(0)
     listOfGroupsToUse = opts.groupsToUse.split("|")
 
+    if "svm" in listOfClassifiers or "svmc" in listOfClassifiers and opts.preProcessing != "scale":
+        logging.warning("You are using SVM --- you should consider process the data using the 'scale' preprocessing method")
+
     #uncomment if it is necessary to see the complete numpy arrays
     #np.set_printoptions(threshold='nan')
     
