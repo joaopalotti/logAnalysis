@@ -10,7 +10,7 @@ import logging
 #classifiers
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import ExtraTreesClassifier
@@ -28,17 +28,21 @@ from createFeatureVector import userClass
 #TODO: create a parameter for this flag
 useIntegral = True
 
-CSVM = 10000
+CSVM = 10
 SVMMaxIter=10000
 SVMWeight = "auto" # [default: None] 
+SVMGamma = 0
+SVMKernel= "linear" 
+#SVMKernel= "rbf"
 
-classifyParameters = {"KNN-K": 20, "ETC-n_estimators": 120, "SVM-cacheSize": 2000, "SVM-kernel": "rbf", "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter, "SVM-gamma":0.0001, "LR-C":1000, "ETC-criterion": "entropy", "ETC-max_features":None, "DT-criterion": "entropy", "DT-max_features":None, , "SVM-class_weight":SVMWeight} 
+classifyParameters = {"KNN-K": 20, "ETC-n_estimators": 120, "SVM-cacheSize": 2000, "SVM-kernel": SVMKernel, "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter, "SVM-gamma":SVMGamma, "LR-C":1000, "ETC-criterion": "entropy", "ETC-max_features":None, "DT-criterion": "entropy", "DT-max_features":None, "SVM-class_weight":SVMWeight} 
 
 gridETC = [{'criterion': ['entropy'], 'max_features': [None], "n_estimators":[10,100,1000,10000]}]
 gridKNN = [{'n_neighbors': [1,5,10,15,20,50,100], 'algorithm': ["auto"]}]
 gridLR = [{'C': [1,1000,10000,10000000], 'penalty': ["l1", "l2"]}]
 gridDT = [{'criterion': ["gini","entropy"], 'max_features': ["auto", None, "log2"]}]
-gridSVM = [{'kernel': ['rbf'], 'gamma': [100, 10, 1, 0, 1e-3, 1e-4, 1e-6], 'C': [1000000]}]
+gridSVM = [{'kernel': ['rbf'], 'gamma': [1, 0, 1e-1, 1e-2, 1e-3, 1e-4], 'C': [0.1,1,10,1000000]},\
+            {'kernel': ['linear'], 'C': [0.01, 0.1,1,10,1000000]}]
 
 percentageIntervals = [0,10,20,30,40,50,60,70,80,90,100]
 #percentageIntervals = [100]
@@ -250,7 +254,11 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
         clfrs.append( (dtc, "Decision Tree", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridDT, "measureProbas":measureProbas}) )
     # ================================================================
     if "svmc" in listOfClassifiers or "svm" in listOfClassifiers:
-        svmc = SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"], max_iter=classifyParameters["SVM-maxIter"], probability=True, gamma=classifyParameters["SVM-gamma"], class_weight=classifyParameters["SVM-class_weight"])
+        if SVMKernel == "linear":
+            svmc = LinearSVC(C=classifyParameters["SVM-C"], class_weight=classifyParameters["SVM-class_weight"])
+        else:
+            svmc = SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"], max_iter=classifyParameters["SVM-maxIter"], probability=measureProbas, gamma=classifyParameters["SVM-gamma"], class_weight=classifyParameters["SVM-class_weight"])
+
         clfrs.append( (svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM, "measureProbas":measureProbas}) )
     # ================================================================
     if "etc" in listOfClassifiers:
@@ -325,7 +333,7 @@ if __name__ == "__main__":
     op.add_option("--usingIncremental", "-i", action="store_true", dest="usingIncremental", help="Use incremental feature vector")
     op.add_option("--logFile", "-l", action="store", type="string", dest="logFile", help="Log filename", default="debug.log")
     op.add_option("--outfileName", "-o", action="store", type="string", dest="outfileName", help="Filename to write the classification output", default="classification.out")
-    op.add_option("--nFolds", "-f", action="store", type="int", dest="nFolds", help="Number of folds for the cross-validation process", default=10)
+    op.add_option("--nFolds", "-f", action="store", type="int", dest="nFolds", help="Number of folds for the cross-validation process", default=5)
     op.add_option("--measureProbas", "-a", action="store_true", dest="measureProbas", help="Active it if you want to measure probabilities. They are necessary to plot ROC and Precision X Recall curves", default=False)
     
     (opts, args) = op.parse_args()

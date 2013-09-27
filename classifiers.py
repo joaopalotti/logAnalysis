@@ -66,7 +66,7 @@ def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None):
 
     originalClf = clf
     if useGridSearch:
-        moduloL.info("Using grid search")
+        moduleL.info("Using grid search")
         clf = GridSearchCV(clf, gridParameters, cv=CV, scoring=gridScore, n_jobs=nJobs)
 
     nSamples = y.shape[0]
