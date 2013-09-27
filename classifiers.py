@@ -33,21 +33,17 @@ def makeReport(y, y_pred, baselines, target_names=['Layman', 'Specialist']):
     ns = Counter(y)
     wf1 = ( f1[0] * ns[0] + f1[1] * ns[1] ) / (ns[0] + ns[1])
     
-    print(classification_report(y, y_pred, target_names=target_names))
+    moduleL.info(classification_report(y, y_pred, target_names=target_names))
     
-    print "F1 Scores (no average) --> ", (f1)
-    
-    print "sf1 -> ", sf1
-    print "GAIN --> %0.2f%% " % (100.0 * (sf1 - baselines.sf1) / baselines.sf1)
-    
-    print "mf1 -> ", mf1
-    print "GAIN --> %0.2f%% " % (100.0 * (mf1 - baselines.mf1) / baselines.mf1)
-    
-    print "wf1 -> ", wf1
-    print "GAIN --> %0.2f%% " % (100.0 * (wf1 - baselines.wf1) / baselines.wf1)
-    
-    print "ACC Score --> ", (acc)
-    print "GAIN --> %0.2f%% " % (100.0 * (acc - baselines.acc) / baselines.acc)
+    moduleL.info("F1 Scores (no average) --> %s", (f1))
+    moduleL.info("sf1 -> %s", sf1)
+    moduleL.info("GAIN --> %0.2f%% " % (100.0 * (sf1 - baselines.sf1) / baselines.sf1))
+    moduleL.info("mf1 -> %s", mf1)
+    moduleL.info("GAIN --> %0.2f%% " % (100.0 * (mf1 - baselines.mf1) / baselines.mf1))
+    moduleL.info("wf1 -> %s", wf1)
+    moduleL.info("GAIN --> %0.2f%% " % (100.0 * (wf1 - baselines.wf1) / baselines.wf1))
+    moduleL.info("ACC Score --> %s", (acc))
+    moduleL.info("GAIN --> %0.2f%% " % (100.0 * (acc - baselines.acc) / baselines.acc))
 
     return ResultMetrics(acc, sf1, mf1, wf1)
 
@@ -61,6 +57,7 @@ def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None):
     useGridSearch= False if "useGridSearch" not in others else others["useGridSearch"]
     gridParameters= None if "gridParameters" not in others else others["gridParameters"]
     gridScore= "f1" if "gridScore" not in others else others["gridScore"]
+    measureProbas = False if "measureProbas" not in others else others["measureProbas"]
    
     if tryToMeasureFeatureImportance and useGridSearch:
         moduleL.warning("Using Grid search and feature importance at the same time is not a good idea")
@@ -69,7 +66,7 @@ def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None):
 
     originalClf = clf
     if useGridSearch:
-        print "Using grid search"
+        moduloL.info("Using grid search")
         clf = GridSearchCV(clf, gridParameters, cv=CV, scoring=gridScore, n_jobs=nJobs)
 
     nSamples = y.shape[0]
@@ -89,10 +86,12 @@ def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None):
         if incrementalData:
             for i, l in zip(range(len(incrementalData)), incrementalData):
                 preds[i] += list(clf.fit(l[train], y[train]).predict(l[test]))
-                probas[i] += list(clf.fit(l[train], y[train]).predict_proba(l[test]))
+                if measureProbas:
+                    probas[i] += list(clf.fit(l[train], y[train]).predict_proba(l[test]))
         else:
             preds.extend( list(clf.fit(X[train], y[train]).predict(X[test])) )
-            probas.extend( list(clf.fit(X[train], y[train]).predict_proba(X[test])))
+            if measureProbas:
+                probas.extend( list(clf.fit(X[train], y[train]).predict_proba(X[test])))
 
         if useGridSearch:
             print("Best parameters set found on development set:")
@@ -121,8 +120,8 @@ def classify(clf, label, X, y, nCV, nJobs, baselines, options={}, incremental=No
     
     if incremental:
         resultMetrics = makeIncrementalReport(y, y_, baselines)
-        precRecall = []
-        roc = []
+        precRecall = getPrecisionRecall(y, probas_)
+        roc = getROC(y, probas_)
     else:
         resultMetrics = makeReport(y, y_, baselines)
         precRecall = getPrecisionRecall(y, probas_)
@@ -194,25 +193,29 @@ def plotGraph(precRecallDict, fileName, xlabel, ylabel, generatePickle=True, has
     plt.close()
 
 def getPrecisionRecall(y, probas):
+    if not probas:
+        return []
 
     probas1 = [p[1] for p in probas]
     
     precision, recall, thresholds = precision_recall_curve(y, probas1)
     area = auc(recall, precision)
-    print "Area Under Curve: %0.2f" % area
-    print "thresholds = ", thresholds
+    #print "Area Under Curve: %0.2f" % area
+    #print "thresholds = ", thresholds
     return (precision, recall)
    
 def getROC(y, probas):
-    
+    if not probas:
+        return []
+
     probas1 = [p[1] for p in probas]
     
     fpr, tpr, thresholdsROC = roc_curve(y, probas1)
     roc_auc = auc(fpr, tpr)
-    print("Area under the ROC curve : %f" % roc_auc)
-    print "thresholdsROC = ", thresholdsROC
-    print "Probas ===> ", probas
-    print "Fpr -> ", fpr, "tpr -> ", tpr
+    #print("Area under the ROC curve : %f" % roc_auc)
+    #print "thresholdsROC = ", thresholdsROC
+    #print "Probas ===> ", probas
+    #print "Fpr -> ", fpr, "tpr -> ", tpr
 
     return (tpr, fpr)
 

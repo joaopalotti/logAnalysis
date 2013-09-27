@@ -28,7 +28,6 @@ from createFeatureVector import userClass
 #TODO: create a parameter for this flag
 useIntegral = True
 
-nCV = 10
 CSVM = 10000
 SVMMaxIter=10000
 
@@ -97,7 +96,7 @@ def transformeInIncrementalDict(userDict, nseed, n=-1, proportional=-1, groupsTo
     return listOfLastQueries, mapOfDicts, listOfLabels
 
 
-def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers, gridSearch, generatePickle, hasPlotLibs, paralled, nJobs, listOfClassifiers, groupsToUse, usingIncremental, outfileName):
+def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers, gridSearch, generatePickle, hasPlotLibs, paralled, nJobs, listOfClassifiers, groupsToUse, usingIncremental, outfileName, nCV, measureProbas):
    
     if healthUsers:
         positiveOutputFile = "healthUser-%d-%s.pk" % (minNumberOfQueries, explanation)
@@ -223,39 +222,39 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     
     if "dmfc" in listOfClassifiers:
         dmfc = DummyClassifier(strategy='most_frequent')
-        clfrs.append( (dmfc, "DummyMostFrequent", X, y, nCV, nJobs, baselines) )
+        clfrs.append( (dmfc, "DummyMostFrequent", X, y, nCV, nJobs, baselines, {"measureProbas":measureProbas}) )
     # ================================================================
     if "dsc" in listOfClassifiers:
         dsc = DummyClassifier(strategy='stratified')
-        clfrs.append( (dsc, "DummyStratified", X, y, nCV, nJobs, baselines) )
+        clfrs.append( (dsc, "DummyStratified", X, y, nCV, nJobs, baselines, {"measureProbas":measureProbas}) )
     # ================================================================
     if "duc" in listOfClassifiers:
         duc = DummyClassifier(strategy='uniform')
-        clfrs.append( (duc, "DummyUniform", X, y, nCV, nJobs, baselines) )
+        clfrs.append( (duc, "DummyUniform", X, y, nCV, nJobs, baselines, {"measureProbas":measureProbas}) )
     # ================================================================
-    if "nbc" in listOfClassifiers:
+    if "nbc" in listOfClassifiers or "nb" in listOfClassifiers:
         nbc = GaussianNB()
-        clfrs.append( (nbc, "Naive Bayes", X, y, nCV, nJobs, baselines) )
+        clfrs.append( (nbc, "Naive Bayes", X, y, nCV, nJobs, baselines, {"measureProbas":measureProbas}) )
     # ================================================================
-    if "knnc" in listOfClassifiers:
+    if "knnc" in listOfClassifiers or "knn" in listOfClassifiers:
         knnc = KNeighborsClassifier(n_neighbors=classifyParameters["KNN-K"])
-        clfrs.append( (knnc, "KNN", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridKNN}) )
+        clfrs.append( (knnc, "KNN", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridKNN, "measureProbas":measureProbas}) )
     # ================================================================
     if "lrc" in listOfClassifiers:
         lrc = LogisticRegression(C=classifyParameters["LR-C"])
-        clfrs.append( (lrc, "Logistic Regression", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridLR}) )
+        clfrs.append( (lrc, "Logistic Regression", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridLR, "measureProbas":measureProbas}) )
     # ================================================================
     if "dtc" in listOfClassifiers:
         dtc = DecisionTreeClassifier( criterion=classifyParameters["DT-criterion"], max_features=classifyParameters["DT-max_features"] )
-        clfrs.append( (dtc, "Decision Tree", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridDT}) )
+        clfrs.append( (dtc, "Decision Tree", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridDT, "measureProbas":measureProbas}) )
     # ================================================================
-    if "svmc" in listOfClassifiers:
+    if "svmc" in listOfClassifiers or "svm" in listOfClassifiers:
         svmc = SVC(kernel=classifyParameters["SVM-kernel"], cache_size=classifyParameters["SVM-cacheSize"], C=classifyParameters["SVM-C"], max_iter=classifyParameters["SVM-maxIter"], probability=True, gamma=classifyParameters["SVM-gamma"])
-        clfrs.append( (svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}) )
+        clfrs.append( (svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM, "measureProbas":measureProbas}) )
     # ================================================================
     if "etc" in listOfClassifiers:
         etc = ExtraTreesClassifier(random_state=0, n_jobs=nJobs, n_estimators=classifyParameters["ETC-n_estimators"], criterion=classifyParameters["ETC-criterion"], max_features=classifyParameters["ETC-max_features"])
-        clfrs.append( (etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC}) )
+        clfrs.append( (etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC, "measureProbas":measureProbas}) )
     
     results = []
     if paralled:
@@ -263,23 +262,23 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
         results = futures.map(parallelClassify,clfrs)
     else:
         if "dmfc" in listOfClassifiers:
-            results.append(classify(dmfc, "DummyMostFrequent", X, y, nCV, nJobs, baselines, incremental=incrementalFV))
+            results.append(classify(dmfc, "DummyMostFrequent", X, y, nCV, nJobs, baselines, {"measureProbas":measureProbas}, incremental=incrementalFV))
         if "dsc" in listOfClassifiers:
-            results.append(classify(dsc, "DummyStratified", X, y, nCV, nJobs, baselines, incremental=incrementalFV))
+            results.append(classify(dsc, "DummyStratified", X, y, nCV, nJobs, baselines, {"measureProbas":measureProbas}, incremental=incrementalFV))
         if "duc" in listOfClassifiers:
-            results.append(classify(duc, "DummyUniform", X, y, nCV, nJobs, baselines, incremental=incrementalFV))
-        if "nbc" in listOfClassifiers:
-            results.append(classify(nbc, "Naive Bayes", X, y, nCV, nJobs, baselines, incremental=incrementalFV))
-        if "knnc" in listOfClassifiers:
-            results.append(classify(knnc, "KNN", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridKNN}, incremental=incrementalFV))
+            results.append(classify(duc, "DummyUniform", X, y, nCV, nJobs, baselines, {"measureProbas":measureProbas}, incremental=incrementalFV))
+        if "nbc" in listOfClassifiers or "nb" in listOfClassifiers:
+            results.append(classify(nbc, "Naive Bayes", X, y, nCV, nJobs, baselines, {"measureProbas":measureProbas}, incremental=incrementalFV))
+        if "knnc" in listOfClassifiers or "knn" in listOfClassifiers:
+            results.append(classify(knnc, "KNN", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridKNN, "measureProbas":measureProbas}, incremental=incrementalFV))
         if "lrc" in listOfClassifiers:
-            results.append(classify(lrc, "Logistic Regression", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridLR}, incremental=incrementalFV))
+            results.append(classify(lrc, "Logistic Regression", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridLR, "measureProbas":measureProbas}, incremental=incrementalFV))
         if "dtc" in listOfClassifiers:
-            results.append(classify(dtc, "Decision Tree", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridDT}, incremental=incrementalFV))
-        if "svmc" in listOfClassifiers:
-            results.append(classify(svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM}, incremental=incrementalFV))
+            results.append(classify(dtc, "Decision Tree", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridDT, "measureProbas":measureProbas}, incremental=incrementalFV))
+        if "svmc" in listOfClassifiers or "svm" in listOfClassifiers:
+            results.append(classify(svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM, "measureProbas":measureProbas}, incremental=incrementalFV))
         if "etc" in listOfClassifiers:
-            results.append(classify(etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC}, incremental=incrementalFV))
+            results.append(classify(etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC, "measureProbas":measureProbas}, incremental=incrementalFV))
 
     precRecall, roc = getCurves(results)
     roc["Random Classifier"] = ([0,1],[0,1])
@@ -325,7 +324,9 @@ if __name__ == "__main__":
     op.add_option("--usingIncremental", "-i", action="store_true", dest="usingIncremental", help="Use incremental feature vector")
     op.add_option("--logFile", "-l", action="store", type="string", dest="logFile", help="Log filename", default="debug.log")
     op.add_option("--outfileName", "-o", action="store", type="string", dest="outfileName", help="Filename to write the classification output", default="classification.out")
-
+    op.add_option("--nFolds", "-f", action="store", type="int", dest="nFolds", help="Number of folds for the cross-validation process", default=10)
+    op.add_option("--measureProbas", "-a", action="store_true", dest="measureProbas", help="Active it if you want to measure probabilities. They are necessary to plot ROC and Precision X Recall curves", default=False)
+    
     (opts, args) = op.parse_args()
     if len(args) > 0:
         print "This program does not receive parameters this way: use -h to see the options."
@@ -345,6 +346,7 @@ if __name__ == "__main__":
     logging.info("Forcing Balance: %d", opts.forceBalance)
     logging.info("Proportional: %d", opts.proportional)
     logging.info("Using Grid Search: %d", opts.gridSearch)
+    logging.info("NFolds for CV = %s", opts.nFolds)
     logging.info("Has plot libs: %d", opts.hasPlotLibs)
     logging.info("Generating Pickle = %d", not opts.ignorePickle)
     logging.info("Running in parallel = %d", opts.useScoop)
@@ -361,6 +363,6 @@ if __name__ == "__main__":
     #uncomment if it is necessary to see the complete numpy arrays
     #np.set_printoptions(threshold='nan')
     
-    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.explanation, opts.healthUsers, opts.gridSearch, not opts.ignorePickle, opts.hasPlotLibs, opts.useScoop, opts.njobs, listOfClassifiers, listOfGroupsToUse, opts.usingIncremental, opts.outfileName)
+    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.explanation, opts.healthUsers, opts.gridSearch, not opts.ignorePickle, opts.hasPlotLibs, opts.useScoop, opts.njobs, listOfClassifiers, listOfGroupsToUse, opts.usingIncremental, opts.outfileName, opts.nFolds, opts.measureProbas)
     
 
