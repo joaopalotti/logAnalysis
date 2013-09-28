@@ -30,6 +30,8 @@ def calculateBaselines(y, y_greatest):
 
 
 def preprocessing(X_noProcess, method):
+    if X_noProcess == []:
+        return []
     # http://scikit-learn.org/stable/modules/preprocessing.html
     from sklearn import preprocessing
     if method == "standard":
@@ -58,6 +60,8 @@ def shuffleIndices(nSamples, nSeed):
 def vectorizeData(listOfDicts):
     from sklearn.feature_extraction import DictVectorizer
     vec = DictVectorizer()
+    if listOfDicts == []:
+        return vec, []
     X_noProcess = vec.fit_transform(listOfDicts).toarray()
     return vec, X_noProcess
 
