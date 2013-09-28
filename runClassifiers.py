@@ -44,9 +44,6 @@ gridDT = [{'criterion': ["gini","entropy"], 'max_features': ["auto", None, "log2
 gridSVM = [{'kernel': ['rbf'], 'gamma': [1, 0, 1e-1, 1e-2, 1e-3, 1e-4], 'C': [0.1,1,10,1000000]},\
             {'kernel': ['linear'], 'C': [0.01, 0.1,1,10,1000000]}]
 
-percentageIntervals = [0,10,20,30,40,50,60,70,80,90,100]
-#percentageIntervals = [100]
-
 def transformeInDict(userDict, nseed, n=-1, proportional=-1, groupsToUse=None):
     listOfDicts = list()
     listOfLabels = list()
@@ -65,7 +62,7 @@ def transformeInDict(userDict, nseed, n=-1, proportional=-1, groupsToUse=None):
         #print udict  #### Check how this features are related with the features calculated by the random tree method
     return listOfDicts, listOfLabels
 
-def transformeInIncrementalDict(userDict, nseed, n=-1, proportional=-1, groupsToUse=None, method="percentage", values=[10,20,50,100]):
+def transformeInIncrementalDict(userDict, nseed, n=-1, proportional=-1, groupsToUse=None, values=[10,20,50,100]):
     listOfLabels = list()
     mapOfDicts = defaultdict(list)
     
@@ -89,17 +86,13 @@ def transformeInIncrementalDict(userDict, nseed, n=-1, proportional=-1, groupsTo
             intermediateList = userc.toDict(idxq, groupsToUse)
             mapOfDicts[i].append(intermediateList)
 
-            #if method == "percentage":
-            #result[i].append(subList[int((len(subList) - 1) * (v/100.0))].toDict(groupsToUse))
-            #print len(subList), v, int(len(subList) * (v/100.0) )
-
         listOfLabels.append(userc.label)
 
     #Returning a list of list of queries of a single user and list of labels
     return mapOfDicts, listOfLabels
 
 
-def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers, gridSearch, generatePickle, hasPlotLibs, paralled, nJobs, listOfClassifiers, groupsToUse, usingIncremental, outfileName, nCV, measureProbas):
+def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers, gridSearch, generatePickle, hasPlotLibs, paralled, nJobs, listOfClassifiers, groupsToUse, usingIncremental, outfileName, nCV, measureProbas, incrementalVector):
    
     if healthUsers:
         positiveOutputFile = "healthUser-%d-%s.pk" % (minNumberOfQueries, explanation)
@@ -137,8 +130,8 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
 
     logging.info("Transforming datasets into Dictionaries...")
     if usingIncremental:
-        negativeUserFV,ll1 = transformeInIncrementalDict(negativeUserFV, nseed, forceBalance, proportional, groupsToUse, "percentage", percentageIntervals)
-        positiveUserFV,ll2 = transformeInIncrementalDict(positiveUserFV, nseed, forceBalance, proportional, groupsToUse, "percentage", percentageIntervals)
+        negativeUserFV,ll1 = transformeInIncrementalDict(negativeUserFV, nseed, forceBalance, proportional, groupsToUse, incrementalVector)
+        positiveUserFV,ll2 = transformeInIncrementalDict(positiveUserFV, nseed, forceBalance, proportional, groupsToUse, incrementalVector)
         ld1, ld2 = [], []
 
         lm1 = len(negativeUserFV)
@@ -174,7 +167,8 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     
     logging.info("Vectorizing dictionaries...")
     vec, X_noProcess = vectorizeData(listOfDicts) 
-    logging.info("Feature Names: %s", vec.get_feature_names())
+    if X_noProcess != []:
+        logging.info("Feature Names: %s", vec.get_feature_names())
     logging.info("Vectorized")
    
     logging.info("Preprocessing data")
@@ -184,24 +178,19 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     logging.info("Data preprocessed")
 
     if usingIncremental:
-    #    if useIntegral:
-    #        incrementalFV = getSubLists(listOfListsOfQueries, "integral", range(0,5), vec, preProcessingMethod, groupsToUse)
-    #    else:
-        #incrementalFV = getSubLists(listOfListsOfQueries, "percentage", percentageIntervals, vec, preProcessingMethod, groupsToUse)
         incrementalFV = [preprocessing(vec.fit_transform(l).toarray(), preProcessingMethod) for k, l in incrementalFV.iteritems()]
-        #print "incrementalFV ---> ", incrementalFV
     else:
         incrementalFV = None
 
-    n_samples, n_features = X.shape
     ####
     ### Shuffer samples  (TODO: Cross-validation)
     ##
     #
-    
     logging.info("Shuffling the data...")
+    n_samples = len(y)
     newIndices = shuffleIndices(n_samples, nseed)
-    X = X[newIndices]
+    if X != []:
+        X = X[newIndices]
     y = y[newIndices]
     if usingIncremental:
         incrementalFV = [ fv[newIndices] for fv in incrementalFV ]
@@ -295,9 +284,9 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
         label = r[0]
         resultMetrics = r[1]
         if usingIncremental:
-            for i in range(len(resultMetrics.acc)):
-                fo.write("%s, Partition %d, %.3f, %.3f, %.3f, %.3f\n" % (label, i,100.0*(resultMetrics.acc[i]), 100.0*resultMetrics.sf1[i], 100.0*resultMetrics.mf1[i], 100.0*resultMetrics.wf1[i]))
-                print "%s, Partition %d, %.3f, %.3f, %.3f, %.3f" % (label, i,100.0*(resultMetrics.acc[i]), 100.0*resultMetrics.sf1[i], 100.0*resultMetrics.mf1[i], 100.0*resultMetrics.wf1[i])
+            for i, part in zip(range(len(incrementalVector)), incrementalVector):
+                fo.write("%s, Partition %d, %.3f, %.3f, %.3f, %.3f\n" % (label, part/10, 100.0*(resultMetrics.acc[i]), 100.0*resultMetrics.sf1[i], 100.0*resultMetrics.mf1[i], 100.0*resultMetrics.wf1[i]))
+                print "%s, Partition %d, %.3f, %.3f, %.3f, %.3f" % (label, part/10, 100.0*(resultMetrics.acc[i]), 100.0*resultMetrics.sf1[i], 100.0*resultMetrics.mf1[i], 100.0*resultMetrics.wf1[i])
             
             print "Means ----- %s, %.3f, %.3f, %.3f, %.3f" % (label, 100.0*(np.mean(resultMetrics.acc)), 100.0*np.mean(resultMetrics.sf1), 100.0*np.mean(resultMetrics.mf1), 100.0*np.mean(resultMetrics.wf1))
         else:
@@ -325,6 +314,7 @@ if __name__ == "__main__":
     op.add_option("--classifiers", "-z", action="store", type="string", dest="classifiers", help="Classifiers to run. Options are dmfc|dsc|duc|nbc|knnc|lrc|dtc|svmc|etc", metavar="cl1|cl2|..", default="dmfc|dsc|duc|nbc|knnc|lrc|dtc|svmc|etc")
     op.add_option("--groupsToUse", "-g", action="store", type="string", dest="groupsToUse", help="Options are: g1 | g2 | ... | g7", metavar="G")
     op.add_option("--usingIncremental", "-i", action="store_true", dest="usingIncremental", help="Use incremental feature vector")
+    op.add_option("--incrementalVector", "-v", action="store", type="string", dest="incrementalVector", help="Incremental vector", default="0|10|20|30|40|50|60|70|80|90|100")
     op.add_option("--logFile", "-l", action="store", type="string", dest="logFile", help="Log filename", default="debug.log")
     op.add_option("--outfileName", "-o", action="store", type="string", dest="outfileName", help="Filename to write the classification output", default="classification.out")
     op.add_option("--nFolds", "-f", action="store", type="int", dest="nFolds", help="Number of folds for the cross-validation process", default=5)
@@ -357,6 +347,11 @@ if __name__ == "__main__":
     logging.info("Classifiers = %s", opts.classifiers)
     listOfClassifiers = opts.classifiers.split("|")
     
+    incrementalVector = map(int, opts.incrementalVector.split("|"))
+    if opts.usingIncremental:
+        logging.info("incrementalVector = %s", incrementalVector)
+
+    
     if not opts.groupsToUse:
         print " -------- Please, use a feature set: (Ex. g1, g2...g7)"
         op.print_help()
@@ -370,6 +365,6 @@ if __name__ == "__main__":
     #uncomment if it is necessary to see the complete numpy arrays
     #np.set_printoptions(threshold='nan')
     
-    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.explanation, opts.healthUsers, opts.gridSearch, not opts.ignorePickle, opts.hasPlotLibs, opts.useScoop, opts.njobs, listOfClassifiers, listOfGroupsToUse, opts.usingIncremental, opts.outfileName, opts.nFolds, opts.measureProbas)
+    runClassify(opts.preProcessing, opts.forceBalance, opts.proportional, opts.minNumberOfQueries, opts.nseed, opts.explanation, opts.healthUsers, opts.gridSearch, not opts.ignorePickle, opts.hasPlotLibs, opts.useScoop, opts.njobs, listOfClassifiers, listOfGroupsToUse, opts.usingIncremental, opts.outfileName, opts.nFolds, opts.measureProbas, incrementalVector)
     
 
