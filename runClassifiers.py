@@ -141,7 +141,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     if usingIncremental:
         ld1,mapOfListOfQueries1,ll1 = transformeInIncrementalDict(negativeUserFV, nseed, forceBalance, proportional, groupsToUse, "percentage", percentageIntervals)
         ld2,mapOfListOfQueries2,ll2 = transformeInIncrementalDict(positiveUserFV, nseed, forceBalance, proportional, groupsToUse, "percentage", percentageIntervals)
-       
+        
         lm1 = len(mapOfListOfQueries1)
         if lm1 != len(mapOfListOfQueries2):
             logging.error("ERROR MAP SIZES ARE NOT EQUAL!")
@@ -164,6 +164,10 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     else:
         ld1, ll1 = transformeInDict(negativeUserFV, nseed, forceBalance, proportional, groupsToUse)
         ld2, ll2 = transformeInDict(positiveUserFV, nseed, forceBalance, proportional, groupsToUse)
+    #Free memory
+    del positiveUserFV
+    del negativeUserFV
+
     logging.info("Transformed")
     
     listOfDicts = ld1 + ld2
@@ -368,6 +372,7 @@ if __name__ == "__main__":
         op.print_help()
         sys.exit(0)
     listOfGroupsToUse = opts.groupsToUse.split("|")
+    logging.info("Groups = %s", listOfGroupsToUse)
 
     if "svm" in listOfClassifiers or "svmc" in listOfClassifiers and opts.preProcessing != "scale":
         logging.warning("You are using SVM --- you should consider process the data using the 'scale' preprocessing method")
