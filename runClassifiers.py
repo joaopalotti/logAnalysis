@@ -66,7 +66,6 @@ def transformeInDict(userDict, nseed, n=-1, proportional=-1, groupsToUse=None):
     return listOfDicts, listOfLabels
 
 def transformeInIncrementalDict(userDict, nseed, n=-1, proportional=-1, groupsToUse=None, method="percentage", values=[10,20,50,100]):
-    listOfLastQueries = list() # the last query has the "accumlated value for a user"
     listOfLabels = list()
     mapOfDicts = defaultdict(list)
     
@@ -94,11 +93,10 @@ def transformeInIncrementalDict(userDict, nseed, n=-1, proportional=-1, groupsTo
             #result[i].append(subList[int((len(subList) - 1) * (v/100.0))].toDict(groupsToUse))
             #print len(subList), v, int(len(subList) * (v/100.0) )
 
-        listOfLastQueries.append(userc.toDict(nq, groupsToUse))
         listOfLabels.append(userc.label)
 
     #Returning a list of list of queries of a single user and list of labels
-    return listOfLastQueries, mapOfDicts, listOfLabels
+    return mapOfDicts, listOfLabels
 
 
 def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQueries, nseed, explanation, healthUsers, gridSearch, generatePickle, hasPlotLibs, paralled, nJobs, listOfClassifiers, groupsToUse, usingIncremental, outfileName, nCV, measureProbas):
@@ -139,27 +137,19 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
 
     logging.info("Transforming datasets into Dictionaries...")
     if usingIncremental:
-        ld1,mapOfListOfQueries1,ll1 = transformeInIncrementalDict(negativeUserFV, nseed, forceBalance, proportional, groupsToUse, "percentage", percentageIntervals)
-        ld2,mapOfListOfQueries2,ll2 = transformeInIncrementalDict(positiveUserFV, nseed, forceBalance, proportional, groupsToUse, "percentage", percentageIntervals)
-        
-        lm1 = len(mapOfListOfQueries1)
-        if lm1 != len(mapOfListOfQueries2):
+        negativeUserFV,ll1 = transformeInIncrementalDict(negativeUserFV, nseed, forceBalance, proportional, groupsToUse, "percentage", percentageIntervals)
+        positiveUserFV,ll2 = transformeInIncrementalDict(positiveUserFV, nseed, forceBalance, proportional, groupsToUse, "percentage", percentageIntervals)
+        ld1, ld2 = [], []
+
+        lm1 = len(negativeUserFV)
+        if lm1 != len(positiveUserFV):
             logging.error("ERROR MAP SIZES ARE NOT EQUAL!")
             print "ERROR MAP SIZES ARE NOT EQUAL!"
             exit(0)
 
-        mergedLists = defaultdict(list)
+        incrementalFV = defaultdict(list)
         for i in range(lm1):
-            mergedLists[i] = mapOfListOfQueries1[i] + mapOfListOfQueries2[i]
-
-            #print "1 ------------------> ", len(mapOfListOfQueries1[i])
-            #print "2 ------------------> ", len(mapOfListOfQueries2[i])
-            #print "merged ------------------> ", len(mergedLists[i])
-
-        #listOfListsOfQueries = np.array(listOfListOfQueries1 + listOfListOfQueries2)
-        #listOfListsOfQueries = listOfListOfQueries1 + listOfListOfQueries2
-        #print "LLQ -> ", listOfListsOfQueries
-        #print "ld -> ", ld1 + ld2
+            incrementalFV[i] = negativeUserFV[i] + positiveUserFV[i]
 
     else:
         ld1, ll1 = transformeInDict(negativeUserFV, nseed, forceBalance, proportional, groupsToUse)
@@ -177,8 +167,8 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     greatestClass = 0 if len(ll1) > len(ll2) else 1
     y_greatest =  np.array((len(ll1) + len(ll2)) * [greatestClass] )
 
-    logging.info("Using %d regular users -- class %s" % (len(ld1), ll1[0]))
-    logging.info("Using %d medical users -- class %s" % (len(ld2), ll2[0]))
+    logging.info("Using %d regular users -- class %s" % (len(ll1), ll1[0]))
+    logging.info("Using %d medical users -- class %s" % (len(ll2), ll2[0]))
     
     baselines = calculateBaselines(y, y_greatest)
     
@@ -198,7 +188,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     #        incrementalFV = getSubLists(listOfListsOfQueries, "integral", range(0,5), vec, preProcessingMethod, groupsToUse)
     #    else:
         #incrementalFV = getSubLists(listOfListsOfQueries, "percentage", percentageIntervals, vec, preProcessingMethod, groupsToUse)
-        incrementalFV = [preprocessing(vec.fit_transform(l).toarray(), preProcessingMethod) for k, l in mergedLists.iteritems()]
+        incrementalFV = [preprocessing(vec.fit_transform(l).toarray(), preProcessingMethod) for k, l in incrementalFV.iteritems()]
         #print "incrementalFV ---> ", incrementalFV
     else:
         incrementalFV = None
