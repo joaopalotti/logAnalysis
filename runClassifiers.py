@@ -278,7 +278,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     plotGraph(precRecall, fileName="officialPR-DT", xlabel="Recall", ylabel="Precision", generatePickle=generatePickle, hasPlotLibs=hasPlotLibs)
     plotGraph(roc, fileName="officialROC-DT", xlabel="False Positive Rate", ylabel="True Positive Rate", generatePickle=generatePickle, hasPlotLibs=hasPlotLibs)
    
-    fo = open(outfileName, "w")
+    fo = open(outfileName, "a")
 
     for r in results:
         label = r[0]
