@@ -226,7 +226,7 @@ def getCurves(results):
         roc[ r[0] ] = r[3]
     return precRecall, roc
 
-def measureFeatureImportance(classifier, featureNames):
+def measureFeatureImportance(classifier, featureNames, makePlot=False, printVectorToFile=True):
     
     import numpy as np
     importances = classifier.feature_importances_
@@ -241,3 +241,24 @@ def measureFeatureImportance(classifier, featureNames):
             print "%d. feature %s (%f)" % (f + 1, featureNames[indices[f]], importances[indices[f]])
         else:
             print "%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]])
+
+    if makePlot:
+        nFeatures = len(indices)
+        featureNamesSorted = [featureNames[i].split(".")[1] for i in indices]
+        topX = 10 #nFeatures
+        topXIndices = np.argsort(importances)[topX:0:-1]
+        print "len - > ", len(topXIndices)
+        import pylab as pl
+        pl.figure()
+        pl.title("Feature importances")
+        pl.bar(range(topX), importances[0:topXIndices], color="r", yerr=std[topXIndices], align="center")
+        pl.xticks(range(topX), featureNamesSorted[0:topX], rotation='vertical')
+        pl.xlim([-1, topX])
+        pl.show()
+
+    if printVectorToFile:
+        featuresDict = {'indices': indices, 'importances': importances, 'std':std, 'featureNames': featureNames}
+        import pickle
+        with open("featureImportance.pk", 'wb') as output:
+            pickle.dump(featuresDict, output, pickle.HIGHEST_PROTOCOL)
+ 

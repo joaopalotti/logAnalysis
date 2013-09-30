@@ -35,7 +35,9 @@ SVMGamma = 0
 SVMKernel= "linear" 
 #SVMKernel= "rbf"
 
-classifyParameters = {"KNN-K": 20, "ETC-n_estimators": 120, "SVM-cacheSize": 2000, "SVM-kernel": SVMKernel, "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter, "SVM-gamma":SVMGamma, "LR-C":1000, "ETC-criterion": "entropy", "ETC-max_features":None, "DT-criterion": "entropy", "DT-max_features":None, "SVM-class_weight":SVMWeight} 
+etcEstimators = 120
+
+classifyParameters = {"KNN-K": 20, "ETC-n_estimators": etcEstimators, "SVM-cacheSize": 2000, "SVM-kernel": SVMKernel, "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter, "SVM-gamma":SVMGamma, "LR-C":1000, "ETC-criterion": "entropy", "ETC-max_features":None, "DT-criterion": "entropy", "DT-max_features":None, "SVM-class_weight":SVMWeight} 
 
 gridETC = [{'criterion': ['entropy'], 'max_features': [None], "n_estimators":[10,100,1000,10000]}]
 gridKNN = [{'n_neighbors': [1,5,10,15,20,50,100], 'algorithm': ["auto"]}]
@@ -270,7 +272,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
         if "svmc" in listOfClassifiers or "svm" in listOfClassifiers:
             results.append(classify(svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM, "measureProbas":measureProbas}, incremental=incrementalFV))
         if "etc" in listOfClassifiers:
-            results.append(classify(etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC, "measureProbas":measureProbas}, incremental=incrementalFV))
+            results.append(classify(etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":measureProbas, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC, "measureProbas":measureProbas}, incremental=incrementalFV))
 
     precRecall, roc = getCurves(results)
     roc["Random Classifier"] = ([0,1],[0,1])
