@@ -253,7 +253,7 @@ class userClass:
             counter+=1
             featuresToUse["%02d.PercentageOfPrepositions" % (counter) ] = 0.0 if 'prep' not in keys else self.accTags[idxq]['prep']/ nTags 
             counter+=1
-            featuresToUse["%02d.PercentageOfPronotuns" % (counter) ] = 0.0 if 'pron' not in keys else self.accTags[idxq]['pron'] / nTags 
+            featuresToUse["%02d.PercentageOfPronouns" % (counter) ] = 0.0 if 'pron' not in keys else self.accTags[idxq]['pron'] / nTags 
             counter+=1
             # Related to actual query
             featuresToUse["%02d.hasNouns" % (counter) ] = False if 'noun' not in keys else self.accTags[idxq]['noun'] > 0
@@ -264,19 +264,19 @@ class userClass:
             counter+=1
             featuresToUse["%02d.hasVerbs" % (counter) ] = False if 'verb' not in keys else self.accTags[idxq]['verb'] > 0
             counter+=1
-            featuresToUse["%02d.hasOfShapes" % (counter) ] = False if 'shape' not in keys else self.accTags[idxq]['shape'] > 0
+            featuresToUse["%02d.hasShapes" % (counter) ] = False if 'shape' not in keys else self.accTags[idxq]['shape'] > 0
             counter+=1
-            featuresToUse["%02d.hasOfPunctuations" % (counter) ] = False if 'punc' not in keys else self.accTags[idxq]['punc'] > 0
+            featuresToUse["%02d.hasPunctuations" % (counter) ] = False if 'punc' not in keys else self.accTags[idxq]['punc'] > 0
             counter+=1
-            featuresToUse["%02d.hasOfAdverbs" % (counter) ] = False if 'adv' not in keys else self.accTags[idxq]['adv'] > 0
+            featuresToUse["%02d.hasAdverbs" % (counter) ] = False if 'adv' not in keys else self.accTags[idxq]['adv'] > 0
             counter+=1
-            featuresToUse["%02d.hasOfDeterminers" % (counter) ] = False if 'det' not in keys else self.accTags[idxq]['det'] > 0
+            featuresToUse["%02d.hasDeterminers" % (counter) ] = False if 'det' not in keys else self.accTags[idxq]['det'] > 0
             counter+=1
-            featuresToUse["%02d.hasOfAuxiliars" % (counter) ] = False if 'aux' not in keys else self.accTags[idxq]['aux'] > 0
+            featuresToUse["%02d.hasAuxiliars" % (counter) ] = False if 'aux' not in keys else self.accTags[idxq]['aux'] > 0
             counter+=1
-            featuresToUse["%02d.hasOfPrepositions" % (counter) ] = False if 'prep' not in keys else self.accTags[idxq]['prep'] > 0
+            featuresToUse["%02d.hasPrepositions" % (counter) ] = False if 'prep' not in keys else self.accTags[idxq]['prep'] > 0
             counter+=1
-            featuresToUse["%02d.hasOfPronotuns" % (counter) ] = False if 'pron' not in keys else self.accTags[idxq]['pron'] > 0
+            featuresToUse["%02d.hasPronotuns" % (counter) ] = False if 'pron' not in keys else self.accTags[idxq]['pron'] > 0
             counter+=1
 
 
