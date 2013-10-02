@@ -279,8 +279,7 @@ class userClass:
             featuresToUse["%02d.hasPronotuns" % (counter) ] = False if 'pron' not in keys else self.accTags[idxq]['pron'] > 0
             counter+=1
 
-
-        if "gn" in groups:
+        if "gl" in groups:
             # Group of features that contains last in the name
             #Group 1:
             featuresToUse["%02d.CharsInQuery" % (counter) ] = self.numberOfChars[idxq]
@@ -291,6 +290,16 @@ class userClass:
             counter+=1
             featuresToUse["%02d.UsedMedAbbQuery" % (counter) ] = self.useOfMedAbb[idxq] == 1
             counter+=1
+            #Group 3:
+            featuresToUse["%02d.ExpandedQuery" % (counter) ] = self.expansions[idxq]
+            counter+=1
+            featuresToUse["%02d.ReductedQuery" % (counter) ] = self.reductions[idxq]
+            counter+=1
+            featuresToUse["%02d.ModifiedQuery" % (counter) ] = self.modifications[idxq]
+            counter+=1
+            featuresToUse["%02d.KeptQuery" % (counter) ] = self.keeps[idxq]
+            counter+=1
+
             #Group 4:
             featuresToUse["%02d.SearchedSymptomQuery" % (counter) ] = (self.symptoms[idxq] == 1)
             counter+=1
@@ -348,10 +357,36 @@ class userClass:
             featuresToUse["%02d.hasOfPronotuns" % (counter) ] = False if 'pron' not in keys else self.accTags[idxq]['pron'] > 0
             counter+=1
 
-
-        #TODO: reference to the last query
-        #if "gl" in groups:
-        #print featuresToUse
+        if "gwsdm" in groups:
+            featuresToUse["%02d.AvgQueriesPerSession" % (counter) ] = 0 if sessionsSoFar == 0 else (idxq+1) / sessionsSoFar
+            counter+=1
+            featuresToUse["%02d.AvgCharsPerQuery" % (counter) ] = sum(self.numberOfChars[0:(idxq+1)])/(idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyPastUseOfNL" % (counter) ] = any(self.useOfNL[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AvgMeSHDepth" % (counter) ] = sum(self.listMeshDepth[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AvgWordsPerQuery" % (counter) ] = sum(self.numberOfWords[0:(idxq+1)])/(idxq+1)
+            counter+=1
+            featuresToUse["%02d.AvgTimePerSession" % (counter) ] = 0 if sessionsSoFar == 0 else sum(self.timePerSession[0:(idxq+1)]) / sessionsSoFar
+            counter+=1
+            featuresToUse["%02d.AnyPastUseOfMedAbb" % (counter) ] = any(self.useOfMedAbb[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AnyPastSearchForSymptoms" % (counter) ] = any(self.symptoms[0:(idxq+1)]) 
+            counter+=1
+            featuresToUse["%02d.AnyPastSearchForCauses" % (counter) ] = any(self.causes[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AnyPastSearchForRemedies" % (counter) ] = any(self.remedies[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AnyPastSearchForNonSymCauseRemedyTypes" % (counter) ] = any(self.notMedical[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AnyPastExpansion" % (counter) ] = any(self.expansions[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AnyPastReductions" % (counter) ] = any(self.reductions[0:(idxq)])
+            counter+=1
+            featuresToUse["%02d.AnyPastModification" % (counter) ] = any(self.modifications[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AnyPastModification" % (counter) ] = any(self.modifications[0:(idxq+1)])
 
         return featuresToUse
 
