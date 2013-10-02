@@ -358,6 +358,7 @@ class userClass:
             counter+=1
 
         if "gwsdm" in groups:
+            sessionsSoFar = sum(self.startedSessions[0:(idxq+1)])
             featuresToUse["%02d.AvgQueriesPerSession" % (counter) ] = 0 if sessionsSoFar == 0 else (idxq+1) / sessionsSoFar
             counter+=1
             featuresToUse["%02d.AvgCharsPerQuery" % (counter) ] = sum(self.numberOfChars[0:(idxq+1)])/(idxq+1)
