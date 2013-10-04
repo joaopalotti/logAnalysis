@@ -232,7 +232,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     # ================================================================
     if "lrc" in listOfClassifiers:
         lrc = LogisticRegression(C=classifyParameters["LR-C"])
-        clfrs.append( (lrc, "Logistic Regression", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridLR, "measureProbas":measureProbas}) )
+        clfrs.append( (lrc, "Logistic Regression", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridLR, "measureProbas":measureProbas}))
     # ================================================================
     if "dtc" in listOfClassifiers:
         dtc = DecisionTreeClassifier( criterion=classifyParameters["DT-criterion"], max_features=classifyParameters["DT-max_features"] )
@@ -248,7 +248,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     # ================================================================
     if "etc" in listOfClassifiers:
         etc = ExtraTreesClassifier(random_state=0, n_jobs=nJobs, n_estimators=classifyParameters["ETC-n_estimators"], criterion=classifyParameters["ETC-criterion"], max_features=classifyParameters["ETC-max_features"])
-        clfrs.append( (etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC, "measureProbas":measureProbas}) )
+        clfrs.append( (etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":True, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC, "measureProbas":measureProbas, "featuresOutFilename":(outfileName + ".pk")}) )
     
     results = []
     if paralled:
@@ -272,7 +272,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
         if "svmc" in listOfClassifiers or "svm" in listOfClassifiers:
             results.append(classify(svmc, "SVM", X, y, nCV, nJobs, baselines, {"useGridSearch":gridSearch, "gridParameters":gridSVM, "measureProbas":measureProbas}, incremental=incrementalFV))
         if "etc" in listOfClassifiers:
-            results.append(classify(etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":measureProbas, "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC, "measureProbas":measureProbas}, incremental=incrementalFV))
+            results.append(classify(etc, "Random Forest", X, y, nCV, nJobs, baselines, {"tryToMeasureFeatureImportance":measureProbas, "featuresOutFilename":(outfileName + ".pk"), "featureNames":vec.get_feature_names(), "useGridSearch":gridSearch, "gridParameters":gridETC, "measureProbas":measureProbas}, incremental=incrementalFV))
 
     precRecall, roc = getCurves(results)
     roc["Random Classifier"] = ([0,1],[0,1])

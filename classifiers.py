@@ -58,6 +58,7 @@ def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None):
     gridParameters= None if "gridParameters" not in others else others["gridParameters"]
     gridScore= "f1" if "gridScore" not in others else others["gridScore"]
     measureProbas = False if "measureProbas" not in others else others["measureProbas"]
+    featuresOutFilename =  "featureImportance.pk" if "featuresOutFilename" not in others else others["featuresOutFilename"]
    
     if tryToMeasureFeatureImportance and useGridSearch:
         moduleL.warning("Using Grid search and feature importance at the same time is not a good idea")
@@ -108,7 +109,7 @@ def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None):
 
     #scores = cross_validation.cross_val_score(clf, X, y, cv=CV, n_jobs=nJobs) #, scoring="f1") 
     if tryToMeasureFeatureImportance:
-        measureFeatureImportance(originalClf, featureNames)
+        measureFeatureImportance(originalClf, featureNames, featuresOutFilename=featuresOutFilename)
 
     moduleL.info("Done")
     return preds, probas
@@ -226,7 +227,7 @@ def getCurves(results):
         roc[ r[0] ] = r[3]
     return precRecall, roc
 
-def measureFeatureImportance(classifier, featureNames, makePlot=False, printVectorToFile=True):
+def measureFeatureImportance(classifier, featureNames, makePlot=False, printVectorToFile=True, featuresOutFilename="featureImportance.pk"):
     
     import numpy as np
     importances = classifier.feature_importances_
@@ -259,6 +260,6 @@ def measureFeatureImportance(classifier, featureNames, makePlot=False, printVect
     if printVectorToFile:
         featuresDict = {'indices': indices, 'importances': importances, 'std':std, 'featureNames': featureNames}
         import pickle
-        with open("featureImportance.pk", 'wb') as output:
+        with open(featuresOutFilename, 'wb') as output:
             pickle.dump(featuresDict, output, pickle.HIGHEST_PROTOCOL)
  
