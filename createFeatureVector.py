@@ -391,6 +391,7 @@ class userClass:
             featuresToUse["%02d.AnyPastModification" % (counter) ] = any(self.modifications[0:(idxq+1)])
 
         if "gtop10" in groups:
+            sessionsSoFar = sum(self.startedSessions[0:(idxq+1)])
             featuresToUse["%02d.AvgQueriesPerSession" % (counter) ] = 0 if sessionsSoFar == 0 else (idxq+1) / sessionsSoFar
             counter+=1
             featuresToUse["%02d.AvgNumberOfModifications" % (counter) ] = sum(self.modifications[0:(idxq+1)]) / (idxq+1)
@@ -413,6 +414,7 @@ class userClass:
             counter+=1
         
         if "gtop20" in groups:
+            sessionsSoFar = sum(self.startedSessions[0:(idxq+1)])
             featuresToUse["%02d.AvgQueriesPerSession" % (counter) ] = 0 if sessionsSoFar == 0 else (idxq+1) / sessionsSoFar
             counter+=1
             featuresToUse["%02d.AvgNumberOfModifications" % (counter) ] = sum(self.modifications[0:(idxq+1)]) / (idxq+1)
