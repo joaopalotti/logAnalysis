@@ -121,8 +121,8 @@ def classify(clf, label, X, y, nCV, nJobs, baselines, options={}, incremental=No
     
     if incremental:
         resultMetrics = makeIncrementalReport(y, y_, baselines)
-        precRecall = getPrecisionRecall(y, probas_)
-        roc = getROC(y, probas_)
+        precRecall = []# getPrecisionRecall(y, probas_)
+        roc = [] # getROC(y, probas_)
     else:
         resultMetrics = makeReport(y, y_, baselines)
         precRecall = getPrecisionRecall(y, probas_)
