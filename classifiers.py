@@ -47,7 +47,7 @@ def makeReport(y, y_pred, baselines, target_names=['Layman', 'Specialist']):
 
     return ResultMetrics(acc, sf1, mf1, wf1)
 
-def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None):
+def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None, usingAllDataToTrain=True):
  
     moduleL.info("OTHERS ==> %s", others)
     moduleL.info("Classifier ==> %s", clf)
@@ -85,10 +85,17 @@ def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None):
     # Run classifier
     for train, test in kFold:
         if incrementalData:
-            for i, l in zip(range(len(incrementalData)), incrementalData):
-                preds[i] += list(clf.fit(l[train], y[train]).predict(l[test]))
-                if measureProbas:
-                    probas[i] += list(clf.fit(l[train], y[train]).predict_proba(l[test]))
+            if usingAllDataToTrain:
+                X = incrementalData[-1]
+                clf.fit(X[train], y[train])
+                for i, l in zip(range(len(incrementalData)), incrementalData):
+                    preds[i] += list(clf.predict(l[test]))
+
+            else:
+                for i, l in zip(range(len(incrementalData)), incrementalData):
+                    preds[i] += list(clf.fit(l[train], y[train]).predict(l[test]))
+                    if measureProbas:
+                        probas[i] += list(clf.fit(l[train], y[train]).predict_proba(l[test]))
         else:
             preds.extend( list(clf.fit(X[train], y[train]).predict(X[test])) )
             if measureProbas:
@@ -114,10 +121,10 @@ def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None):
     moduleL.info("Done")
     return preds, probas
 
-def classify(clf, label, X, y, nCV, nJobs, baselines, options={}, incremental=None):
+def classify(clf, label, X, y, nCV, nJobs, baselines, options={}, incremental=None, usingAllDataToTrain=True):
     moduleL.info("Running: %s", label)
        
-    y_ , probas_ = runClassifier(clf, X, y, nCV, nJobs, options, incremental)
+    y_ , probas_ = runClassifier(clf, X, y, nCV, nJobs, options, incremental, usingAllDataToTrain)
     
     if incremental:
         resultMetrics = makeIncrementalReport(y, y_, baselines)
