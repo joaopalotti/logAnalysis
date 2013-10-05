@@ -47,7 +47,7 @@ def makeReport(y, y_pred, baselines, target_names=['Layman', 'Specialist']):
 
     return ResultMetrics(acc, sf1, mf1, wf1)
 
-def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None, usingAllDataToTrain=True):
+def runClassifier(clf, X, y, CV, nJobs, others, incrementalData, usingAllDataToTrain):
  
     moduleL.info("OTHERS ==> %s", others)
     moduleL.info("Classifier ==> %s", clf)
@@ -83,23 +83,25 @@ def runClassifier(clf, X, y, CV, nJobs, others={}, incrementalData=None, usingAl
         preds = []
 
     # Run classifier
+    #print "ALL -> ", incrementalData
+    X = incrementalData[-1]
     for train, test in kFold:
         if incrementalData:
             if usingAllDataToTrain:
-                X = incrementalData[-1]
                 clf.fit(X[train], y[train])
                 for i, l in zip(range(len(incrementalData)), incrementalData):
                     preds[i] += list(clf.predict(l[test]))
 
             else:
                 for i, l in zip(range(len(incrementalData)), incrementalData):
-                    preds[i] += list(clf.fit(l[train], y[train]).predict(l[test]))
+                    clf.fit(l[train], y[train])
+                    preds[i] += list(clf.predict(l[test]))
                     if measureProbas:
-                        probas[i] += list(clf.fit(l[train], y[train]).predict_proba(l[test]))
+                        probas[i] += list(clf.predict_proba(l[test]))
         else:
-            preds.extend( list(clf.fit(X[train], y[train]).predict(X[test])) )
+
             if measureProbas:
-                probas.extend( list(clf.fit(X[train], y[train]).predict_proba(X[test])))
+                probas.extend( list(clf.predict_proba(X[test])))
 
         if useGridSearch:
             print("Best parameters set found on development set:")

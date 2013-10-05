@@ -145,7 +145,7 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
         incrementalFV = defaultdict(list)
         for i in range(lm1):
             incrementalFV[i] = negativeUserFV[i] + positiveUserFV[i]
-
+        
     else:
         ld1, ll1 = transformeInDict(negativeUserFV, nseed, forceBalance, proportional, groupsToUse)
         ld2, ll2 = transformeInDict(positiveUserFV, nseed, forceBalance, proportional, groupsToUse)
