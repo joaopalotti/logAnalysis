@@ -112,23 +112,24 @@ class userClass:
             counter+=1
             featuresToUse["%02d.AnyPastExpansion" % (counter) ] = any(self.expansions[0:(idxq+1)])
             counter+=1
-            featuresToUse["%02d.ExpandedQuery" % (counter) ] = self.expansions[idxq]
-            counter+=1
             featuresToUse["%02d.AvgNumberOfReductions" % (counter) ] = sum(self.reductions[0:(idxq+1)]) / (idxq+1)
             counter+=1
             featuresToUse["%02d.AnyPastReductions" % (counter) ] = any(self.reductions[0:(idxq)])
-            counter+=1
-            featuresToUse["%02d.ReductedQuery" % (counter) ] = self.reductions[idxq]
             counter+=1
             featuresToUse["%02d.AvgNumberOfModifications" % (counter) ] = sum(self.modifications[0:(idxq+1)]) / (idxq+1)
             counter+=1
             featuresToUse["%02d.AnyPastModification" % (counter) ] = any(self.modifications[0:(idxq+1)])
             counter+=1
-            featuresToUse["%02d.ModifiedQuery" % (counter) ] = self.modifications[idxq]
-            counter+=1
             featuresToUse["%02d.AvgNumberOfKeeps" % (counter) ] = sum(self.keeps[0:(idxq+1)]) / (idxq+1)
             counter+=1
             featuresToUse["%02d.AnyPastKeep" % (counter) ] = any(self.keeps[0:(idxq+1)])
+            counter+=1
+            #Features related to the actual query:
+            featuresToUse["%02d.ExpandedQuery" % (counter) ] = self.expansions[idxq]
+            counter+=1
+            featuresToUse["%02d.ReductedQuery" % (counter) ] = self.reductions[idxq]
+            counter+=1
+            featuresToUse["%02d.ModifiedQuery" % (counter) ] = self.modifications[idxq]
             counter+=1
             featuresToUse["%02d.KeptQuery" % (counter) ] = self.keeps[idxq]
             counter+=1
@@ -356,6 +357,124 @@ class userClass:
             featuresToUse["%02d.hasOfPrepositions" % (counter) ] = False if 'prep' not in keys else self.accTags[idxq]['prep'] > 0
             counter+=1
             featuresToUse["%02d.hasOfPronotuns" % (counter) ] = False if 'pron' not in keys else self.accTags[idxq]['pron'] > 0
+            counter+=1
+
+        if "gnl" in groups:
+            #Group1
+            featuresToUse["%02d.AvgCharsPerQuery" % (counter) ] = sum(self.numberOfChars[0:(idxq+1)])/(idxq+1)
+            counter+=1
+            featuresToUse["%02d.AvgWordsPerQuery" % (counter) ] = sum(self.numberOfWords[0:(idxq+1)])/(idxq+1)
+            counter+=1
+            featuresToUse["%02d.AvgUseOfNL" % (counter) ] = sum(self.useOfNL[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyPastUseOfNL" % (counter) ] = any(self.useOfNL[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AvgUseOfMedAbb" % (counter) ] = sum(self.useOfMedAbb[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyPastUseOfMedAbb" % (counter) ] = any(self.useOfMedAbb[0:(idxq+1)])
+            counter+=1
+            #Group2
+            sessionsSoFar = sum(self.startedSessions[0:(idxq+1)])
+            featuresToUse["%02d.AvgQueriesPerSession" % (counter) ] = 0 if sessionsSoFar == 0 else (idxq+1) / sessionsSoFar
+            counter+=1
+            featuresToUse["%02d.AvgTimePerSession" % (counter) ] = 0 if sessionsSoFar == 0 else sum(self.timePerSession[0:(idxq+1)]) / sessionsSoFar
+            counter+=1
+            #Group3
+            featuresToUse["%02d.AvgNumberOfExpansions" % (counter) ] = sum(self.expansions[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyPastExpansion" % (counter) ] = any(self.expansions[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfReductions" % (counter) ] = sum(self.reductions[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyPastReductions" % (counter) ] = any(self.reductions[0:(idxq)])
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfModifications" % (counter) ] = sum(self.modifications[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyPastModification" % (counter) ] = any(self.modifications[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfKeeps" % (counter) ] = sum(self.keeps[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyPastKeep" % (counter) ] = any(self.keeps[0:(idxq+1)])
+            counter+=1
+            #Group4
+            featuresToUse["%02d.AvgSymptomsPerQuery" % (counter) ] = sum(self.symptoms[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyPastSearchForSymptoms" % (counter) ] = any(self.symptoms[0:(idxq+1)]) 
+            counter+=1
+            featuresToUse["%02d.AvgCausesPerQuery" % (counter) ] = sum(self.causes[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyPastSearchForCauses" % (counter) ] = any(self.causes[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AvgRemediesPerQuery" % (counter) ] = sum(self.remedies[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyPastSearchForRemedies" % (counter) ] = any(self.remedies[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AvgNonSymCauseRemedyTypesPerQuery" % (counter) ] = sum(self.notMedical[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyPastSearchForNonSymCauseRemedyTypes" % (counter) ] = any(self.notMedical[0:(idxq+1)])
+            counter+=1
+            #Group5
+            featuresToUse["%02d.AvgQueriesUsingMeSH" % (counter) ] = sum([1 for m in self.listNumberOfMeshConcepts[0:(idxq+1)] if m > 0]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfMeSHPerQuery" % (counter) ] = sum(self.listNumberOfMeshConcepts[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AvgMeSHDepth" % (counter) ] = sum(self.listMeshDepth[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.HasUsedMeSHBefore" % (counter) ] = False if sum(self.listMeshDepth[0:(idxq+1)]) == 0 else True   
+            counter+=1
+            featuresToUse["%02d.AvgQueriesUsingSources" % (counter) ] = sum([1 for s in self.listOfSources[0:(idxq+1)] if s > 0]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfSourcesPerQuery" % (counter) ] = sum(self.listOfSources[0:(idxq+1)]) / (idxq+1) 
+            counter+=1
+            featuresToUse["%02d.TotalNumberOfDifferentSourcesUsed" % (counter) ] = len(self.accSetOfSources[idxq]) / 169.0
+            counter+=1
+            featuresToUse["%02d.AvgQueriesUsingConcepts" % (counter) ] = sum([1 for c in self.listOfConcepts[0:(idxq+1)] if c > 0]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfConceptsPerQuery" % (counter) ] = sum(self.listOfConcepts[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.TotalNumberOfDifferentConceptsUsed" % (counter) ] = len(self.accSetOfConcepts[idxq])
+            counter+=1
+            #Group6
+            featuresToUse["%02d.AvgNumberOfCHVDataFound" % (counter) ] =  sum(self.chvdata[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyCHVDataInPast" % (counter) ] = any(self.chvdata[0:(idxq+1)]) 
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfCHVFound" % (counter) ] = sum(self.chvf[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyCHVInPast" % (counter) ] = any(self.chvf[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfUMLSFound" % (counter) ] = sum(self.umls[0:(idxq+1)])/(idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyUMLSInPast" % (counter) ] = any(self.umls[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfCHVMisspelledFound" % (counter) ] = sum(self.chvMisspelled[0:(idxq+1)])/(idxq+1)
+            counter+=1
+            featuresToUse["%02d.AnyCHVMisspelledInPast" % (counter) ] = any(self.chvMisspelled[0:(idxq+1)]) 
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfComboScoreFound" % (counter) ] =  sum(self.comboScore[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            #Group7
+            featuresToUse["%02d.PercentageOfNouns" % (counter) ] = 0.0 if 'noun' not in keys else self.accTags[idxq]['noun'] / nTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfAdjectives" % (counter) ] = 0.0 if 'adj' not in keys else self.accTags[idxq]['adj'] / nTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfConjuctions" % (counter) ] = 0.0 if 'conj' not in keys else self.accTags[idxq]['conj'] / nTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfVerbs" % (counter) ] = 0.0 if 'verb' not in keys else self.accTags[idxq]['verb'] / nTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfShapes" % (counter) ] = 0.0 if 'shape' not in keys else self.accTags[idxq]['shape'] / nTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfPunctuations" % (counter) ] = 0.0 if 'punc' not in keys else self.accTags[idxq]['punc'] / nTags
+            counter+=1
+            featuresToUse["%02d.PercentageOfAdverbs" % (counter) ] = 0.0 if 'adv' not in keys else self.accTags[idxq]['adv'] / nTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfDeterminers" % (counter) ] = 0.0 if 'det' not in keys else self.accTags[idxq]['det'] / nTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfAuxiliars" % (counter) ] = 0.0 if 'aux' not in keys else self.accTags[idxq]['aux'] / nTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfPrepositions" % (counter) ] = 0.0 if 'prep' not in keys else self.accTags[idxq]['prep']/ nTags 
+            counter+=1
+            featuresToUse["%02d.PercentageOfPronouns" % (counter) ] = 0.0 if 'pron' not in keys else self.accTags[idxq]['pron'] / nTags 
             counter+=1
 
         if "gwsdm" in groups:

@@ -99,7 +99,8 @@ def runClassifier(clf, X, y, CV, nJobs, others, incrementalData, usingAllDataToT
                     if measureProbas:
                         probas[i] += list(clf.predict_proba(l[test]))
         else:
-
+            clf.fit(X[train], y[train])
+            preds.extend( list(clf.predict(X[test])) )
             if measureProbas:
                 probas.extend( list(clf.predict_proba(X[test])))
 
@@ -123,7 +124,7 @@ def runClassifier(clf, X, y, CV, nJobs, others, incrementalData, usingAllDataToT
     moduleL.info("Done")
     return preds, probas
 
-def classify(clf, label, X, y, nCV, nJobs, baselines, options={}, incremental=None, usingAllDataToTrain=True):
+def classify(clf, label, X, y, nCV, nJobs, baselines, options={}, incremental=None, usingAllDataToTrain=False):
     moduleL.info("Running: %s", label)
        
     y_ , probas_ = runClassifier(clf, X, y, nCV, nJobs, options, incremental, usingAllDataToTrain)
