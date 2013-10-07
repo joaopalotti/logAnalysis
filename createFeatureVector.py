@@ -830,7 +830,7 @@ def calculateTimePerSession(data):
 
         startDate = dateNewSession[0][0]
         endDate = startDate
-        print "User ---> ", user, " Start --> ", startDate, "dateNewSession", dateNewSession
+        #print "User ---> ", user, " Start --> ", startDate, "dateNewSession", dateNewSession
 
         mapUserNumberOfSessions[user].append(1)
         mapUserTotalTimePerSession[user].append(0)
@@ -838,34 +838,37 @@ def calculateTimePerSession(data):
         for date, newSession in dateNewSession[1:]:
             #Seeks the next session
             if not newSession:
-                endDate = date
+                #print "start - ", startDate
+                #print "now - ", date
+                seconds = (date - startDate).total_seconds()
+                #print "Seconds - ", seconds
+                startDate = date
+                #endDate = date
                 mapUserNumberOfSessions[user].append(0)
-                mapUserTotalTimePerSession[user].append(0)
+                mapUserTotalTimePerSession[user].append(seconds)
                 continue
             
             # It is a new session:
             else:
-                seconds = (endDate - startDate).total_seconds()
-                #print "SECONDS --> ", seconds 
-               
+                #seconds = (endDate - startDate).total_seconds()
                 # Reset the date limits
                 startDate = date
                 endDate = date
-                
                 #totalSeconds += seconds
                 #numberOfSessions += 1
-                
                 mapUserNumberOfSessions[user].append(1)
-                mapUserTotalTimePerSession[user].append(seconds)
+                mapUserTotalTimePerSession[user].append(0)
         
         #the last session
         #seconds = (endDate - startDate).total_seconds() 
         #mapUserNumberOfSessions[user].append(1)
         #mapUserTotalTimePerSession[user].append(seconds)
     
-        print "User = ", user
-        for k,v in mapUserNumberOfSessions.iteritems():
-            print k, v
+        #print "User = ", user
+        #print mapUserNumberOfSessions[user]
+        #print mapUserTotalTimePerSession[user]
+        #for k,v in mapUserNumberOfSessions.iteritems():
+        #    print k, v
         #for k,v in mapUserTotalTimePerSession.iteritems():
         #    print k, v
         
