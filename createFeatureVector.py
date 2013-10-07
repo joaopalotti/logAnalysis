@@ -91,14 +91,14 @@ class userClass:
             featuresToUse["%02d.AnyPastUseOfMedAbb" % (counter) ] = any(self.useOfMedAbb[0:(idxq+1)])
             counter+=1
             #Features related to the actual query:
-            featuresToUse["%02d.CharsInQuery" % (counter) ] = self.numberOfChars[idxq]
-            counter+=1
-            featuresToUse["%02d.WordsInQuery" % (counter) ] = self.numberOfWords[idxq]
-            counter+=1
-            featuresToUse["%02d.UsedNLQuery" % (counter) ] = self.useOfNL[idxq] == 1
-            counter+=1
-            featuresToUse["%02d.UsedMedAbbQuery" % (counter) ] = self.useOfMedAbb[idxq] == 1
-            counter+=1
+            #featuresToUse["%02d.CharsInQuery" % (counter) ] = self.numberOfChars[idxq]
+            #counter+=1
+            #featuresToUse["%02d.WordsInQuery" % (counter) ] = self.numberOfWords[idxq]
+            #counter+=1
+            #featuresToUse["%02d.UsedNLQuery" % (counter) ] = self.useOfNL[idxq] == 1
+            #counter+=1
+            #featuresToUse["%02d.UsedMedAbbQuery" % (counter) ] = self.useOfMedAbb[idxq] == 1
+            #counter+=1
 
         if "g2" in groups:
             sessionsSoFar = sum(self.startedSessions[0:(idxq+1)])
@@ -125,14 +125,14 @@ class userClass:
             featuresToUse["%02d.AnyPastKeep" % (counter) ] = any(self.keeps[0:(idxq+1)])
             counter+=1
             #Features related to the actual query:
-            featuresToUse["%02d.ExpandedQuery" % (counter) ] = self.expansions[idxq]
-            counter+=1
-            featuresToUse["%02d.ReductedQuery" % (counter) ] = self.reductions[idxq]
-            counter+=1
-            featuresToUse["%02d.ModifiedQuery" % (counter) ] = self.modifications[idxq]
-            counter+=1
-            featuresToUse["%02d.KeptQuery" % (counter) ] = self.keeps[idxq]
-            counter+=1
+            #featuresToUse["%02d.ExpandedQuery" % (counter) ] = self.expansions[idxq]
+            #counter+=1
+            #featuresToUse["%02d.ReductedQuery" % (counter) ] = self.reductions[idxq]
+            #counter+=1
+            #featuresToUse["%02d.ModifiedQuery" % (counter) ] = self.modifications[idxq]
+            #counter+=1
+            #featuresToUse["%02d.KeptQuery" % (counter) ] = self.keeps[idxq]
+            #counter+=1
         
         if "g4" in groups:
             featuresToUse["%02d.AvgSymptomsPerQuery" % (counter) ] = sum(self.symptoms[0:(idxq+1)]) / (idxq+1)
@@ -152,14 +152,14 @@ class userClass:
             featuresToUse["%02d.AnyPastSearchForNonSymCauseRemedyTypes" % (counter) ] = any(self.notMedical[0:(idxq+1)])
             counter+=1
             #Features related to the actual query:
-            featuresToUse["%02d.SearchedSymptomQuery" % (counter) ] = (self.symptoms[idxq] == 1)
-            counter+=1
-            featuresToUse["%02d.SearchedCauseQuery" % (counter) ] =   (self.causes[idxq] == 1)
-            counter+=1
-            featuresToUse["%02d.SearchedRemedyQuery" % (counter) ] =   (self.remedies[idxq] == 1)
-            counter+=1
-            featuresToUse["%02d.SearchedForNonSymCauseRemedyQuery" % (counter) ] = (self.notMedical[idxq] == 1)
-            counter+=1
+            #featuresToUse["%02d.SearchedSymptomQuery" % (counter) ] = (self.symptoms[idxq] == 1)
+            #counter+=1
+            #featuresToUse["%02d.SearchedCauseQuery" % (counter) ] =   (self.causes[idxq] == 1)
+            #counter+=1
+            #featuresToUse["%02d.SearchedRemedyQuery" % (counter) ] =   (self.remedies[idxq] == 1)
+            #counter+=1
+            #featuresToUse["%02d.SearchedForNonSymCauseRemedyQuery" % (counter) ] = (self.notMedical[idxq] == 1)
+            #counter+=1
  
         if "g5" in groups:
             ###------------------------- Mesh features --------------------------###
@@ -172,10 +172,10 @@ class userClass:
             featuresToUse["%02d.HasUsedMeSHBefore" % (counter) ] = False if sum(self.listMeshDepth[0:(idxq+1)]) == 0 else True   
             counter+=1
             #Features related to the actual query:
-            featuresToUse["%02d.NumberOfMeshInQuery" % (counter) ] = self.listNumberOfMeshConcepts[idxq]
-            counter+=1
-            featuresToUse["%02d.MeSHDepthInQuery" % (counter) ] = self.listMeshDepth[idxq]
-            counter+=1
+            #featuresToUse["%02d.NumberOfMeshInQuery" % (counter) ] = self.listNumberOfMeshConcepts[idxq]
+            #counter+=1
+            #featuresToUse["%02d.MeSHDepthInQuery" % (counter) ] = self.listMeshDepth[idxq]
+            #counter+=1
             ###------------------------- Souce features --------------------------###
             #Number of different sources in metamap: 169  (http://www.nlm.nih.gov/research/umls/sourcereleasedocs/index.html)
             featuresToUse["%02d.AvgQueriesUsingSources" % (counter) ] = sum([1 for s in self.listOfSources[0:(idxq+1)] if s > 0]) / (idxq+1)
@@ -185,8 +185,8 @@ class userClass:
             featuresToUse["%02d.TotalNumberOfDifferentSourcesUsed" % (counter) ] = len(self.accSetOfSources[idxq]) / 169.0
             counter+=1
             #Features related to the actual query:
-            featuresToUse["%02d.NumberOfSourcesInQuery" % (counter) ] = self.listOfSources[idxq]
-            counter+=1
+            #featuresToUse["%02d.NumberOfSourcesInQuery" % (counter) ] = self.listOfSources[idxq]
+            #counter+=1
             ###------------------------- Concepts --------------------------###
             featuresToUse["%02d.AvgQueriesUsingConcepts" % (counter) ] = sum([1 for c in self.listOfConcepts[0:(idxq+1)] if c > 0]) / (idxq+1)
             counter+=1
@@ -195,8 +195,8 @@ class userClass:
             featuresToUse["%02d.TotalNumberOfDifferentConceptsUsed" % (counter) ] = len(self.accSetOfConcepts[idxq])
             counter+=1
             #Features related to the query:
-            featuresToUse["%02d.NumberOfConceptsInQuery" % (counter) ] = self.listOfConcepts[idxq]
-            counter+=1
+            #featuresToUse["%02d.NumberOfConceptsInQuery" % (counter) ] = self.listOfConcepts[idxq]
+            #counter+=1
 
         if "g6" in groups:
             featuresToUse["%02d.AvgNumberOfCHVDataFound" % (counter) ] =  sum(self.chvdata[0:(idxq+1)]) / (idxq+1)
@@ -218,16 +218,16 @@ class userClass:
             featuresToUse["%02d.AvgNumberOfComboScoreFound" % (counter) ] =  sum(self.comboScore[0:(idxq+1)]) / (idxq+1)
             counter+=1
             #Features related to the actual query:
-            featuresToUse["%02d.NumberOfCHVDataQuery" % (counter) ] = self.chvdata[idxq]
-            counter+=1
-            featuresToUse["%02d.NumberOfCHVQuery" % (counter) ] = self.chvf[idxq]
-            counter+=1
-            featuresToUse["%02d.NumberOfUMLSQuery" % (counter) ] = self.umls[idxq]
-            counter+=1
-            featuresToUse["%02d.NumberOfCHVMisspelledQuery" % (counter) ] = self.chvMisspelled[idxq]
-            counter+=1
-            featuresToUse["%02d.NumberOfComboScoreQuery" % (counter) ] = self.comboScore[idxq]
-            counter+=1
+            #featuresToUse["%02d.NumberOfCHVDataQuery" % (counter) ] = self.chvdata[idxq]
+            #counter+=1
+            #featuresToUse["%02d.NumberOfCHVQuery" % (counter) ] = self.chvf[idxq]
+            #counter+=1
+            #featuresToUse["%02d.NumberOfUMLSQuery" % (counter) ] = self.umls[idxq]
+            #counter+=1
+            #featuresToUse["%02d.NumberOfCHVMisspelledQuery" % (counter) ] = self.chvMisspelled[idxq]
+            #counter+=1
+            #featuresToUse["%02d.NumberOfComboScoreQuery" % (counter) ] = self.comboScore[idxq]
+            #counter+=1
 
         if "g7" in groups:
             ###------------------------- TAGS --------------------------###
@@ -258,28 +258,28 @@ class userClass:
             featuresToUse["%02d.PercentageOfPronouns" % (counter) ] = 0.0 if 'pron' not in keys else self.accTags[idxq]['pron'] / nTags 
             counter+=1
             # Related to actual query
-            featuresToUse["%02d.hasNouns" % (counter) ] = False if 'noun' not in keys else self.accTags[idxq]['noun'] > 0
-            counter+=1
-            featuresToUse["%02d.hasAdjectives" % (counter) ] = False if 'adj' not in keys else self.accTags[idxq]['adj'] > 0 
-            counter+=1
-            featuresToUse["%02d.hasConjuctions" % (counter) ] = False if 'conj' not in keys else self.accTags[idxq]['conj'] > 0 
-            counter+=1
-            featuresToUse["%02d.hasVerbs" % (counter) ] = False if 'verb' not in keys else self.accTags[idxq]['verb'] > 0
-            counter+=1
-            featuresToUse["%02d.hasShapes" % (counter) ] = False if 'shape' not in keys else self.accTags[idxq]['shape'] > 0
-            counter+=1
-            featuresToUse["%02d.hasPunctuations" % (counter) ] = False if 'punc' not in keys else self.accTags[idxq]['punc'] > 0
-            counter+=1
-            featuresToUse["%02d.hasAdverbs" % (counter) ] = False if 'adv' not in keys else self.accTags[idxq]['adv'] > 0
-            counter+=1
-            featuresToUse["%02d.hasDeterminers" % (counter) ] = False if 'det' not in keys else self.accTags[idxq]['det'] > 0
-            counter+=1
-            featuresToUse["%02d.hasAuxiliars" % (counter) ] = False if 'aux' not in keys else self.accTags[idxq]['aux'] > 0
-            counter+=1
-            featuresToUse["%02d.hasPrepositions" % (counter) ] = False if 'prep' not in keys else self.accTags[idxq]['prep'] > 0
-            counter+=1
-            featuresToUse["%02d.hasPronotuns" % (counter) ] = False if 'pron' not in keys else self.accTags[idxq]['pron'] > 0
-            counter+=1
+            #featuresToUse["%02d.hasNouns" % (counter) ] = False if 'noun' not in keys else self.accTags[idxq]['noun'] > 0
+            #counter+=1
+            #featuresToUse["%02d.hasAdjectives" % (counter) ] = False if 'adj' not in keys else self.accTags[idxq]['adj'] > 0 
+            #counter+=1
+            #featuresToUse["%02d.hasConjuctions" % (counter) ] = False if 'conj' not in keys else self.accTags[idxq]['conj'] > 0 
+            #counter+=1
+            #featuresToUse["%02d.hasVerbs" % (counter) ] = False if 'verb' not in keys else self.accTags[idxq]['verb'] > 0
+            #counter+=1
+            #featuresToUse["%02d.hasShapes" % (counter) ] = False if 'shape' not in keys else self.accTags[idxq]['shape'] > 0
+            #counter+=1
+            #featuresToUse["%02d.hasPunctuations" % (counter) ] = False if 'punc' not in keys else self.accTags[idxq]['punc'] > 0
+            #counter+=1
+            #featuresToUse["%02d.hasAdverbs" % (counter) ] = False if 'adv' not in keys else self.accTags[idxq]['adv'] > 0
+            #counter+=1
+            #featuresToUse["%02d.hasDeterminers" % (counter) ] = False if 'det' not in keys else self.accTags[idxq]['det'] > 0
+            #counter+=1
+            #featuresToUse["%02d.hasAuxiliars" % (counter) ] = False if 'aux' not in keys else self.accTags[idxq]['aux'] > 0
+            #counter+=1
+            #featuresToUse["%02d.hasPrepositions" % (counter) ] = False if 'prep' not in keys else self.accTags[idxq]['prep'] > 0
+            #counter+=1
+            #featuresToUse["%02d.hasPronotuns" % (counter) ] = False if 'pron' not in keys else self.accTags[idxq]['pron'] > 0
+            #counter+=1
 
         if "gl" in groups:
             # Group of features that contains last in the name
