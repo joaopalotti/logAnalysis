@@ -811,12 +811,9 @@ def calculateUsingSemantic(data, semanticType):
         mapUserSemantic[userId].append(1 if hasSemanticType(st, semanticType) else 0)
     return mapUserSemantic
 
-
 def calculateTimePerSession(data):
     mapUserTotalTimePerSession = defaultdict(list)
     mapUserNumberOfSessions = defaultdict(list)
-    #mapUserTimeLastSession = dict()
-    #mapUserQueriesLastSession = dict()
 
     userDateBool =  sorted( (member.userId, member.datetime , member.previouskeywords is None) for member in data ) # (user, date, newSession?)
 
@@ -833,7 +830,10 @@ def calculateTimePerSession(data):
 
         startDate = dateNewSession[0][0]
         endDate = startDate
-        #print "User ---> ", user, " Start --> ", startDate
+        print "User ---> ", user, " Start --> ", startDate, "dateNewSession", dateNewSession
+
+        mapUserNumberOfSessions[user].append(1)
+        mapUserTotalTimePerSession[user].append(0)
 
         for date, newSession in dateNewSession[1:]:
             #Seeks the next session
@@ -859,18 +859,13 @@ def calculateTimePerSession(data):
                 mapUserTotalTimePerSession[user].append(seconds)
         
         #the last session
-        seconds = (endDate - startDate).total_seconds()
-        #print "SECONDS --> ", seconds 
-       
-        #It is the end of the last session
-        #totalSeconds += seconds
-        #numberOfSessions += 1
-        
-        mapUserNumberOfSessions[user].append(1)
-        mapUserTotalTimePerSession[user].append(seconds)
-
-        #for k,v in mapUserNumberOfSessions.iteritems():
-        #    print k, v
+        #seconds = (endDate - startDate).total_seconds() 
+        #mapUserNumberOfSessions[user].append(1)
+        #mapUserTotalTimePerSession[user].append(seconds)
+    
+        print "User = ", user
+        for k,v in mapUserNumberOfSessions.iteritems():
+            print k, v
         #for k,v in mapUserTotalTimePerSession.iteritems():
         #    print k, v
         
