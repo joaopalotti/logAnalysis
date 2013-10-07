@@ -84,7 +84,9 @@ def runClassifier(clf, X, y, CV, nJobs, others, incrementalData, usingAllDataToT
 
     # Run classifier
     #print "ALL -> ", incrementalData
-    X = incrementalData[-1]
+    if incrementalData and usingAllDataToTrain:
+        X = incrementalData[-1]
+
     for train, test in kFold:
         if incrementalData:
             if usingAllDataToTrain:
