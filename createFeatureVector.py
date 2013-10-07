@@ -454,6 +454,9 @@ class userClass:
             featuresToUse["%02d.AvgNumberOfComboScoreFound" % (counter) ] =  sum(self.comboScore[0:(idxq+1)]) / (idxq+1)
             counter+=1
             #Group7
+            nTags = sum(self.accTags[idxq].values())
+            nTags = 1.0 if nTags == 0 else nTags
+            keys = self.accTags[idxq].keys()
             featuresToUse["%02d.PercentageOfNouns" % (counter) ] = 0.0 if 'noun' not in keys else self.accTags[idxq]['noun'] / nTags 
             counter+=1
             featuresToUse["%02d.PercentageOfAdjectives" % (counter) ] = 0.0 if 'adj' not in keys else self.accTags[idxq]['adj'] / nTags 
