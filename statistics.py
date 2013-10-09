@@ -15,6 +15,7 @@ SOME IMPORTANT NOTES:
 
 # GLOBAL VARIABLES:
 numberOfQueriesInASessionThreshold = 100
+removeClassifierOutilersOnly = True #TODO: remove this after ECIR deadline
 removeOutliers=True
 plottingInstalled=False
 removeStopWords=False
@@ -33,8 +34,10 @@ def calculateMetrics(dataPair):
     It is important to run the session analyse first because it is going to eliminate users considered as robots (more than X queries in one unique session)
     X -> numberOfQueriesInASessionThreshold, but you may want to check it later
     '''
-    
-    if removeOutliers:
+    if removeClassifierOutilersOnly:
+        data = removeClassifierOutilers(data)
+
+    elif removeOutliers:
         outliersToRemove = removeOutliers( createSessions(data) )
         newData = [member for member in data if member.userId not in outliersToRemove]
         data = newData
@@ -567,6 +570,16 @@ def removeOutliers(sessions):
     
     return usersToRemove
     
+def removeClassifierOutilers(data):
+    userIds = sorted( [member.userId for member in data ] ) 
+    usersToRemove = set()
+    for k, g in groupby(userIds):
+        x = len(list(g)) 
+        if x > Xmax or x < Xmin:
+            usersToRemove.add(k)
+    newData = [member for member in data if member.userId not in usersToRemove]
+    return newData
+
 
 def createSessions(data):
     sessions = defaultdict(dict)
