@@ -524,64 +524,66 @@ class userClass:
             counter+=1
             featuresToUse["%02d.AvgNumberOfModifications" % (counter) ] = sum(self.modifications[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.ModifiedQuery" % (counter) ] = self.modifications[idxq]
-            counter+=1
             featuresToUse["%02d.AvgNumberOfKeeps" % (counter) ] = sum(self.keeps[0:(idxq+1)]) / (idxq+1)
             counter+=1
             featuresToUse["%02d.AnyPastKeep" % (counter) ] = any(self.keeps[0:(idxq+1)])
             counter+=1
-            featuresToUse["%02d.KeptQuery" % (counter) ] = self.keeps[idxq]
-            counter+=1
-            featuresToUse["%02d.AvgNumberOfCHVFound" % (counter) ] = sum(self.chvf[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AvgTimePerSession" % (counter) ] = 0 if sessionsSoFar == 0 else sum(self.timePerSession[0:(idxq+1)]) / sessionsSoFar
+            featuresToUse["%02d.AvgCharsPerQuery" % (counter) ] = sum(self.numberOfChars[0:(idxq+1)])/(idxq+1)
             counter+=1
             featuresToUse["%02d.AvgNumberOfCHVDataFound" % (counter) ] =  sum(self.chvdata[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.CharsInQuery" % (counter) ] = self.numberOfChars[idxq]
+            featuresToUse["%02d.AvgTimePerSession" % (counter) ] = 0 if sessionsSoFar == 0 else sum(self.timePerSession[0:(idxq+1)]) / sessionsSoFar
             counter+=1
-        
+            featuresToUse["%02d.AvgNumberOfSourcesPerQuery" % (counter) ] = sum(self.listOfSources[0:(idxq+1)]) / (idxq+1) 
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfCHVFound" % (counter) ] = sum(self.chvf[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfUMLSFound" % (counter) ] = sum(self.umls[0:(idxq+1)])/(idxq+1)
+            counter+=1
+
+       
         if "gtop20" in groups:
             sessionsSoFar = sum(self.startedSessions[0:(idxq+1)])
             featuresToUse["%02d.AvgQueriesPerSession" % (counter) ] = 0 if sessionsSoFar == 0 else (idxq+1) / sessionsSoFar
             counter+=1
             featuresToUse["%02d.AvgNumberOfModifications" % (counter) ] = sum(self.modifications[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.ModifiedQuery" % (counter) ] = self.modifications[idxq]
-            counter+=1
             featuresToUse["%02d.AvgNumberOfKeeps" % (counter) ] = sum(self.keeps[0:(idxq+1)]) / (idxq+1)
             counter+=1
             featuresToUse["%02d.AnyPastKeep" % (counter) ] = any(self.keeps[0:(idxq+1)])
             counter+=1
-            featuresToUse["%02d.KeptQuery" % (counter) ] = self.keeps[idxq]
-            counter+=1
-            featuresToUse["%02d.AvgNumberOfCHVFound" % (counter) ] = sum(self.chvf[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AvgTimePerSession" % (counter) ] = 0 if sessionsSoFar == 0 else sum(self.timePerSession[0:(idxq+1)]) / sessionsSoFar
+            featuresToUse["%02d.AvgCharsPerQuery" % (counter) ] = sum(self.numberOfChars[0:(idxq+1)])/(idxq+1)
             counter+=1
             featuresToUse["%02d.AvgNumberOfCHVDataFound" % (counter) ] =  sum(self.chvdata[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.CharsInQuery" % (counter) ] = self.numberOfChars[idxq]
+            featuresToUse["%02d.AvgTimePerSession" % (counter) ] = 0 if sessionsSoFar == 0 else sum(self.timePerSession[0:(idxq+1)]) / sessionsSoFar
             counter+=1
             featuresToUse["%02d.AvgNumberOfSourcesPerQuery" % (counter) ] = sum(self.listOfSources[0:(idxq+1)]) / (idxq+1) 
             counter+=1
-            featuresToUse["%02d.PercentageOfNouns" % (counter) ] = 0.0 if 'noun' not in keys else self.accTags[idxq]['noun'] / nTags 
+            featuresToUse["%02d.AvgNumberOfCHVFound" % (counter) ] = sum(self.chvf[0:(idxq+1)]) / (idxq+1)
+            counter+=1
+            featuresToUse["%02d.AvgNumberOfUMLSFound" % (counter) ] = sum(self.umls[0:(idxq+1)])/(idxq+1)
+            counter+=1
+            #other top10 features
+            featuresToUse["%02d.AnyPastSearchForNonSymCauseRemedyTypes" % (counter) ] = any(self.notMedical[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.AnyPastModification" % (counter) ] = any(self.modifications[0:(idxq+1)])
             counter+=1
             featuresToUse["%02d.TotalNumberOfDifferentConceptsUsed" % (counter) ] = len(self.accSetOfConcepts[idxq])
             counter+=1
-            featuresToUse["%02d.AnyPastSearchForNonSymCauseRemedyTypes" % (counter) ] = any(self.notMedical[0:(idxq+1)])
+            featuresToUse["%02d.AvgCausesPerQuery" % (counter) ] = sum(self.causes[0:(idxq+1)]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.AvgCharsPerQuery" % (counter) ] = sum(self.numberOfChars[0:(idxq+1)])/(idxq+1)
+            featuresToUse["%02d.PercentageOfNouns" % (counter) ] = 0.0 if 'noun' not in keys else self.accTags[idxq]['noun'] / nTags 
             counter+=1
-            featuresToUse["%02d.NumberOfSourcesInQuery" % (counter) ] = self.listOfSources[idxq]
-            counter+=1
-            featuresToUse["%02d.AnyPastExpansion" % (counter) ] = any(self.expansions[0:(idxq+1)])
+            featuresToUse["%02d.AvgQueriesUsingSources" % (counter) ] = sum([1 for s in self.listOfSources[0:(idxq+1)] if s > 0]) / (idxq+1)
             counter+=1
             featuresToUse["%02d.AvgQueriesUsingConcepts" % (counter) ] = sum([1 for c in self.listOfConcepts[0:(idxq+1)] if c > 0]) / (idxq+1)
             counter+=1
-            featuresToUse["%02d.NumberOfCHVDataQuery" % (counter) ] = self.chvdata[idxq]
+            featuresToUse["%02d.AnyCHVDataInPast" % (counter) ] = any(self.chvdata[0:(idxq+1)]) 
             counter+=1
-            featuresToUse["%02d.AvgCausesPerQuery" % (counter) ] = sum(self.causes[0:(idxq+1)]) / (idxq+1)
+            featuresToUse["%02d.AnyPastExpansion" % (counter) ] = any(self.expansions[0:(idxq+1)])
+            counter+=1
+            featuresToUse["%02d.TotalNumberOfDifferentSourcesUsed" % (counter) ] = len(self.accSetOfSources[idxq]) / 169.0
             counter+=1
 
         return featuresToUse
