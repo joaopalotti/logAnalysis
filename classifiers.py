@@ -237,6 +237,7 @@ def getCurves(results):
     for r in results:
         precRecall[ r[0] ] = r[2]
         roc[ r[0] ] = r[3]
+    
     return precRecall, roc
 
 def measureFeatureImportance(classifier, featureNames, makePlot=False, printVectorToFile=True, featuresOutFilename="featureImportance.pk"):

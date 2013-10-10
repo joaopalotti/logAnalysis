@@ -1,11 +1,13 @@
 import pickle, sys
 
 from classifiers import classify, makeReport, plotGraph, getPrecisionRecall, getROC
+path = sys.argv[1]
 
-with open("ROC.pk", 'rb') as input:
+with open(path + "ROC.pk", 'rb') as input:
     roc = pickle.load(input)
+print roc
 
-with open("precisionAndRecall.pk", 'rb') as input:
+with open(path + "precisionAndRecall.pk", 'rb') as input:
     precisionAndRecall = pickle.load(input)
 
 plotGraph(roc, fileName="ROC", xlabel="False Positive Rate", ylabel="True Positive Rate", generatePickle=False, hasPlotLibs=True)

@@ -36,6 +36,8 @@ SVMKernel= "linear"
 #SVMKernel= "rbf"
 
 etcEstimators = 120
+ROCNAME="ROC"
+PRECRECALLNAME="PrecAndRecall"
 
 classifyParameters = {"KNN-K": 20, "ETC-n_estimators": etcEstimators, "SVM-cacheSize": 2000, "SVM-kernel": SVMKernel, "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter, "SVM-gamma":SVMGamma, "LR-C":1000, "ETC-criterion": "entropy", "ETC-max_features":None, "DT-criterion": "entropy", "DT-max_features":None, "SVM-class_weight":SVMWeight} 
 
@@ -277,8 +279,8 @@ def runClassify(preProcessingMethod, forceBalance, proportional, minNumberOfQuer
     precRecall, roc = getCurves(results)
     roc["Random Classifier"] = ([0,1],[0,1])
 
-    plotGraph(precRecall, fileName="officialPR-DT", xlabel="Recall", ylabel="Precision", generatePickle=generatePickle, hasPlotLibs=hasPlotLibs)
-    plotGraph(roc, fileName="officialROC-DT", xlabel="False Positive Rate", ylabel="True Positive Rate", generatePickle=generatePickle, hasPlotLibs=hasPlotLibs)
+    plotGraph(precRecall, fileName=PRECRECALLNAME, xlabel="Recall", ylabel="Precision", generatePickle=generatePickle, hasPlotLibs=hasPlotLibs)
+    plotGraph(roc, fileName=ROCNAME, xlabel="False Positive Rate", ylabel="True Positive Rate", generatePickle=generatePickle, hasPlotLibs=hasPlotLibs)
    
     fo = open(outfileName, "a")
 
