@@ -18,13 +18,17 @@ def generateStatsVector(values):
     return npStatistics(values)
 
 class npStatistics:
-
     def __init__(self, values):
         self.min    = np.nanmin(values)
         self.max    = np.nanmax(values)
         self.mean   = np.mean(values)
         self.median = np.median(values)
         self.std    = np.std(values) 
+        self.p0     = np.percentile(values,[0])[0]
+        self.p25     = np.percentile(values,[25])[0]
+        self.p50     = np.percentile(values,[50])[0]
+        self.p75     = np.percentile(values,[75])[0]
+        self.p100     = np.percentile(values,[100])[0]
 
 def createAcronymSet(usingAdamAbbreviations):
 
