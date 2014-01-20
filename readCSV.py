@@ -97,7 +97,7 @@ def readKhresmoi(filename):
     return data
 
 
-def readMyFormat(filename, version, verbose=True):
+def readMyFormat(filename, version="v6", verbose=True):
 
     if verbose:
         print ("Reading file: ", filename)
