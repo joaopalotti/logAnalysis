@@ -152,6 +152,7 @@ def parallelClassify(pars):
         return classify(pars[0], pars[1], pars[2], pars[3], pars[4], pars[5], pars[6], {})
 
 def plotGraph(precRecallDict, fileName, xlabel, ylabel, generatePickle=True, hasPlotLibs=False):
+    
     if generatePickle:
         import pickle
         with open(fileName + ".pk", 'wb') as output:
@@ -163,30 +164,14 @@ def plotGraph(precRecallDict, fileName, xlabel, ylabel, generatePickle=True, has
     import matplotlib.pylab as plt
     
     for title, yx in precRecallDict.items():
-        if title == "Random Forest":
-            plt.plot(yx[1], yx[0], label="Random Forest (AUC=0.94)")
-    
-    for title, yx in precRecallDict.items():
-        if title != "Random Forest":
-            if title == "DummyMostFrequent":
-                title = "Most Freq. Class Classifier (AUC=0.50)"
-            
-            if title == "Naive Bayes":
-                title = "Naive Bayes (AUC=0.72)"
-            
-            if title == "KNN":
-                title = "KNN (AUC=0.93)"
-            
-            if title == "Decision Tree":
-                continue
-                title = "Decision Tree (AUC=0.81)"
-            
-            if title == "Logistic Regression":
-                title = "Logistic Regression (AUC=0.89)"
-            
-            if title == "SVM":
-                title = "SVM (AUC=0.93)"
-            plt.plot(yx[1], yx[0], label=title)
+        areaUnderCurve = auc(yx[1], yx[0])
+        print "Area under the curve - %.2f" % (areaUnderCurve)
+
+        if title == "DummyMostFrequent":
+            title = "Most Freq. Class Classifier (AUC=%.2f)" %(areaUnderCurve)
+        else:
+            title = title + (" (AUC=%.2f) " %(areaUnderCurve))
+        plt.plot(yx[1], yx[0], label=title)
 
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
