@@ -8,7 +8,6 @@ import sys, pickle
 from readCSV import readMyFormat
 from auxiliarFunctions import NLWords, preProcessData, createAcronymSet, symptomTypes, causeTypes, remedyTypes, noMedicalTypes, compareSets
 
-
 removeStopWords=False
 formatVersion = "v6"
 pathToData = "../logAnalysisDataSets/"
@@ -77,19 +76,16 @@ class userClass:
             print "ERROR ---- idxq > numberOfQueries. idxq = %d, numberOfQueries = %d" % (idxq, self.numberOfQueries)
             exit(0)
 
+        featuresToUse["id"] = self.id
+        featuresToUse["numberOfQueries"] = self.numberOfQueries
+
         if "g1" in groups:
-            featuresToUse["%02d.AvgCharsPerQuery" % (counter) ] = sum(self.numberOfChars[0:(idxq+1)])/(idxq+1)
-            counter+=1
-            featuresToUse["%02d.AvgWordsPerQuery" % (counter) ] = sum(self.numberOfWords[0:(idxq+1)])/(idxq+1)
-            counter+=1
-            featuresToUse["%02d.AvgUseOfNL" % (counter) ] = sum(self.useOfNL[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AnyPastUseOfNL" % (counter) ] = any(self.useOfNL[0:(idxq+1)])
-            counter+=1
-            featuresToUse["%02d.AvgUseOfMedAbb" % (counter) ] = sum(self.useOfMedAbb[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AnyPastUseOfMedAbb" % (counter) ] = any(self.useOfMedAbb[0:(idxq+1)])
-            counter+=1
+            featuresToUse["AvgCharsPerQuery"] = sum(self.numberOfChars[0:(idxq+1)])/(idxq+1)
+            featuresToUse["AvgWordsPerQuery"] = sum(self.numberOfWords[0:(idxq+1)])/(idxq+1)
+            featuresToUse["AvgUseOfNL"] = sum(self.useOfNL[0:(idxq+1)]) / (idxq+1)
+            #featuresToUse["AnyPastUseOfNL"] = any(self.useOfNL[0:(idxq+1)])
+            featuresToUse["AvgUseOfMedAbb"] = sum(self.useOfMedAbb[0:(idxq+1)]) / (idxq+1)
+            #featuresToUse["AnyPastUseOfMedAbb"] = any(self.useOfMedAbb[0:(idxq+1)])
             #Features related to the actual query:
             #featuresToUse["%02d.CharsInQuery" % (counter) ] = self.numberOfChars[idxq]
             #counter+=1
@@ -102,28 +98,18 @@ class userClass:
 
         if "g2" in groups:
             sessionsSoFar = sum(self.startedSessions[0:(idxq+1)])
-            featuresToUse["%02d.AvgQueriesPerSession" % (counter) ] = 0 if sessionsSoFar == 0 else (idxq+1) / sessionsSoFar
-            counter+=1
-            featuresToUse["%02d.AvgTimePerSession" % (counter) ] = 0 if sessionsSoFar == 0 else sum(self.timePerSession[0:(idxq+1)]) / sessionsSoFar
-            counter+=1
+            featuresToUse["AvgQueriesPerSession"] = 0 if sessionsSoFar == 0 else (idxq+1) / sessionsSoFar
+            featuresToUse["AvgTimePerSession"]  = 0 if sessionsSoFar == 0 else sum(self.timePerSession[0:(idxq+1)]) / sessionsSoFar
         
         if "g3" in groups:
-            featuresToUse["%02d.AvgNumberOfExpansions" % (counter) ] = sum(self.expansions[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AnyPastExpansion" % (counter) ] = any(self.expansions[0:(idxq+1)])
-            counter+=1
-            featuresToUse["%02d.AvgNumberOfReductions" % (counter) ] = sum(self.reductions[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AnyPastReductions" % (counter) ] = any(self.reductions[0:(idxq)])
-            counter+=1
-            featuresToUse["%02d.AvgNumberOfModifications" % (counter) ] = sum(self.modifications[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AnyPastModification" % (counter) ] = any(self.modifications[0:(idxq+1)])
-            counter+=1
-            featuresToUse["%02d.AvgNumberOfKeeps" % (counter) ] = sum(self.keeps[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AnyPastKeep" % (counter) ] = any(self.keeps[0:(idxq+1)])
-            counter+=1
+            featuresToUse["AvgNumberOfExpansions" ] = sum(self.expansions[0:(idxq+1)]) / (idxq+1)
+            featuresToUse["AnyPastExpansion" ] = any(self.expansions[0:(idxq+1)])
+            featuresToUse["AvgNumberOfReductions"] = sum(self.reductions[0:(idxq+1)]) / (idxq+1)
+            featuresToUse["AnyPastReductions" ] = any(self.reductions[0:(idxq)])
+            featuresToUse["AvgNumberOfModifications" ] = sum(self.modifications[0:(idxq+1)]) / (idxq+1)
+            featuresToUse["AnyPastModification" ] = any(self.modifications[0:(idxq+1)])
+            featuresToUse["AvgNumberOfKeeps" ] = sum(self.keeps[0:(idxq+1)]) / (idxq+1)
+            featuresToUse["AnyPastKeep" ] = any(self.keeps[0:(idxq+1)])
             #Features related to the actual query:
             #featuresToUse["%02d.ExpandedQuery" % (counter) ] = self.expansions[idxq]
             #counter+=1
@@ -135,99 +121,60 @@ class userClass:
             #counter+=1
         
         if "g4" in groups:
-            featuresToUse["%02d.AvgSymptomsPerQuery" % (counter) ] = sum(self.symptoms[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AnyPastSearchForSymptoms" % (counter) ] = any(self.symptoms[0:(idxq+1)]) 
-            counter+=1
-            featuresToUse["%02d.AvgCausesPerQuery" % (counter) ] = sum(self.causes[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AnyPastSearchForCauses" % (counter) ] = any(self.causes[0:(idxq+1)])
-            counter+=1
-            featuresToUse["%02d.AvgRemediesPerQuery" % (counter) ] = sum(self.remedies[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AnyPastSearchForRemedies" % (counter) ] = any(self.remedies[0:(idxq+1)])
-            counter+=1
-            featuresToUse["%02d.AvgNonSymCauseRemedyTypesPerQuery" % (counter) ] = sum(self.notMedical[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AnyPastSearchForNonSymCauseRemedyTypes" % (counter) ] = any(self.notMedical[0:(idxq+1)])
-            counter+=1
+            featuresToUse["AvgSymptomsPerQuery"] = sum(self.symptoms[0:(idxq+1)]) / (idxq+1)
+            #featuresToUse["AnyPastSearchForSymptoms" % (counter) ] = any(self.symptoms[0:(idxq+1)]) 
+            featuresToUse["AvgCausesPerQuery" ] = sum(self.causes[0:(idxq+1)]) / (idxq+1)
+            #featuresToUse["AnyPastSearchForCauses" % (counter) ] = any(self.causes[0:(idxq+1)])
+            featuresToUse["AvgRemediesPerQuery" ] = sum(self.remedies[0:(idxq+1)]) / (idxq+1)
+            #featuresToUse["AnyPastSearchForRemedies" % (counter) ] = any(self.remedies[0:(idxq+1)])
+            featuresToUse["AvgNonSymCauseRemedyTypesPerQuery" ] = sum(self.notMedical[0:(idxq+1)]) / (idxq+1)
+            #featuresToUse["AnyPastSearchForNonSymCauseRemedyTypes" % (counter) ] = any(self.notMedical[0:(idxq+1)])
+            
             #Features related to the actual query:
             #featuresToUse["%02d.SearchedSymptomQuery" % (counter) ] = (self.symptoms[idxq] == 1)
-            #counter+=1
             #featuresToUse["%02d.SearchedCauseQuery" % (counter) ] =   (self.causes[idxq] == 1)
-            #counter+=1
             #featuresToUse["%02d.SearchedRemedyQuery" % (counter) ] =   (self.remedies[idxq] == 1)
-            #counter+=1
             #featuresToUse["%02d.SearchedForNonSymCauseRemedyQuery" % (counter) ] = (self.notMedical[idxq] == 1)
-            #counter+=1
  
         if "g5" in groups:
             ###------------------------- Mesh features --------------------------###
-            featuresToUse["%02d.AvgQueriesUsingMeSH" % (counter) ] = sum([1 for m in self.listNumberOfMeshConcepts[0:(idxq+1)] if m > 0]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AvgNumberOfMeSHPerQuery" % (counter) ] = sum(self.listNumberOfMeshConcepts[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AvgMeSHDepth" % (counter) ] = sum(self.listMeshDepth[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.HasUsedMeSHBefore" % (counter) ] = False if sum(self.listMeshDepth[0:(idxq+1)]) == 0 else True   
-            counter+=1
+            featuresToUse["AvgQueriesUsingMeSH" ] = sum([1 for m in self.listNumberOfMeshConcepts[0:(idxq+1)] if m > 0]) / (idxq+1)
+            featuresToUse["AvgNumberOfMeSHPerQuery"] = sum(self.listNumberOfMeshConcepts[0:(idxq+1)]) / (idxq+1)
+            featuresToUse["AvgMeSHDepth" ] = sum(self.listMeshDepth[0:(idxq+1)]) / (idxq+1)
+            #featuresToUse["HasUsedMeSHBefore" % (counter) ] = False if sum(self.listMeshDepth[0:(idxq+1)]) == 0 else True   
             #Features related to the actual query:
             #featuresToUse["%02d.NumberOfMeshInQuery" % (counter) ] = self.listNumberOfMeshConcepts[idxq]
-            #counter+=1
             #featuresToUse["%02d.MeSHDepthInQuery" % (counter) ] = self.listMeshDepth[idxq]
-            #counter+=1
             ###------------------------- Souce features --------------------------###
             #Number of different sources in metamap: 169  (http://www.nlm.nih.gov/research/umls/sourcereleasedocs/index.html)
-            featuresToUse["%02d.AvgQueriesUsingSources" % (counter) ] = sum([1 for s in self.listOfSources[0:(idxq+1)] if s > 0]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AvgNumberOfSourcesPerQuery" % (counter) ] = sum(self.listOfSources[0:(idxq+1)]) / (idxq+1) 
-            counter+=1
-            featuresToUse["%02d.TotalNumberOfDifferentSourcesUsed" % (counter) ] = len(self.accSetOfSources[idxq]) / 169.0
-            counter+=1
+            featuresToUse["AvgQueriesUsingSources" ] = sum([1 for s in self.listOfSources[0:(idxq+1)] if s > 0]) / (idxq+1)
+            featuresToUse["AvgNumberOfSourcesPerQuery" ] = sum(self.listOfSources[0:(idxq+1)]) / (idxq+1) 
+            #featuresToUse["%02d.TotalNumberOfDifferentSourcesUsed" % (counter) ] = len(self.accSetOfSources[idxq]) / 169.0
             #Features related to the actual query:
             #featuresToUse["%02d.NumberOfSourcesInQuery" % (counter) ] = self.listOfSources[idxq]
-            #counter+=1
             ###------------------------- Concepts --------------------------###
-            featuresToUse["%02d.AvgQueriesUsingConcepts" % (counter) ] = sum([1 for c in self.listOfConcepts[0:(idxq+1)] if c > 0]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AvgNumberOfConceptsPerQuery" % (counter) ] = sum(self.listOfConcepts[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.TotalNumberOfDifferentConceptsUsed" % (counter) ] = len(self.accSetOfConcepts[idxq])
-            counter+=1
+            featuresToUse["AvgQueriesUsingConcepts" ] = sum([1 for c in self.listOfConcepts[0:(idxq+1)] if c > 0]) / (idxq+1)
+            featuresToUse["AvgNumberOfConceptsPerQuery" ] = sum(self.listOfConcepts[0:(idxq+1)]) / (idxq+1)
+            #featuresToUse["%02d.TotalNumberOfDifferentConceptsUsed" % (counter) ] = len(self.accSetOfConcepts[idxq])
             #Features related to the query:
             #featuresToUse["%02d.NumberOfConceptsInQuery" % (counter) ] = self.listOfConcepts[idxq]
-            #counter+=1
 
         if "g6" in groups:
-            featuresToUse["%02d.AvgNumberOfCHVDataFound" % (counter) ] =  sum(self.chvdata[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AnyCHVDataInPast" % (counter) ] = any(self.chvdata[0:(idxq+1)]) 
-            counter+=1
-            featuresToUse["%02d.AvgNumberOfCHVFound" % (counter) ] = sum(self.chvf[0:(idxq+1)]) / (idxq+1)
-            counter+=1
-            featuresToUse["%02d.AnyCHVInPast" % (counter) ] = any(self.chvf[0:(idxq+1)])
-            counter+=1
-            featuresToUse["%02d.AvgNumberOfUMLSFound" % (counter) ] = sum(self.umls[0:(idxq+1)])/(idxq+1)
-            counter+=1
-            featuresToUse["%02d.AnyUMLSInPast" % (counter) ] = any(self.umls[0:(idxq+1)])
-            counter+=1
-            featuresToUse["%02d.AvgNumberOfCHVMisspelledFound" % (counter) ] = sum(self.chvMisspelled[0:(idxq+1)])/(idxq+1)
-            counter+=1
-            featuresToUse["%02d.AnyCHVMisspelledInPast" % (counter) ] = any(self.chvMisspelled[0:(idxq+1)]) 
-            counter+=1
-            featuresToUse["%02d.AvgNumberOfComboScoreFound" % (counter) ] =  sum(self.comboScore[0:(idxq+1)]) / (idxq+1)
-            counter+=1
+            featuresToUse["AvgNumberOfCHVDataFound" ] =  sum(self.chvdata[0:(idxq+1)]) / (idxq+1)
+            #featuresToUse["AnyCHVDataInPast" % (counter) ] = any(self.chvdata[0:(idxq+1)]) 
+            featuresToUse["AvgNumberOfCHVFound" ] = sum(self.chvf[0:(idxq+1)]) / (idxq+1)
+            #featuresToUse["AnyCHVInPast" % (counter) ] = any(self.chvf[0:(idxq+1)])
+            featuresToUse["AvgNumberOfUMLSFound" ] = sum(self.umls[0:(idxq+1)])/(idxq+1)
+            #featuresToUse["AnyUMLSInPast" % (counter) ] = any(self.umls[0:(idxq+1)])
+            featuresToUse["AvgNumberOfCHVMisspelledFound" ] = sum(self.chvMisspelled[0:(idxq+1)])/(idxq+1)
+            #featuresToUse["AnyCHVMisspelledInPast" % (counter) ] = any(self.chvMisspelled[0:(idxq+1)]) 
+            featuresToUse["AvgNumberOfComboScoreFound"] =  sum(self.comboScore[0:(idxq+1)]) / (idxq+1)
             #Features related to the actual query:
             #featuresToUse["%02d.NumberOfCHVDataQuery" % (counter) ] = self.chvdata[idxq]
-            #counter+=1
             #featuresToUse["%02d.NumberOfCHVQuery" % (counter) ] = self.chvf[idxq]
-            #counter+=1
             #featuresToUse["%02d.NumberOfUMLSQuery" % (counter) ] = self.umls[idxq]
-            #counter+=1
             #featuresToUse["%02d.NumberOfCHVMisspelledQuery" % (counter) ] = self.chvMisspelled[idxq]
-            #counter+=1
             #featuresToUse["%02d.NumberOfComboScoreQuery" % (counter) ] = self.comboScore[idxq]
-            #counter+=1
 
         if "g7" in groups:
             ###------------------------- TAGS --------------------------###
@@ -235,30 +182,18 @@ class userClass:
             nTags = 1.0 if nTags == 0 else nTags
             keys = self.accTags[idxq].keys()
 
-            featuresToUse["%02d.PercentageOfNouns" % (counter) ] = 0.0 if 'noun' not in keys else self.accTags[idxq]['noun'] / nTags 
-            counter+=1
-            featuresToUse["%02d.PercentageOfAdjectives" % (counter) ] = 0.0 if 'adj' not in keys else self.accTags[idxq]['adj'] / nTags 
-            counter+=1
-            featuresToUse["%02d.PercentageOfConjuctions" % (counter) ] = 0.0 if 'conj' not in keys else self.accTags[idxq]['conj'] / nTags 
-            counter+=1
-            featuresToUse["%02d.PercentageOfVerbs" % (counter) ] = 0.0 if 'verb' not in keys else self.accTags[idxq]['verb'] / nTags 
-            counter+=1
-            featuresToUse["%02d.PercentageOfShapes" % (counter) ] = 0.0 if 'shape' not in keys else self.accTags[idxq]['shape'] / nTags 
-            counter+=1
-            featuresToUse["%02d.PercentageOfPunctuations" % (counter) ] = 0.0 if 'punc' not in keys else self.accTags[idxq]['punc'] / nTags
-            counter+=1
-            featuresToUse["%02d.PercentageOfAdverbs" % (counter) ] = 0.0 if 'adv' not in keys else self.accTags[idxq]['adv'] / nTags 
-            counter+=1
-            featuresToUse["%02d.PercentageOfDeterminers" % (counter) ] = 0.0 if 'det' not in keys else self.accTags[idxq]['det'] / nTags 
-            counter+=1
-            featuresToUse["%02d.PercentageOfAuxiliars" % (counter) ] = 0.0 if 'aux' not in keys else self.accTags[idxq]['aux'] / nTags 
-            counter+=1
-            featuresToUse["%02d.PercentageOfPrepositions" % (counter) ] = 0.0 if 'prep' not in keys else self.accTags[idxq]['prep']/ nTags 
-            counter+=1
-            featuresToUse["%02d.PercentageOfPronouns" % (counter) ] = 0.0 if 'pron' not in keys else self.accTags[idxq]['pron'] / nTags 
-            counter+=1
-            featuresToUse["%02d.PercentageOfModals" % (counter) ] = 0.0 if 'modal' not in keys else self.accTags[idxq]['modal'] / nTags 
-            counter+=1
+            featuresToUse["PercentageOfNouns" ] = 0.0 if 'noun' not in keys else self.accTags[idxq]['noun'] / nTags 
+            featuresToUse["PercentageOfAdjectives" ] = 0.0 if 'adj' not in keys else self.accTags[idxq]['adj'] / nTags 
+            featuresToUse["PercentageOfConjuctions" ] = 0.0 if 'conj' not in keys else self.accTags[idxq]['conj'] / nTags 
+            featuresToUse["PercentageOfVerbs" ] = 0.0 if 'verb' not in keys else self.accTags[idxq]['verb'] / nTags 
+            featuresToUse["PercentageOfShapes" ] = 0.0 if 'shape' not in keys else self.accTags[idxq]['shape'] / nTags 
+            featuresToUse["PercentageOfPunctuations"] = 0.0 if 'punc' not in keys else self.accTags[idxq]['punc'] / nTags
+            featuresToUse["PercentageOfAdverbs"] = 0.0 if 'adv' not in keys else self.accTags[idxq]['adv'] / nTags 
+            featuresToUse["PercentageOfDeterminers"] = 0.0 if 'det' not in keys else self.accTags[idxq]['det'] / nTags 
+            featuresToUse["PercentageOfAuxiliars"] = 0.0 if 'aux' not in keys else self.accTags[idxq]['aux'] / nTags 
+            featuresToUse["PercentageOfPrepositions"] = 0.0 if 'prep' not in keys else self.accTags[idxq]['prep']/ nTags 
+            featuresToUse["PercentageOfPronouns"] = 0.0 if 'pron' not in keys else self.accTags[idxq]['pron'] / nTags 
+            featuresToUse["PercentageOfModals"] = 0.0 if 'modal' not in keys else self.accTags[idxq]['modal'] / nTags 
             
             # Related to actual query
             #featuresToUse["%02d.hasNouns" % (counter) ] = False if 'noun' not in keys else self.accTags[idxq]['noun'] > 0
@@ -586,6 +521,17 @@ class userClass:
             featuresToUse["%02d.TotalNumberOfDifferentSourcesUsed" % (counter) ] = len(self.accSetOfSources[idxq]) / 169.0
             counter+=1
 
+        if "gryen" in groups:
+            featuresToUse["%02d.AvgCharsPerQuery" % (counter) ] = sum(self.numberOfChars[0:(idxq+1)])/(idxq+1)
+            counter+=1
+            featuresToUse["%02d.AvgWordsPerQuery" % (counter) ] = sum(self.numberOfWords[0:(idxq+1)])/(idxq+1)
+            counter+=1
+            sessionsSoFar = sum(self.startedSessions[0:(idxq+1)])
+            featuresToUse["%02d.AvgQueriesPerSession" % (counter) ] = 0 if sessionsSoFar == 0 else (idxq+1) / sessionsSoFar
+            counter+=1
+            featuresToUse["%02d.AvgTimePerSession" % (counter) ] = 0 if sessionsSoFar == 0 else sum(self.timePerSession[0:(idxq+1)]) / sessionsSoFar
+            counter+=1
+
         return featuresToUse
 
         #TODO: remove this after wsdm result is issued
@@ -836,11 +782,7 @@ def calculateTimePerSession(data):
 
     for (user, dateNewSession) in tempMap.iteritems():
         
-        totalSeconds = 0
-        numberOfSessions = 0
-
         startDate = dateNewSession[0][0]
-        endDate = startDate
         #print "User ---> ", user, " Start --> ", startDate, "dateNewSession", dateNewSession
 
         mapUserNumberOfSessions[user].append(1)
@@ -864,7 +806,6 @@ def calculateTimePerSession(data):
                 #seconds = (endDate - startDate).total_seconds()
                 # Reset the date limits
                 startDate = date
-                endDate = date
                 #totalSeconds += seconds
                 #numberOfSessions += 1
                 mapUserNumberOfSessions[user].append(1)
@@ -966,48 +907,6 @@ def mergeFVs(*fvs):
 
     return newDict
 
-def healthNotHealthUsers(minimalNumberOfQueries, maxNumberOfQueries, smallDataset):
-    if smallDataset:
-        # 1% of the dataset only
-        honFV = createFV(pathToData + "/hon/honEnglish." + formatVersion + ".1.dataset..gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
-        aolHealthFV = createFV(pathToData + "/aolHealth/aolHealth." + formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
-        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
-        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".1.dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
-        notHealth = createFV(pathToData + "/aolNotHealth/aolNotHealthFinal-noDash.v5."+ formatVersion + ".1.dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
-   
-    else:
-        if honAug:
-            honFV = createFV(pathToData + "/hon/honAugEnglish." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
-        else:
-            honFV = createFV(pathToData + "/hon/honEnglish." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
-
-        if aolClean:
-            aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthClean." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
-            notHealth = createFV(pathToData + "/aolNotHealth/aolNotHealthNoAnimal-noDash." + formatVersion + ".dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
-        else:
-            aolHealthFV = createFV(pathToData + "/aolHealth/aolHealthCompleteFixed5." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
-            notHealth = createFV(pathToData + "/aolNotHealth/aolNotHealthFinal-noDash." + formatVersion + ".dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
-        
-        goldMinerFV = createFV(pathToData + "/goldminer/goldMiner." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
-        tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".dataset.gz", 0, minimalNumberOfQueries, maxNumberOfQueries)
-
-
-    ### Merge Feature sets and transforme them into inputs
-    healthUserFV = mergeFVs(honFV, aolHealthFV, goldMinerFV, tripFV)
-    notHealthUserFV = notHealth
- 
-    healthUserOutputFile = "healthUser-%d-%s.pk" % (minimalNumberOfQueries, explanation)
-    notHealthUserOutputFile = "notHealthUser-%d-%s.pk" % (minimalNumberOfQueries, explanation)
-   
-    ####### Save and Load the Features
-    with open(healthUserOutputFile, 'wb') as output:
-        pickle.dump(healthUserFV, output, pickle.HIGHEST_PROTOCOL)
-        print "CREATED FILE: %s" % (healthUserOutputFile)
-    
-    with open(notHealthUserOutputFile, 'wb') as output:
-        pickle.dump(notHealthUserFV, output, pickle.HIGHEST_PROTOCOL)
-        print "CREATED FILE: %s" % (notHealthUserOutputFile)
-
 def regularMedicalUsers(minimalNumberOfQueries, maxNumberOfQueries, explanation, smallDataset):
     ####
     ### Load Datasets
@@ -1034,6 +933,22 @@ def regularMedicalUsers(minimalNumberOfQueries, maxNumberOfQueries, explanation,
         tripFV = createFV(pathToData + "/trip/trip." + formatVersion + ".dataset.gz", 1, minimalNumberOfQueries, maxNumberOfQueries)
     
 
+    
+    with open("goldMinerFV.pk", 'wb') as output:
+        pickle.dump(goldMinerFV, output, pickle.HIGHEST_PROTOCOL)
+    with open("tripFV.pk", 'wb') as output:
+        pickle.dump(tripFV, output, pickle.HIGHEST_PROTOCOL)
+    with open("aolFV.pk", 'wb') as output:
+        pickle.dump(aolHealthFV, output, pickle.HIGHEST_PROTOCOL)
+    with open("honFV.pk", 'wb') as output:
+        pickle.dump(honFV, output, pickle.HIGHEST_PROTOCOL)
+
+    print " DONE! " 
+
+    return
+
+    ########Not runing this code:
+
     ####
     ### Merge Feature sets and transforme them into inputs
     ##
@@ -1047,7 +962,6 @@ def regularMedicalUsers(minimalNumberOfQueries, maxNumberOfQueries, explanation,
     medicalUserOutputFile = "medicalUser-%d-%s.pk" % (minimalNumberOfQueries, explanation)
 
     ####### Save and Load the Features
-    import pickle
     with open(regularUserOutputFile, 'wb') as output:
         pickle.dump(regularUserFV, output, pickle.HIGHEST_PROTOCOL)
         print "CREATED FILE: %s" % (regularUserOutputFile)
@@ -1079,7 +993,6 @@ if __name__ == "__main__":
     op.add_option("--maxNumberOfQueries", "-M", action="store", type="int", dest="maxNumberOfQueries", help="Define the max. number of queries (X) necessary to use\
                   a user for classification.  [default: %default]", metavar="X", default=100)
     op.add_option("--explanation", "-e", action="store", type="string", dest="explanation", help="Prefix to include in the created files", metavar="N", default="")
-    op.add_option("--healthUsers", "-u", action="store_true", dest="healthUsers", help="Use if you want to create a health/not health user feature file", default=False)
     op.add_option("--testingOnly", "-t", action="store_true", dest="testingOnly", help="Just to test some new feature", default=False)
     op.add_option("--1p", "-s", action="store_true", dest="smallDataset", help="Just create the feature vectors based on 1% of the datasets", default=False)
 
@@ -1091,8 +1004,5 @@ if __name__ == "__main__":
         testing(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation)
         sys.exit(0)
 
-    if opts.healthUsers:
-        healthNotHealthUsers(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation, opts.smallDataset)
-    else:
-        regularMedicalUsers(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation, opts.smallDataset)
+    regularMedicalUsers(opts.minNumberOfQueries, opts.maxNumberOfQueries, opts.explanation, opts.smallDataset)
 

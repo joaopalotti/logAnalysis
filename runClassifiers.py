@@ -36,8 +36,8 @@ SVMKernel= "linear"
 #SVMKernel= "rbf"
 
 etcEstimators = 120
-ROCNAME="ROC"
-PRECRECALLNAME="PrecAndRecall"
+ROCNAME="ROC-WSDM"
+PRECRECALLNAME="PrecAndRecall-WSDM"
 
 classifyParameters = {"KNN-K": 20, "ETC-n_estimators": etcEstimators, "SVM-cacheSize": 2000, "SVM-kernel": SVMKernel, "SVM-C": CSVM, "SVM-maxIter":SVMMaxIter, "SVM-gamma":SVMGamma, "LR-C":1000, "ETC-criterion": "entropy", "ETC-max_features":None, "DT-criterion": "entropy", "DT-max_features":None, "SVM-class_weight":SVMWeight} 
 
@@ -45,8 +45,9 @@ gridETC = [{'criterion': ['entropy'], 'max_features': [None], "n_estimators":[10
 gridKNN = [{'n_neighbors': [1,5,10,15,20,50,100], 'algorithm': ["auto"]}]
 gridLR = [{'C': [1,1000,10000,10000000], 'penalty': ["l1", "l2"]}]
 gridDT = [{'criterion': ["gini","entropy"], 'max_features': ["auto", None, "log2"]}]
-gridSVM = [{'kernel': ['rbf'], 'gamma': [1, 0, 1e-1, 1e-2, 1e-3, 1e-4], 'C': [0.1,1,10,1000000]},\
-            {'kernel': ['linear'], 'C': [0.01, 0.1,1,10,1000000]}]
+#gridSVM = [{'kernel': ['rbf'], 'gamma': [1, 0, 1e-1, 1e-2, 1e-3, 1e-4], 'C': [0.1,1,10,1000000]},\
+#            {'kernel': ['linear'], 'C': [0.01, 0.1,1,10,1000000]}]
+gridSVM = [{'kernel': ['linear'], 'C': [0.01, 0.1, 1000000]}]
 
 def transformeInDict(userDict, nseed, n=-1, proportional=-1, groupsToUse=None):
     listOfDicts = list()

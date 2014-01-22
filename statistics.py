@@ -2,6 +2,7 @@ from __future__ import division
 from collections import defaultdict, Counter
 import operator
 from datetime import datetime
+from itertools import groupby
 #My classes
 from latexTools import latexPrinter
 from auxiliarFunctions import *
@@ -15,7 +16,7 @@ SOME IMPORTANT NOTES:
 
 # GLOBAL VARIABLES:
 numberOfQueriesInASessionThreshold = 100
-removeClassifierOutilersOnly = True #TODO: remove this after ECIR deadline
+removeClassifierOutlersOnly = False #TODO: remove this after ECIR deadline
 removeOutliers=True
 plottingInstalled=False
 removeStopWords=False
@@ -34,8 +35,8 @@ def calculateMetrics(dataPair):
     It is important to run the session analyse first because it is going to eliminate users considered as robots (more than X queries in one unique session)
     X -> numberOfQueriesInASessionThreshold, but you may want to check it later
     '''
-    if removeClassifierOutilersOnly:
-        data = removeClassifierOutilers(data)
+    if removeClassifierOutlersOnly:
+        data = removeClassifierOutlers(data)
 
     elif removeOutliers:
         outliersToRemove = removeOutliers( createSessions(data) )
@@ -61,7 +62,6 @@ def calculateMetrics(dataPair):
     countingNL = calculateNLuse(data)
     countingQueriesPerUser = calculateQueriesPerUser(data)
     countingQueryRanking = calculateQueryRanking(data)
-    usersMetrics = calculateMetricsForUsers(data)
 
     numberOfQueries = sum(countingQueries.values())
     percentageAcronymInQueries = 100.0 * len(hasAcronym) / numberOfQueries
@@ -71,7 +71,7 @@ def calculateMetrics(dataPair):
             countingMeshByUser, countingDiseaseByUser, countingMeshWeightedByUser, countingDiseaseWeightedByUser,\
             countingMeshWeighted, countingDiseaseWeighted = calculateMesh(data)
     
-    countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, meanComboScore = calculateCHV(data)
+    countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, npComboScore = calculateCHV(data)
     countingPOS = calculatePOS(data)
     countingSources = calculateSources(data)
     countingConcepts = calculateConcepts(data)
@@ -92,6 +92,7 @@ def calculateMetrics(dataPair):
         printPOS(f, countingPOS)
         printSources(f, countingSources, numberOfQueries)
         printConcepts(f, countingConcepts, numberOfQueries)
+        printCHV(f, npComboScore)
     
     #Data for tables
     numberOfMeshTerms = sum(countingMesh.values())
@@ -144,7 +145,7 @@ def calculateMetrics(dataPair):
     appendSemanticByUser(dataName, semanticTypesCountedByUser, numberOfUsers)
     appendSemanticByUserWeighted(dataName, numberOfUsers, semanticTypesCountedByUserWeighted)
     appendBooleanUse(dataName, booleanTerms, numberOfQueries, usersUsingBools, numberOfUsers)
-    appendCHV(dataName, countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, numberOfQueries, meanComboScore)
+    appendCHV(dataName, countingCHVFound, numberCHV, numberUMLS, numberCHVMisspelled, numberOfQueries, npComboScore)
     
     return dataName, countingAcronyms, countingTimePerSession, countingTokens, countingQueries, countingQueriesPerSession, countingMesh, countingDisease, countingMeshDepth, countingQueriesPerUser, countingQueryRanking, queryInNumbers, queryInChars
 
@@ -297,17 +298,16 @@ def calculateCHV(data):
     numberCHV = 0
     numberUMLS = 0
     numberCHVMisspelled = 0
-    comboScore = 0
+    comboScore = []
 
     for member in data:
         countingCHVFound[member.CHVFound] += 1
         numberCHV += (1 if member.hasCHV == True else 0)
         numberUMLS += (1 if member.hasUMLS == True else 0)
         numberCHVMisspelled += (1 if member.hasCHVMisspelled == True else 0)
-        comboScore += member.comboScore
+        comboScore.append(member.comboScore)
 
-    print "CHV ---- ", Counter(countingCHVFound), numberCHV, numberUMLS, numberCHVMisspelled, comboScore/len(data)
-    return Counter(countingCHVFound), numberCHV, numberUMLS, numberCHVMisspelled, comboScore/len(data)
+    return Counter(countingCHVFound), numberCHV, numberUMLS, numberCHVMisspelled, generateStatsVector(comboScore)
 
 def calculateSemanticTypesPercentages(userSemanticType):
     
@@ -351,20 +351,11 @@ def calculateSemanticTypesPercentages(userSemanticType):
 
     return {"symptom":symptomSet, "cause":causeSet, "remedy":remedySet, "where":whereSet, "noMedical":noMedicalSet}, {"symptom":symptom, "cause":cause, "remedy":remedy, "where":where, "noMedical":noMedical}, usersWithSemantic
 
-def calculateMetricsForUsers(data):
-    pass
-    #userIds = set( (member.userId) for member in data )
-    #print userIds
-
-
 def hasNLword(words):
-    #TODO: find a better list:
     # possibility: use Noun + Verb Phrase or other structures like that
     return len( [ w for w in words if w.lower() in NLWords ] ) > 0
 
 def calculateNLuse(data):
-
-    #TODO: to finish it!
     countingNL = defaultdict(int)
     userKeywords = ( (member.userId, member.keywords) for member in data )
 
@@ -422,8 +413,6 @@ def calculateMesh(data):
     countingDisease = Counter(meshDiseases)
     countingMesh = Counter(meshValues)
 
-
-   
     return countingMesh, countingDisease, hasMeshValues, countingMeshDepth, usersUsingMesh, meanMeshDepthByUser, countingMeshByUser, countingDiseaseByUser, countingMeshWeightedByUser, countingDiseaseWeightedByUser, countingMeshWeighted, countingDiseaseWeighted
 
 def calculateMeshMetricsByUser(userMesh):
@@ -570,7 +559,7 @@ def removeOutliers(sessions):
     
     return usersToRemove
     
-def removeClassifierOutilers(data):
+def removeClassifierOutlers(data):
     userIds = sorted( [member.userId for member in data ] ) 
     usersToRemove = set()
     for k, g in groupby(userIds):
@@ -968,7 +957,6 @@ def calculateTerms(data, coOccurrenceThreshold=0.6):
 def calculateQueriesPerUser(data):
     
     #from datetime import datetime
-    from itertools import groupby
     #print "START!"
     #start = datetime.now()
 
@@ -1276,4 +1264,12 @@ def printConcepts(writer, countingConcepts, numberOfQueries):
     for source, count in countingConcepts.most_common(10):
         writer.write('{0:45} ==> {1:8d}\n'.format(source, count, 100.0 * count / numberOfQueries))
 
+def printCHV(writer, npComboScore):
+    writer.write("-" * 40 + "\n")
+    writer.write("CHV:\n")
+    writer.write('{0:45} ==> {1:.2f}\n'.format("0%", npComboScore.p0))
+    writer.write('{0:45} ==> {1:.2f}\n'.format("25%", npComboScore.p25))
+    writer.write('{0:45} ==> {1:.2f}\n'.format("50%", npComboScore.p50))
+    writer.write('{0:45} ==> {1:.2f}\n'.format("75%", npComboScore.p75))
+    writer.write('{0:45} ==> {1:.2f}\n'.format("100%", npComboScore.p100))
 
