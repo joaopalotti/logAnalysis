@@ -5,16 +5,12 @@ import pandas as pd
 PATH_TO_DATASETS = "../logAnalysisDataSets/"
 usingScoop = False
 useHON = True
-useGM = False
-useTRIP = False
-useAOLH = False
-
-#aolNotHealthOption = 0
-# 0) NOT using it
-# 1) aolNotHealthFinal-noDash  (CIKM)
-# 2) aolHealthNoAnimal-noDash-clicked
-# 3) aolNotHealthODP (WSDM) *
-# 4) aolNotHealthODPNoScience
+useGM = True
+useTRIP = True
+useAOLH = True
+useAOLNH = True
+useLAY = True
+useEXP = True
 
 if __name__ == "__main__":
     
@@ -40,11 +36,17 @@ if __name__ == "__main__":
         aolHealth = readMyFormat(PATH_TO_DATASETS + "aolh/aolh.gz")
         datasets.append([aolHealth, "AOLH"])    
     
-    #if mergeLaypeople:
-    #    laypeople = hon + aolHealth
+    if useAOLNH:
+        aolHealth = readMyFormat(PATH_TO_DATASETS + "aolnh/aolnh.gz")
+        datasets.append([aolHealth, "AOLNH"])    
     
-    #if mergeExperts:
-    #    experts = trip + goldMiner
+    if useLAY:
+        laypeople = hon + aolHealth
+        datasets.append([laypeople, "LAY"])    
+    
+    if useEXP:
+        experts = trip + gm
+        datasets.append([experts, "EXP"])    
 
     calculateStatistics(datasets, usingScoop) 
 
