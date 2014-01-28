@@ -124,6 +124,7 @@ public class myApi2 {
         Set<String> sources = new HashSet<String>();
         Set<String> concepts = new HashSet<String>();
         List<Result> resultList = api.processCitationsFromString(terms);
+        Map<String,Set<String> > mappingPossibility = new HashMap<String, Set<String> >();
 
         for (Result result: resultList) {
             if (result != null) {
@@ -187,9 +188,8 @@ public class myApi2 {
                         out.println(" Minimal Commitment Parse: " + pcm.getPhrase().getMincoManAsString());
                         
 
-                        out.println("Mappings:");
                         */
-
+                        
                         for (Mapping map: pcm.getMappingList()) {
                             //out.println(" Map Score: " + map.getScore());
                             for (Ev mapEv: map.getEvList()) {
@@ -198,6 +198,17 @@ public class myApi2 {
                                 String conceptUID = mapEv.getConceptId();
                                 //out.println("  Concept ID: " + conceptUID);
                                 concepts.add(conceptUID);
+
+                                
+                                String concept = mapEv.getConceptName().toLowerCase();
+                                for(String semantic:  mapEv.getSemanticTypes()){
+                                    Set<String> myMap = new HashSet<String>();
+                                    if (mappingPossibility.containsKey(concept)){
+                                        myMap = mappingPossibility.get(concept);
+                                    }
+                                    myMap.add(semantic);
+                                    mappingPossibility.put(concept, myMap);
+                                }
 
                                 //Take the MESH code only if the MSH is in the source list
                                 if (mapEv.getSources().contains("MSH")){
@@ -225,7 +236,6 @@ public class myApi2 {
                                     semantics.add(s);
                                 }
                                 //out.println("  Score: " + mapEv.getScore());
-                                //out.println("  Concept Id: " + mapEv.getConceptId());
                             }
                         }
                     }
@@ -298,6 +308,22 @@ public class myApi2 {
         toReturn.add(output);
         output = "";
        
+        for(Map.Entry<String, Set<String> > entry : mappingPossibility.entrySet()){
+            String key = entry.getKey();
+            Set<String> values = entry.getValue();
+            output = output + key + "|";
+            if(values.size() >= 1){
+                Iterator<String> it = values.iterator();
+                output += it.next();
+                while(it.hasNext()){
+                    output = output + ";" + it.next();
+                }
+                output = output + "|";
+            }
+        }
+        out.println(output);
+        toReturn.add(output);
+
         this.api.resetOptions();
         return toReturn;
     }
@@ -321,86 +347,6 @@ public class myApi2 {
             //System.out.println("s --> " + s);
             result.add(s);
         }
-
-
-
-        //list = list.substring(1, list.length() - 1);
-        /*
-        while(true){
-            if( list.charAt(0) == ',' )
-                list = list.substring(1, list.length());
-
-            //System.out.println("Parsing (1) => " + list);
-            String[] elements = null;
-
-            //Remove bug in metamap
-            //Example of query that is badly processed: inputmatch([RA,)]) -> inputmatch([RA])
-            //list = list.replaceAll("inputmatch\\(\\[([\\w]*)\\,\\)\\]\\)", "inputmatch\\(\\[$1\\]\\)");
-            
-            //merge all inputmatches. Ex inputmatch([Critical,Care,",(,nursing]) -> inputmatch([a])
-            //list = list.replaceAll("inputmatch\\(\\[([\\w]*)+\\,[^]]+\\]\\)", "inputmatch\\(\\[a\\]\\)");
-
-            //System.out.println("Replaced => " + list);
-
-            elements = getElement(list);
-            String actual = elements[0];
-            String rest = elements[1];
-            
-            System.out.println("Actual => " + actual);
-            System.out.println("Rest   => " + rest);
-
-            int op = countOccurences(actual, '('); 
-            int cp = countOccurences(actual, ')');
-            int rop = countOccurences(rest, '('); 
-            int rcp = countOccurences(rest, ')');
-            
-            System.out.println(" op = "+ op );
-            System.out.println(" cp = "+ cp );
-            System.out.println(" rop = "+ rop );
-            System.out.println(" rcp = "+ rcp );
-            System.out.println(" true ? " + (op == cp && op == 0));
-
-            if(op == cp && op == 0){
-                adjust = -1;
-                list = list.replaceAll("inputmatch\\(\\[([\\w]*)+\\,[^]]+\\]\\)", "inputmatch\\(\\[a\\]\\)");
-                //actual = rest;
-                //rest = "";
-
-                elements = getElement(list, adjust);
-                actual = elements[0];
-                rest = elements[1];
-
-                System.out.println("op == cp == 0");
-                System.out.println("NEW Actual => " + actual);
-                System.out.println("NEW Rest   => " + rest);
-
-            }
-            else if(rcp > rop){
-                adjust = 1;
-                elements = getElement(list, adjust);
-                actual = elements[0];
-                rest = elements[1];
-
-                System.out.println("rcp > rop");
-                System.out.println("NEW Actual => " + actual);
-                System.out.println("NEW Rest   => " + rest);
-
-            }
-
-            String tag = getTag(actual);
-            String token = getToken(actual, adjust);
-            
-            System.out.println("TAG => " + tag);
-            System.out.println("TOKEN   => " + token);
-            
-            result.add(token);
-            result.add(tag);
-
-            if(rest.equals(""))
-                break;
-            list = rest;
-        }
-        */
 
         return result;
     }
@@ -519,8 +465,8 @@ public class myApi2 {
                 }
             }
         }
-        result[0] =  list.substring(0, stop + 1);
-        result[1] =  list.substring(stop + 1, list.length());
+        result[0] = list.substring(0, stop + 1);
+        result[1] = list.substring(stop + 1, list.length());
         return result;
     }
 
@@ -633,7 +579,6 @@ public class myApi2 {
                 System.out.println("using WSD");
 	            options.add("y");
             }
-
         }
         if(inFilename == null){
 	            System.out.println("Error...use -i <filename> to enter the filename you want.");
