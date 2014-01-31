@@ -75,6 +75,8 @@ def calculateMetrics(dataPair):
     countingPOS = calculatePOS(data)
     countingSources = calculateSources(data)
     countingConcepts = calculateConcepts(data)
+    calculateSemanticConceptMaping(data)
+
 
     # Print statistics
     with open(dataName + ".result", "w") as f:
@@ -276,6 +278,37 @@ def calculateStatistics(dataList, usingScoop):
     latexWriter.addTable(tableCHVHeader, caption="CHV usage", transpose=True)
     latexWriter.addTable(tablePOSHeader, caption="POS tags usage", transpose=True)
     #print sum(countingMeshByUser.values()), sum(countingMeshWeightedByUser.values())
+
+def calculateSemanticConceptMaping(data, sessionsOutFile="sessions.txt"):
+    """
+        Given the data, it takes all the semantic concept maps for each session
+        and outputs a session file to used by the smpmf java package.
+    """
+
+    allSessions = createSessions(data)
+    # Exclude the unecessary fields of all dictionaries
+    listOfSessions = []
+    for userSession in allSessions.values():
+        for session in userSession.values():
+            listOfSessions.append(session)
+
+    # Creates a list of sessions: sessions[ session1, session2, session3 ].
+    # Every session is a list of queries.
+    # Every query is a map of semantic types used to concepts in the query.
+    sessionsf = open(sessionsOutFile, "a")
+    for session in listOfSessions:
+        print_minus_2 = False
+
+        for (i,query) in enumerate(session):
+            if query[3]:
+                for semantic, concept in query[3].iteritems():
+                    sessionsf.write(semantic + " ")
+                    print_minus_2 = True
+                sessionsf.write("-1 ")
+        
+        if print_minus_2:
+            sessionsf.write("\b\b2\n")
+
 
 def calculateSources(data):
     sources = []
@@ -571,27 +604,39 @@ def removeClassifierOutlers(data):
 
 
 def createSessions(data):
-    sessions = defaultdict(dict)
+    """
+        Given the dataset (data), it creates a structure like:
+            dict[userId][1 -> numberOfSessions][0][session]
+    """
 
-    for member in data:
+
+    sessions = defaultdict(dict)
+    
+    #Sort data to ensure it is sorted by userId and datetime
+    data = sorted( [(member.userId, member.datetime, member.keywords,\
+                     member.previouskeywords,member.semanticTypes, member.mapSemanticConcepts) \
+                    for member in data], \
+                    key=operator.itemgetter(0,1))
+    
+    for (userId, datetime, keywords, previouskeywords, semanticTypes, mapSemCon) in data:
 
         # There are no previous keywords and no sessions of this id -> create the first one sessions[id][1] = list
-        if member.previouskeywords is None and not sessions[member.userId]:
-            sessions[member.userId][1] = [[member.datetime, member.keywords, member.semanticTypes]]
+        if member.previouskeywords is None and not sessions[userId]:
+            sessions[userId][1] = [[datetime, keywords, semanticTypes, mapSemCon]]
 
         # There are no previous keywords and there is at least one sessions of this id -> another session
-        elif member.previouskeywords is None and sessions[member.userId]:
-            sessions[member.userId][ len(sessions[member.userId]) + 1 ] = [[member.datetime, member.keywords, member.semanticTypes]]
+        elif previouskeywords is None and sessions[userId]:
+            sessions[userId][ len(sessions[userId]) + 1 ] = [[datetime, keywords, semanticTypes, mapSemCon]]
         
-        elif member.previouskeywords is not None and not sessions[member.userId]:
+        elif previouskeywords is not None and not sessions[userId]:
             # This situation should not happen, but it does (some error in the logs). It means that a session was not created but there were previous keywords.
             #print "ERROR!"
             #print member.userId, member.datetime, member.keywords, "previous ---> ", member.previouskeywords
-            sessions[member.userId][1] = [[member.datetime, member.keywords, member.semanticTypes]]
+            sessions[userId][1] = [[datetime, keywords, semanticTypes, mapSemCon]]
 
         # There are previous keywords!
         else:
-            sessions[member.userId][ len(sessions[member.userId]) ] += [[member.datetime,member.keywords, member.semanticTypes]]
+            sessions[userId][ len(sessions[userId]) ] += [[datetime, keywords, semanticTypes, mapSemCon]]
 
     #for session, date in sessions.iteritems():
     #    print session, date

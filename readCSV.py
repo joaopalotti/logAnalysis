@@ -1,4 +1,5 @@
-import csv, sys, gzip
+import csv
+import gzip
 from datetime import datetime
 from time import time
 # My classed:
@@ -97,12 +98,11 @@ def readKhresmoi(filename):
     return data
 
 
-def readMyFormat(filename, version="v6", verbose=True):
+def readMyFormat(filename, verbose=True):
 
     if verbose:
         print ("Reading file: ", filename)
-    start = time()
-     
+    
     data = []
     csvfile = openZip(filename)
     reader = csv.reader(csvfile, delimiter=',', quotechar='"', escapechar="\\", doublequote=False)
@@ -114,32 +114,14 @@ def readMyFormat(filename, version="v6", verbose=True):
     for row in reader:
         #print row, len(row)
 
-        if version == "v4" and len(row) != 6:
-            print "Version4 --- (len(row) !=6) ERROR in this line: ", row
-            sys.exit(0)
-            continue
-        
-        if version == "v5" and len(row) != 11:
-            print "Version5 --- (len(row) !=11) ERROR in this line: ", row
-            sys.exit(0)
-            continue
-        
-        if version == "v6" and len(row) != 14:
-            print "Version6 --- (len(row) !=14) ERROR in this line: ", row
-            sys.exit(0)
-            continue
-        
         #No keywords in this line, skip it
         if len(row[2]) == 0 or row[2] == None:
             continue
 
-        if version == "v4":
-            temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4], semanticTypes=row[5])
-        elif version == "v5":
-            temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4], semanticTypes=row[5], CHVFound=row[6], hasCHV=row[7], hasUMLS=row[8], hasCHVMisspelled=row[9], comboScore=row[10] )
-        elif version == "v6":
-            temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4], semanticTypes=row[5], CHVFound=row[6], hasCHV=row[7], hasUMLS=row[8], hasCHVMisspelled=row[9], comboScore=row[10],  sourceList=row[11], postags=row[12], concepts=row[13] )
-
+        temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4],\
+                       semanticTypes=row[5], CHVFound=row[6], hasCHV=row[7], hasUMLS=row[8], hasCHVMisspelled=row[9],\
+                       comboScore=row[10],  sourceList=row[11], postags=row[12], concepts=row[13],\
+                       semanticConcepts=row[14])
         data.append(temp)
     return data
 

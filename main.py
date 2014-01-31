@@ -5,12 +5,12 @@ import pandas as pd
 PATH_TO_DATASETS = "../logAnalysisDataSets/"
 usingScoop = False
 useHON = True
-useGM = True
-useTRIP = True
-useAOLH = True
-useAOLNH = True
-useLAY = True
-useEXP = True
+useGM = False
+useTRIP = False
+useAOLH = False
+useAOLNH = False
+useLAY = False
+useEXP = False
 
 if __name__ == "__main__":
     
@@ -23,7 +23,7 @@ if __name__ == "__main__":
    
     #HON
     if useHON:
-        hon = readMyFormat(PATH_TO_DATASETS + "hon/hon.gz")
+        hon = readMyFormat(PATH_TO_DATASETS + "hon/hon1.gz")
         datasets.append([hon, "HON"])
         
     #Trip

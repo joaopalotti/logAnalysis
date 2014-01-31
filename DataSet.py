@@ -1,11 +1,20 @@
 from datetime import datetime
-import re, sys, csv
+from collections import defaultdict
+import re
+import sys
+import csv
 
 class DataSet(object):
-    
+    """
+    This class represents one single row in the data logs, it means one single query made by one user. 
+    Among the defined fields there are the userid, keywords used in the query, semantic concepts found, etc.
+    """
+
     # CHVFound -> number of concepts that are in the CHV list
     # hasCHV -> if any of the concepts found are exactly as the CHV suggests
-    def __init__(self, dttime, userId, keywords, previouskeywords=None, category=None, publication=None, rank=None, clickurl=None, mesh=None, semanticTypes=None, usingTimestamp=False, CHVFound=0, hasCHV=False, hasUMLS=False, hasCHVMisspelled=False, comboScore=0, sourceList=None, postags=None, concepts=None): 
+    def __init__(self, dttime, userId, keywords, previouskeywords=None, category=None, publication=None, rank=None, clickurl=None, mesh=None,\
+                 semanticTypes=None, usingTimestamp=False, CHVFound=0, hasCHV=False, hasUMLS=False, hasCHVMisspelled=False, comboScore=0,\
+                 sourceList=None, postags=None, concepts=None, semanticConcepts=None): 
       
         withMs = re.compile("(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).(\d{3})")
         withMsAndQuote = re.compile("\"(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).(\d{3})\"")
@@ -69,6 +78,26 @@ class DataSet(object):
         if concepts:
             self.concepts = [ c for c in concepts.split(";") if c ]
     
+        self.mapSemanticConcepts = self.generateMapOfSemanticTypes(semanticConcepts)
+    
+    def generateMapOfSemanticTypes(self, row):
+        """
+        Map each of the concepts found to a semantic type:
+            Ex. "test|inpr;lbpr;ftcn|gg|geoa|1+|qnco;clas|food intolerance|sosy|"
+            This will generate this dictionary:
+                inpr -> 'test'
+                sosy -> 'food intolerance'
+                ...
+        """
+        if not row:
+            return None
+        return_dict = defaultdict(list)
+        fields = row.split("|")[0:-1] #Excludes the empty space at the and of the string
+        for (keyword, stype) in ((fields[i], fields[i+1]) for i in range(0, len(fields), 2)):
+            for t in stype.split(";"):
+                return_dict[t].append(keyword)
+        return return_dict
+
     def printMe(self, out=sys.stdout):
         writer = csv.writer(out, delimiter=',', quoting=csv.QUOTE_ALL, quotechar ='"', escapechar='\\', doublequote=False)
         # Should add here any important information and modify the corresponding readCSV
