@@ -75,8 +75,7 @@ def calculateMetrics(dataPair):
     countingPOS = calculatePOS(data)
     countingSources = calculateSources(data)
     countingConcepts = calculateConcepts(data)
-    calculateSemanticConceptMaping(data)
-
+    calculateSemanticConceptMaping(data, dataName + ".sessions.txt")
 
     # Print statistics
     with open(dataName + ".result", "w") as f:
@@ -308,7 +307,6 @@ def calculateSemanticConceptMaping(data, sessionsOutFile="sessions.txt"):
         
         if print_minus_2:
             sessionsf.write("\b\b2\n")
-
 
 def calculateSources(data):
     sources = []
