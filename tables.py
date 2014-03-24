@@ -97,5 +97,7 @@ def appendBooleanUse(dataName, booleanTerms, numberOfQueries, usersUsingBools, n
 
 def appendPOS(dataName, countingPOS, numberOfQueries):
     totalPOS = sum(countingPOS.values())
+    totalPOS = 1 if totalPOS == 0 else totalPOS
+
     postagsRow.append( [dataName, totalPOS / numberOfQueries, countingPOS["noun"]/totalPOS, countingPOS["adj"]/totalPOS, countingPOS["prep"]/totalPOS, countingPOS["conj"]/totalPOS, countingPOS["aux"]/totalPOS, countingPOS["det"]/totalPOS, countingPOS["pron"]/totalPOS, countingPOS["verb"]/totalPOS, countingPOS["punc"]/totalPOS, countingPOS["shape"]/totalPOS, countingPOS["adv"]/totalPOS ])
 

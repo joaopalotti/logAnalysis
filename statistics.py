@@ -1,7 +1,7 @@
 from __future__ import division
 from collections import defaultdict, Counter
 import operator
-from datetime import datetime
+from datetime import datetime, timedelta
 from itertools import groupby
 #My classes
 from latexTools import latexPrinter
@@ -12,6 +12,7 @@ from tables import *
 SOME IMPORTANT NOTES:
     -> Keeping the stop words.
     -> Considering that more than 100 queries in one unique session is way too much. So, the session is removed.
+    -> Removing successively duplicated queries in the same session.
 """
 
 # GLOBAL VARIABLES:
@@ -42,6 +43,8 @@ def calculateMetrics(dataPair):
         outliersToRemove = removeOutliers( createSessions(data) )
         newData = [member for member in data if member.userId not in outliersToRemove]
         data = newData
+   
+    data = removeSuccessivelyDuplicates(data, 30)
     
     numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
         numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
@@ -153,8 +156,6 @@ def calculateMetrics(dataPair):
 def calculateStatistics(dataList, usingScoop):    
     #everything related to tables are set aside in the tables.py
     
-    if usingScoop:
-        from scoop import futures
    
     """
         Expected a list of list of DataSet (TripData or AolData) objects
@@ -277,6 +278,25 @@ def calculateStatistics(dataList, usingScoop):
     latexWriter.addTable(tableCHVHeader, caption="CHV usage", transpose=True)
     latexWriter.addTable(tablePOSHeader, caption="POS tags usage", transpose=True)
     #print sum(countingMeshByUser.values()), sum(countingMeshWeightedByUser.values())
+    
+def removeSuccessivelyDuplicates(data, numberOfMinutes):
+    data = sorted(data, key= lambda member: (member.userId, member.datetime))
+    newdata = []
+
+    last = data[0]
+    newdata.append(last)
+
+    for actual in data[1:]:
+        #Same user issuing the same query in less than numberOfMinutes minutes.
+        if actual.userId == last.userId and actual.keywords == last.keywords and \
+           actual.datetime - last.datetime < timedelta(minutes=numberOfMinutes):
+            continue
+        
+        newdata.append(actual)
+        last = actual
+    
+    print "Removed %d successively duplicate examples" % (len(data) - len(newdata))
+    return newdata
 
 def calculateSemanticConceptMaping(data, sessionsOutFile="sessions.txt"):
     """
@@ -294,33 +314,36 @@ def calculateSemanticConceptMaping(data, sessionsOutFile="sessions.txt"):
     # Creates a list of sessions: sessions[ session1, session2, session3 ].
     # Every session is a list of queries.
     # Every query is a map of semantic types used to concepts in the query.
-    sessionsf = open(sessionsOutFile, "a")
+    sessionsf = open(sessionsOutFile, "w")
     for session in listOfSessions:
-        print_minus_2 = False
+        writeline = []
 
         for (i,query) in enumerate(session):
             if query[3]:
                 for semantic, concept in query[3].iteritems():
                     sessionsf.write(semantic + " ")
-                    print_minus_2 = True
+                    writeline.append(semantic+" ")
                 sessionsf.write("-1 ")
+                writeline.append("-1 ")
         
-        if print_minus_2:
-            sessionsf.write("\b\b2\n")
+        if len(writeline) > 0:
+            writeline[-1] = "-2\n"
+            sessionsf.write("".join(writeline))
+    sessionsf.close()
 
 def calculateSources(data):
     sources = []
-    sources += [s for member in data for s in member.sourceList if member.sourceList] 
+    sources += [s for member in data if member.sourceList for s in member.sourceList] 
     return Counter(sources) 
 
 def calculateConcepts(data):
     concept = []
-    concept += [c for member in data for c in member.concepts] 
+    concept += [c for member in data if member.concepts for c in member.concepts] 
     return Counter(concept) 
 
 def calculatePOS(data):
     tags = []
-    tags += [tag for member in data for tag in member.postags] 
+    tags += [tag for member in data if member.postags for tag in member.postags] 
     return Counter(tags) 
 
 def calculateCHV(data):
@@ -606,20 +629,18 @@ def createSessions(data):
         Given the dataset (data), it creates a structure like:
             dict[userId][1 -> numberOfSessions][0][session]
     """
-
-
-    sessions = defaultdict(dict)
-    
     #Sort data to ensure it is sorted by userId and datetime
     data = sorted( [(member.userId, member.datetime, member.keywords,\
                      member.previouskeywords,member.semanticTypes, member.mapSemanticConcepts) \
                     for member in data], \
                     key=operator.itemgetter(0,1))
     
-    for (userId, datetime, keywords, previouskeywords, semanticTypes, mapSemCon) in data:
+    sessions = defaultdict(dict)
 
+    for (userId, datetime, keywords, previouskeywords, semanticTypes, mapSemCon) in data:
+    
         # There are no previous keywords and no sessions of this id -> create the first one sessions[id][1] = list
-        if member.previouskeywords is None and not sessions[userId]:
+        if previouskeywords is None and not sessions[userId]:
             sessions[userId][1] = [[datetime, keywords, semanticTypes, mapSemCon]]
 
         # There are no previous keywords and there is at least one sessions of this id -> another session
@@ -628,8 +649,8 @@ def createSessions(data):
         
         elif previouskeywords is not None and not sessions[userId]:
             # This situation should not happen, but it does (some error in the logs). It means that a session was not created but there were previous keywords.
-            #print "ERROR!"
-            #print member.userId, member.datetime, member.keywords, "previous ---> ", member.previouskeywords
+            print "ERROR!"
+            print "user --> ", userId, " data --> ", datetime,  "words -> ", keywords, "previous ---> ", previouskeywords
             sessions[userId][1] = [[datetime, keywords, semanticTypes, mapSemCon]]
 
         # There are previous keywords!

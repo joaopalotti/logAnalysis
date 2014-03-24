@@ -2,9 +2,9 @@ from statistics import calculateStatistics
 from readCSV import readMyFormat 
 import pandas as pd
 
-PATH_TO_DATASETS = "../logAnalysisDataSets/"
+PATH_TO_DATASETS = "/data/palotti/logAnalysisDataSets/"
 usingScoop = False
-useHON = True
+useHON = False
 useGM = False
 useTRIP = False
 useAOLH = False
@@ -13,6 +13,13 @@ useLAY = False
 useEXP = False
 
 if __name__ == "__main__":
+    datasets = []
+    data = readMyFormat(PATH_TO_DATASETS + "trip/trip1.gz")
+    datasets.append([data, "TEST"])
+    
+    calculateStatistics(datasets, usingScoop) 
+
+if __name__ == "__main__A":
     
     datasets = []
 
@@ -23,7 +30,7 @@ if __name__ == "__main__":
    
     #HON
     if useHON:
-        hon = readMyFormat(PATH_TO_DATASETS + "hon/hon1.gz")
+        hon = readMyFormat(PATH_TO_DATASETS + "hon/hon.gz")
         datasets.append([hon, "HON"])
         
     #Trip

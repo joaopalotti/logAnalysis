@@ -60,6 +60,7 @@ class DataSet(object):
         
         if self.semanticTypes is not None:
             if any(s for s in self.semanticTypes if len(s) != 4 ) == True:
+                print self.semanticTypes
                 assert False
 
         self.CHVFound = int(CHVFound)
