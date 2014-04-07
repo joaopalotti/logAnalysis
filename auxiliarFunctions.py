@@ -186,7 +186,7 @@ def preProcessData(data, removeStopWords):
         -> Source                -> bact (Bacterium), virs (Virus), Fungs (fngs), Archaeon (arch)
         
         -> (Cause) Disease/Dysfunction  -> dsyn (Disease or Syndrome), mobd (Mental or Behavioral Dysfunction), neop (Neoplastic Process), patf (Pathologic Function)
-        -> Cure                 -> clnd (Clinical Drug), antb (Antibiotic), aapp(Amino Acid, Peptide, or Protein?), phsu (Pharmacologic Substance), imft (Immunologic Factor - vaccine, e.g.), vita (Vitamin)
+        -> Cure                 -> clnd (Clinical Drug), antb (Antibiotic), aapp(Amino Acid, Peptide, or Protein?), phsu (Pharmacologic Substance), imft (Immunologic Factor - vaccine, e.g.), vita (Vitamin), (TOPP ---> treatment)
 
         -> Prevention?
 
@@ -205,7 +205,7 @@ def causeTypes():
     return ["dsyn", "mobd", "neop","patf"]
 
 def remedyTypes():
-    return ["clnd", "antb","aapp","phsu","imft","vita"]
+    return ["clnd", "antb","aapp","phsu","imft","vita","topp"]
 
 def whereTypes():
     return ["bpoc", "bsoj","tisu","bdsy","blor"]
