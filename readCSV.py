@@ -43,7 +43,6 @@ def readKhresmoiRank(filename):
     #Sort the data by user and datetime to construct sessions
     #reader = sorted(reader, key= lambda k: (k[1], k[0]))  
     frow = reader.next()
-    print len(frow), frow
     temp = DataSet(dttime=None, userId=frow[1], keywords=frow[2], previouskeywords=None, rank=frow[6])
     previouskeywords = frow[2]
     lastUserId = frow[1]
@@ -118,10 +117,15 @@ def readMyFormat(filename, verbose=True):
         if len(row[2]) == 0 or row[2] == None:
             continue
 
-        temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4],\
+        if len(row) > 11:
+            temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4],\
                        semanticTypes=row[5], CHVFound=row[6], hasCHV=row[7], hasUMLS=row[8], hasCHVMisspelled=row[9],\
                        comboScore=row[10],  sourceList=row[11], postags=row[12], concepts=row[13],\
                        semanticConcepts=row[14])
+        else:
+            temp = DataSet(dttime=row[0], userId=row[1], keywords=row[2], previouskeywords=row[3], mesh=row[4],\
+                       semanticTypes=row[5], CHVFound=row[6], hasCHV=row[7], hasUMLS=row[8], hasCHVMisspelled=row[9],\
+                       comboScore=row[10])
         data.append(temp)
     return data
 

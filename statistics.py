@@ -16,6 +16,7 @@ SOME IMPORTANT NOTES:
 """
 
 # GLOBAL VARIABLES:
+removeSuccessivelyDuplicatedQuery = False
 numberOfQueriesInASessionThreshold = 100
 removeClassifierOutlersOnly = False #TODO: remove this after ECIR deadline
 removeOutliers=True
@@ -43,8 +44,9 @@ def calculateMetrics(dataPair):
         outliersToRemove = removeOutliers( createSessions(data) )
         newData = [member for member in data if member.userId not in outliersToRemove]
         data = newData
-   
-    data = removeSuccessivelyDuplicates(data, 30)
+  
+    if removeSuccessivelyDuplicatedQuery:
+        data = removeSuccessivelyDuplicates(data, 30)
     
     numberOfSessions, countingQueriesPerSession, npNumQueriesInSession, countingTimePerSession, npTime,\
         numberOfExpansions, numberOfShrinkage, numberOfReformulations, numberOfRepetitions, vectorOfModifiedSessions,\
@@ -155,7 +157,6 @@ def calculateMetrics(dataPair):
 
 def calculateStatistics(dataList, usingScoop):    
     #everything related to tables are set aside in the tables.py
-    
    
     """
         Expected a list of list of DataSet (TripData or AolData) objects

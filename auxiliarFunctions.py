@@ -6,7 +6,14 @@ from nltk.tokenize.punkt import PunktWordTokenizer
 
 PATH_TO_AUX_FILES = "auxFiles/"
 
-NLWords = ["would", "wouldn't", "wouldnt", "could", "couldn't", "couldnt", "should", "shouldn't", "shouldnt", "how", "when", "where", "which", "who", "whom", "can", "cannot", "why", "what", "we", "they", "i", "do", "does", "must", "ought", "whats", "wheres", "whos"]
+NLWords = [#WH Questions: 'what', 'How', '?', 'When', 'Why' and others ('Who' 'Where', 'Which'
+           "what", "whats", "how", "when", "why", "who", "where", "which", "whom", "whos", "wheres",\
+           # Yes/No questions: 'Can', 'Is', 'Does', 'Do', 'Are' and others ('Could' 'Should', 'Will', 'Would').
+           "can", "cannot", "are" "arent", "aren't", "is", "isnt", "isn't", "does", "doesnt", "doesn't", "do", "dont", "don't",
+           "would", "wouldn't", "wouldnt", "could", "couldn't", "couldnt", "should", "shouldn't", "shouldnt", 
+           "must", "ought", "will",
+            # Pronoun:
+           "we", "they", "i", "you","he","she"]
 
 def openZip(filename):
     if filename.endswith(".gz"):
@@ -176,24 +183,9 @@ def preProcessData(data, removeStopWords):
 
     return modifiedData
 
-#TODO: checkar isso aqui
 """
     Some important semantic types (list: http://metamap.nlm.nih.gov/SemanticTypeMappings_2011AA.txt)
     http://www.nlm.nih.gov/research/umls/META3_current_semantic_types.html  ---> semantic trees
-
-        -> Symptom              -> sosy (Sign or Symptom), lbtr (Laboratory or Test Result)
-        
-        -> Source                -> bact (Bacterium), virs (Virus), Fungs (fngs), Archaeon (arch)
-        
-        -> (Cause) Disease/Dysfunction  -> dsyn (Disease or Syndrome), mobd (Mental or Behavioral Dysfunction), neop (Neoplastic Process), patf (Pathologic Function)
-        -> Cure                 -> clnd (Clinical Drug), antb (Antibiotic), aapp(Amino Acid, Peptide, or Protein?), phsu (Pharmacologic Substance), imft (Immunologic Factor - vaccine, e.g.), vita (Vitamin), (TOPP ---> treatment)
-
-        -> Prevention?
-
-        -> where     -> bpoc (Body Part, Organ, or Organ Component), bsoj (Body Space or Junction), tisu (tissue), bdsy (Body System), blor (Body Location or Region)
-
-        ->>> Important and missing classification: inpo (Injury or Poisoning),  diap (Diagnostic Procedure), irda (Indicator, Reagent, or Diagnostic Aid), fndg (Finding), ftcn (Functional Concept), gngm (Gene or Genome), hcro (Health Care Related Organization), hlca (Health Care Activity), horm|Hormone, inch|Inorganic Chemical, lbpr|Laboratory Procedure
-"""
 
 def symptomTypes():
     return ["sosy","lbtr", "fndg"] 
@@ -213,4 +205,26 @@ def whereTypes():
 def noMedicalTypes():
     return ["mnob","geoa","rnlw", "inpr", "idcn", "spco", "cnce", "orgt"]
     # mnob|Manufactured Object;  geoa|Geographic Area; inpr|Intellectual Product; qlco|Qualitative Concept; qnco|Quantitative Concept; ftcn|Functional Concept; idcn|Idea or Concept ; popg|Population Group; spco|Spatial Concept; cnce|Conceptual Entity; orgt|Organization
+"""
+# This is the way is done in iiix paper:
+def symptomTypes():
+    return ["sosy","fndg"]
+
+def causeTypes():
+    return ["acab","anab","comd","cgab","emod","inpo","mobd","neop","patf","dsyn","fndg"]
+
+def remedyTypes():
+    return ["aapp","antb","bacs","bodm","carb","chem","chvf","chvs","clnd","eico","elii","enzy","hops",\
+            "horm","imft","irda","inch","lipd","nsba","nnon","orch","opco","phsu","rcpt","strd","vita", "topp"]
+
+def whereTypes():
+    return []
+
+def noMedicalTypes():
+    return ["mnob","geoa","rnlw", "inpr", "idcn", "spco", "cnce", "orgt"]
+
+#    "ana": ["anst","blor","bpoc","bsoj","bdsu","bdsy","celc","cell","emst","ffas","tisu"],
+#    "dia": ["diap","lbpr","lbtr"],
+
+
 

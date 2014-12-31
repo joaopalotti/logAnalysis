@@ -25,7 +25,8 @@ def readIn(filename, fileVersion, verbose=True):
         print ("Reading information of file already transformed into MY FORMAT! Filename: ", filename)
 
     #data already sorted
-    data = readMyFormat(filename, fileVersion, verbose)
+    #data = readMyFormat(filename, fileVersion, verbose)
+    data = readMyFormat(filename, verbose)
 
     return data
 

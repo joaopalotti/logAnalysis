@@ -3,23 +3,25 @@ from readCSV import readMyFormat
 import pandas as pd
 
 PATH_TO_DATASETS = "/data/palotti/logAnalysisDataSets/"
+AOLH_DATASET = "/data/palotti/logAnalysisDataSets/aolData/AOL-user-ct-collection/healthq.fixed.gz"
+AOLNH_DATASET = "/data/palotti/logAnalysisDataSets/aolData/AOL-user-ct-collection/nhealthq.fixed.gz"
 usingScoop = False
-useHON = False
-useGM = False
-useTRIP = False
-useAOLH = False
+useHON = True
+useGM = True
+useTRIP = True
+useAOLH = True
 useAOLNH = False
 useLAY = False
 useEXP = False
 
-if __name__ == "__main__":
+if __name__ == "__main__A":
     datasets = []
     data = readMyFormat(PATH_TO_DATASETS + "trip/trip1.gz")
     datasets.append([data, "TEST"])
     
     calculateStatistics(datasets, usingScoop) 
 
-if __name__ == "__main__A":
+if __name__ == "__main__":
     
     datasets = []
 
@@ -40,12 +42,12 @@ if __name__ == "__main__A":
 
     #AOL-Health
     if useAOLH:
-        aolHealth = readMyFormat(PATH_TO_DATASETS + "aolh/aolh.gz")
+        aolHealth = readMyFormat(AOLH_DATASET)
         datasets.append([aolHealth, "AOLH"])    
     
     if useAOLNH:
-        aolHealth = readMyFormat(PATH_TO_DATASETS + "aolnh/aolnh.gz")
-        datasets.append([aolHealth, "AOLNH"])    
+        aolnHealth = readMyFormat(AOLNH_DATASET)
+        datasets.append([aolnHealth, "AOLNH"])    
     
     if useLAY:
         laypeople = hon + aolHealth
